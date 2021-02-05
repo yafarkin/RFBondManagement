@@ -13,15 +13,12 @@ namespace RfBondManagement.Main
 
             var menu = new MenuBar(new[]
             {
-                new MenuBarItem("_File", new MenuItem[]
+                new MenuBarItem("_Файл", new []
                 {
-                    new MenuItem("_Quit", "", () => Application.RequestStop())
+                    new MenuItem("_Загрузить портфель", "", () => Application.RequestStop()),
+                    new MenuItem("_Загрузить настройки", "", () => Application.RequestStop()),
+                    new MenuItem("_Выход", string.Empty, () => Application.RequestStop())
                 }), // end of file menu
-                new MenuBarItem("_Help", new MenuItem[]
-                {
-                    new MenuItem("_About", "", ()
-                        => MessageBox.Query(10, 5, "About", "Written by Ali Bahraminezhad\nVersion: 0.0001", "Ok"))
-                }) // end of the help menu
             });
             top.Add(menu);
 

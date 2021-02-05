@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RfBondManagement.Main", "RfBondManagement.Main\RfBondManagement.Main.csproj", "{817B0C0D-FB39-4A8F-BC0D-B5EDF5BD941D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RfBondManagement.Engine", "RfBondManagement.Engine\RfBondManagement.Engine.csproj", "{A08173B7-1B05-4013-8D78-93F6D0138D07}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{817B0C0D-FB39-4A8F-BC0D-B5EDF5BD941D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{817B0C0D-FB39-4A8F-BC0D-B5EDF5BD941D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{817B0C0D-FB39-4A8F-BC0D-B5EDF5BD941D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A08173B7-1B05-4013-8D78-93F6D0138D07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A08173B7-1B05-4013-8D78-93F6D0138D07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A08173B7-1B05-4013-8D78-93F6D0138D07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A08173B7-1B05-4013-8D78-93F6D0138D07}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

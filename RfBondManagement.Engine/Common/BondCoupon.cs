@@ -6,5 +6,7 @@ namespace RfBondManagement.Engine
     {
         public DateTime Date { get; set; }
         public decimal Value { get; set; }
+
+        public override string ToString() => $"{Date}: {Value:C}";
     }
 }

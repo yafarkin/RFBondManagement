@@ -9,6 +9,8 @@ namespace RfBondManagement.Engine
         public DateTime? OfferDate { get; set; }
         public DateTime MaturityDate { get; set; }
 
+        public int Duration { get; set; }
+
         public decimal BondPar { get; set; }
         public string Currency { get; set; }
 

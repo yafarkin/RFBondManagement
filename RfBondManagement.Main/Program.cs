@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using LiteDB;
-using RfBondManagement.Engine;
+﻿using RfBondManagement.Engine.Database;
 using RfBondManagement.Main.Windows;
 using Terminal.Gui;
 
@@ -12,55 +10,29 @@ namespace RfBondManagement.Main
         {
             Application.Init();
 
-            var db = new LiteDatabase("bondmanagement.db");
+            var db = new DatabaseLayer();
+            var settings = db.LoadSettings();
 
-            var settingsColl = db.GetCollection<Settings>("settings");
-            var settings = settingsColl.FindAll().FirstOrDefault();
-            if (null == settings)
+            var mainWindow = new MainWindow(db);
+
+            var mainMenu = new MainMenu();
+            mainMenu.OnExit += Application.RequestStop;
+            mainMenu.OnChangeSettings += () =>
             {
-                settings = new Settings();
-                settingsColl.Insert(settings);
-            }
+                var settingsWindow = new GeneralSettingsWindow(mainWindow);
+                settingsWindow.DataBind(settings);
 
-            var mainWindow = new Window("Портфель облигаций")
-            {
-                X = 0,
-                Y = 1,
+                settingsWindow.OnSave += newSettings =>
+                {
+                    settings = newSettings;
+                    db.SaveSettings(settings);
+                };
 
-                Width = Dim.Fill(),
-                Height = Dim.Fill()
+                mainWindow.Add(settingsWindow);
             };
 
-            var settingsWindow = new GeneralSettingsWindow(mainWindow);
-
-            var menu = new MenuBar(new[]
-            {
-                new MenuBarItem("_Файл", new []
-                {
-                    new MenuItem("_Загрузить портфель", string.Empty, () => Application.RequestStop()),
-                    new MenuItem("_Загрузить настройки", string.Empty, () => Application.RequestStop()),
-                    new MenuItem("_Выход", string.Empty, () => Application.RequestStop())
-                }),
-                new MenuBarItem("_Настройки", new[]
-                {
-                    new MenuItem("_Общие настройки", string.Empty, () =>
-                    {
-                        settingsWindow.DataBind(settings);
-
-                        settingsWindow.OnSave += newSettings =>
-                        {
-                            settings = newSettings;
-                            settingsColl.DeleteAll();
-                            settingsColl.Insert(settings);
-                        };
-
-                        mainWindow.Add(settingsWindow);
-                    })
-                })
-            });
-
             var top = Application.Top;
-            top.Add(menu);
+            top.Add(mainMenu.Menu);
             top.Add(mainWindow);
 
             Application.Run();

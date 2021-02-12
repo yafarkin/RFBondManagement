@@ -6,8 +6,6 @@ namespace RfBondManagement.Engine
     {
         public string AccountNumber { get; set; }
 
-        public List<BaseStockPaper> Papers { get; set; }
-
-        public List<BaseAction> Actions { get; set; }
+        public List<BaseStockPaperInPortfolio> Papers { get; set; }
     }
 }

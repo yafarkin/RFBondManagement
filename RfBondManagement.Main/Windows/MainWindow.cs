@@ -31,23 +31,25 @@ namespace RfBondManagement.Main.Windows
 
         protected void InitControls()
         {
-            var listPapers = new ListPaperView {PaperSource = () =>
-            {
-                //_db.GetPapers().ToList()
-                var result = new List<BaseStockPaper>()
-                {
-                    new BaseBondPaper {BondPar = 1000, Currency = "RUR", Name = "test1"},
-                    new BaseBondPaper {BondPar = 1000, Currency = "RUR", Name = "test2"},
-                };
+            //var listPapers = new ListPaperView
+            //{
+            //    PaperSource = () =>
+            //    {
+            //        //_db.GetPapers().ToList()
+            //        var result = new List<BaseStockPaper>()
+            //        {
+            //            new BaseBondPaper {BondPar = 1000, Currency = "RUR", Name = "test1"},
+            //            new BaseBondPaper {BondPar = 1000, Currency = "RUR", Name = "test2"},
+            //        };
 
-                IListDataSource
+            //        //return result;
+            //    }
+            //};
 
-                return result;
-            }
-            };
 
-            Add(listPapers);
+            //listPapers.DataBind();
 
+            //Add(listPapers);
         }
     }
 }

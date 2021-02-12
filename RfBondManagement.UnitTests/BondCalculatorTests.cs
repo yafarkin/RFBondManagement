@@ -69,19 +69,25 @@ namespace RfBondManagement.UnitTests
         [Test]
         public void TenPercents_Clear()
         {
+            var buyAction = new BondBuyAction
+            {
+                Count = 1,
+                Date = new DateTime(2020, 9, 2),
+                NKD = 0,
+                Paper = BondPaper,
+                Price = 100
+            };
+
             var bondIncomeInfo = new BondIncomeInfo
             {
-                BuyAction = new BondBuyAction
+                PaperInPortfolio = new BaseBondPaperInPortfolio
                 {
-                    Count = 1,
-                    Date = new DateTime(2020, 9, 2),
-                    NKD = 0,
-                    Paper = BondPaper,
-                    Price = 100
+                    Actions = new List<BaseAction> {buyAction},
+                    BondPaper = BondPaper
                 }
             };
 
-            Calculator.StartCalculateIncome(bondIncomeInfo, null, BondPaper.MaturityDate);
+            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, null, BondPaper.MaturityDate);
             Assert.IsTrue(bondIncomeInfo.CloseByMaturityDate);
             Assert.AreEqual(1000m, bondIncomeInfo.BalanceOnBuy);
             Assert.AreEqual(1300m, bondIncomeInfo.BalanceOnSell);
@@ -93,19 +99,25 @@ namespace RfBondManagement.UnitTests
         [Test]
         public void TenPercents_withSettings()
         {
+            var buyAction = new BondBuyAction
+            {
+                Count = 1,
+                Date = new DateTime(2020, 9, 2),
+                NKD = 0,
+                Paper = BondPaper,
+                Price = 100
+            };
+
             var bondIncomeInfo = new BondIncomeInfo
             {
-                BuyAction = new BondBuyAction
+                PaperInPortfolio = new BaseBondPaperInPortfolio
                 {
-                    Count = 1,
-                    Date = new DateTime(2020, 9, 2),
-                    NKD = 0,
-                    Paper = BondPaper,
-                    Price = 100
+                    Actions = new List<BaseAction> {buyAction},
+                    BondPaper = BondPaper
                 }
             };
 
-            Calculator.StartCalculateIncome(bondIncomeInfo, Settings, BondPaper.MaturityDate);
+            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, Settings, BondPaper.MaturityDate);
             Assert.IsTrue(bondIncomeInfo.CloseByMaturityDate);
             Assert.AreEqual(1000.61m, bondIncomeInfo.BalanceOnBuy);
             Assert.AreEqual(1261m, bondIncomeInfo.BalanceOnSell);
@@ -162,19 +174,25 @@ namespace RfBondManagement.UnitTests
                 }
             };
 
+            var buyAction = new BondBuyAction
+            {
+                Count = 1,
+                Date = new DateTime(2021, 2, 4),
+                NKD = 27.6m,
+                Paper = realPaper,
+                Price = 103.75m
+            };
+
             var bondIncomeInfo = new BondIncomeInfo
             {
-                BuyAction = new BondBuyAction
+                PaperInPortfolio = new BaseBondPaperInPortfolio
                 {
-                    Count = 1,
-                    Date = new DateTime(2021, 2, 4),
-                    NKD = 27.6m,
-                    Paper = realPaper,
-                    Price = 103.75m
+                    Actions = new List<BaseAction> { buyAction },
+                    BondPaper = BondPaper
                 }
             };
 
-            Calculator.StartCalculateIncome(bondIncomeInfo, Settings, realPaper.MaturityDate);
+            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, Settings, realPaper.MaturityDate);
 
             Assert.IsTrue(bondIncomeInfo.CloseByMaturityDate);
             Assert.AreEqual(1065.75m, Math.Round(bondIncomeInfo.BalanceOnBuy, 2));

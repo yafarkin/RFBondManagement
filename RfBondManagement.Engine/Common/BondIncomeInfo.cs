@@ -1,8 +1,11 @@
-﻿namespace RfBondManagement.Engine
+﻿using System;
+
+namespace RfBondManagement.Engine
 {
     public class BondIncomeInfo
     {
-        public BondBuyAction BuyAction;
+        public BaseBondPaperInPortfolio PaperInPortfolio;
+
 
         public bool CloseByMaturityDate;
         public decimal SellPrice;
@@ -13,5 +16,6 @@
         public decimal BalanceOnSell => SellPrice + IncomeByCoupons;
         public decimal ExpectedIncome => BalanceOnSell - BalanceOnBuy;
         public decimal RealIncomePercent;
+        public DateTime ExpectedPositiveDate;
     }
 }

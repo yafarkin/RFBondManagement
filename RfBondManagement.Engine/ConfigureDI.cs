@@ -10,7 +10,7 @@ namespace RfBondManagement.Engine
         public static IUnityContainer Configure(IUnityContainer container = null)
         {
             container ??= new UnityContainer();
-            container.RegisterType<IDatabaseLayer, DatabaseLayer>();
+            container.RegisterType<IDatabaseLayer, DatabaseLayer>(TypeLifetime.Singleton);
             container.RegisterType<IBondCalculator, BondCalculator>();
 
             container.AddNewExtension<NLogExtension>();

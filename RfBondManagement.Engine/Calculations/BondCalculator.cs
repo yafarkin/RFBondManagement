@@ -27,9 +27,9 @@ namespace RfBondManagement.Engine.Calculations
                 bondIncomeInfo.BalanceOnBuy += bii.BalanceOnBuy * buyAction.Count;
                 bondIncomeInfo.IncomeByCoupons += bii.IncomeByCoupons * buyAction.Count;
                 bondIncomeInfo.SellTax += bii.SellTax * buyAction.Count;
-                if (bondIncomeInfo.ExpectedPositiveDate < bii.ExpectedPositiveDate)
+                if (bondIncomeInfo.BreakevenDate < bii.BreakevenDate)
                 {
-                    bondIncomeInfo.ExpectedPositiveDate = bii.ExpectedPositiveDate;
+                    bondIncomeInfo.BreakevenDate = bii.BreakevenDate;
                 }
                 realIncomePercent.Add(bii.RealIncomePercent);
                 avgSellPrice.Add(bii.SellPrice * buyAction.Count);
@@ -112,9 +112,9 @@ namespace RfBondManagement.Engine.Calculations
             var couponSum = nkd - tax;
             balance += couponSum;
 
-            if (balance > 0 && bondIncomeInfo.ExpectedPositiveDate == default(DateTime))
+            if (balance > 0 && bondIncomeInfo.BreakevenDate == default(DateTime))
             {
-                bondIncomeInfo.ExpectedPositiveDate = fromDate;
+                bondIncomeInfo.BreakevenDate = fromDate;
             }
 
             bondIncomeInfo.IncomeByCoupons += couponSum;

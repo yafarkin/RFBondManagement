@@ -2,14 +2,11 @@
 using System.Linq;
 using System.Windows.Forms;
 using NLog;
-using RfBondManagement.Engine;
-using RfBondManagement.Engine.Calculations;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
-using RfBondManagement.WinForm.Forms;
 using Unity;
 
-namespace RfBondManagement.WinForm
+namespace RfBondManagement.WinForm.Forms
 {
     public partial class MainForm : Form
     {
@@ -24,6 +21,7 @@ namespace RfBondManagement.WinForm
             _logger = logger;
             _container = container;
             _db = db;
+
             InitializeComponent();
         }
 
@@ -79,13 +77,21 @@ namespace RfBondManagement.WinForm
                     biiToClose.BalanceOnSell.ToString("C"),
                     biiToClose.ExpectedIncome.ToString("C"),
                     (biiToClose.RealIncomePercent/100).ToString("P"),
-                    biiToClose.ExpectedPositiveDate.ToShortDateString(),
+                    biiToClose.BreakevenDate.ToShortDateString(),
                     (bondPaper.MaturityDate - DateTime.Today).Days.ToString(),
                 });
                 lvPapers.Items.Add(lvi);
             }
 
             lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+        }
+
+        private void menuItemBondCalculator_Click(object sender, EventArgs e)
+        {
+            using (var f = _container.Resolve<BondCalculatorForm>())
+            {
+                f.ShowDialog();
+            }
         }
     }
 }

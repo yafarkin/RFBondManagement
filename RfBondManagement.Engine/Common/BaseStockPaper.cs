@@ -12,5 +12,7 @@ namespace RfBondManagement.Engine.Common
         public List<PriceOnDate> Price { get; set; }
 
         public PriceOnDate LastPrice => Price?.OrderByDescending(p => p.Date).FirstOrDefault();
+
+        public override string ToString() => Name;
     }
 }

@@ -16,6 +16,6 @@ namespace RfBondManagement.Engine.Common
         public decimal BalanceOnSell => SellPrice + IncomeByCoupons;
         public decimal ExpectedIncome => BalanceOnSell - BalanceOnBuy;
         public decimal RealIncomePercent;
-        public DateTime ExpectedPositiveDate;
+        public DateTime BreakevenDate;
     }
 }

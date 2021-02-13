@@ -1,8 +1,6 @@
-﻿
-using System.Drawing;
-using RfBondManagement.WinForm.Controls;
+﻿using RfBondManagement.WinForm.Controls;
 
-namespace RfBondManagement.WinForm
+namespace RfBondManagement.WinForm.Forms
 {
     partial class MainForm
     {
@@ -34,6 +32,7 @@ namespace RfBondManagement.WinForm
         {
             this.mainMenu = new System.Windows.Forms.MenuStrip();
             this.menuItemFile = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemBondCalculator = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemExit = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemSettings = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemGeneralSettings = new System.Windows.Forms.ToolStripMenuItem();
@@ -75,15 +74,25 @@ namespace RfBondManagement.WinForm
             // menuItemFile
             // 
             this.menuItemFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuItemBondCalculator,
             this.menuItemExit});
             this.menuItemFile.Name = "menuItemFile";
             this.menuItemFile.Size = new System.Drawing.Size(48, 20);
             this.menuItemFile.Text = "Файл";
             // 
+            // menuItemBondCalculator
+            // 
+            this.menuItemBondCalculator.Name = "menuItemBondCalculator";
+            this.menuItemBondCalculator.ShortcutKeys = System.Windows.Forms.Keys.F6;
+            this.menuItemBondCalculator.Size = new System.Drawing.Size(226, 22);
+            this.menuItemBondCalculator.Text = "Калькулятор облигации";
+            this.menuItemBondCalculator.Click += new System.EventHandler(this.menuItemBondCalculator_Click);
+            // 
             // menuItemExit
             // 
             this.menuItemExit.Name = "menuItemExit";
-            this.menuItemExit.Size = new System.Drawing.Size(109, 22);
+            this.menuItemExit.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F4)));
+            this.menuItemExit.Size = new System.Drawing.Size(226, 22);
             this.menuItemExit.Text = "Выход";
             this.menuItemExit.Click += new System.EventHandler(this.menuItemExit_Click);
             // 
@@ -98,7 +107,8 @@ namespace RfBondManagement.WinForm
             // menuItemGeneralSettings
             // 
             this.menuItemGeneralSettings.Name = "menuItemGeneralSettings";
-            this.menuItemGeneralSettings.Size = new System.Drawing.Size(175, 22);
+            this.menuItemGeneralSettings.ShortcutKeys = System.Windows.Forms.Keys.F3;
+            this.menuItemGeneralSettings.Size = new System.Drawing.Size(194, 22);
             this.menuItemGeneralSettings.Text = "Общие настройки";
             this.menuItemGeneralSettings.Click += new System.EventHandler(this.menuItemGeneralSettings_Click);
             // 
@@ -305,6 +315,7 @@ namespace RfBondManagement.WinForm
         private System.Windows.Forms.ColumnHeader chCount;
         private System.Windows.Forms.ColumnHeader chIncome;
         private System.Windows.Forms.ColumnHeader chPositiveDate;
+        private System.Windows.Forms.ToolStripMenuItem menuItemBondCalculator;
     }
 }
 

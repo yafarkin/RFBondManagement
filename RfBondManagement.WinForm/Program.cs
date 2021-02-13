@@ -2,6 +2,7 @@ using System;
 using System.Windows.Forms;
 using NLog;
 using RfBondManagement.Engine;
+using RfBondManagement.WinForm.Forms;
 using Unity;
 
 namespace RfBondManagement.WinForm
@@ -15,6 +16,8 @@ namespace RfBondManagement.WinForm
         static void Main()
         {
             var container = ConfigureDI.Configure();
+            container.RegisterInstance(container);
+
             var logger = container.Resolve<ILogger>();
 
             logger.Info("Start application");

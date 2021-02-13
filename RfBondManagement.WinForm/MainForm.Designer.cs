@@ -1,4 +1,7 @@
 ﻿
+using System.Drawing;
+using RfBondManagement.WinForm.Controls;
+
 namespace RfBondManagement.WinForm
 {
     partial class MainForm
@@ -43,15 +46,15 @@ namespace RfBondManagement.WinForm
             this.chBondPar = new System.Windows.Forms.ColumnHeader();
             this.chCount = new System.Windows.Forms.ColumnHeader();
             this.chSummToClose = new System.Windows.Forms.ColumnHeader();
+            this.chIncome = new System.Windows.Forms.ColumnHeader();
             this.chPercent = new System.Windows.Forms.ColumnHeader();
+            this.chPositiveDate = new System.Windows.Forms.ColumnHeader();
             this.chDaysToClose = new System.Windows.Forms.ColumnHeader();
             this.pnlActions = new System.Windows.Forms.Panel();
             this.btnDeletePaper = new System.Windows.Forms.Button();
             this.btnEditPaper = new System.Windows.Forms.Button();
             this.btnAddPaper = new System.Windows.Forms.Button();
             this.lblPaperList = new System.Windows.Forms.Label();
-            this.chIncome = new System.Windows.Forms.ColumnHeader();
-            this.chPositiveDate = new System.Windows.Forms.ColumnHeader();
             this.mainMenu.SuspendLayout();
             this.pnlPaperDetails.SuspendLayout();
             this.pnlPapers.SuspendLayout();
@@ -182,10 +185,20 @@ namespace RfBondManagement.WinForm
             this.chSummToClose.Name = "chSummToClose";
             this.chSummToClose.Text = "Сумма к закр.";
             // 
+            // chIncome
+            // 
+            this.chIncome.Name = "chIncome";
+            this.chIncome.Text = "Доход";
+            // 
             // chPercent
             // 
             this.chPercent.Name = "chPercent";
             this.chPercent.Text = "% доход";
+            // 
+            // chPositiveDate
+            // 
+            this.chPositiveDate.Name = "chPositiveDate";
+            this.chPositiveDate.Text = "В плюс после";
             // 
             // chDaysToClose
             // 
@@ -206,6 +219,7 @@ namespace RfBondManagement.WinForm
             // 
             // btnDeletePaper
             // 
+            this.btnDeletePaper.Enabled = false;
             this.btnDeletePaper.Location = new System.Drawing.Point(175, 8);
             this.btnDeletePaper.Name = "btnDeletePaper";
             this.btnDeletePaper.Size = new System.Drawing.Size(75, 23);
@@ -215,6 +229,7 @@ namespace RfBondManagement.WinForm
             // 
             // btnEditPaper
             // 
+            this.btnEditPaper.Enabled = false;
             this.btnEditPaper.Location = new System.Drawing.Point(93, 8);
             this.btnEditPaper.Name = "btnEditPaper";
             this.btnEditPaper.Size = new System.Drawing.Size(75, 23);
@@ -224,6 +239,7 @@ namespace RfBondManagement.WinForm
             // 
             // btnAddPaper
             // 
+            this.btnAddPaper.Enabled = false;
             this.btnAddPaper.Location = new System.Drawing.Point(12, 8);
             this.btnAddPaper.Name = "btnAddPaper";
             this.btnAddPaper.Size = new System.Drawing.Size(75, 23);
@@ -239,16 +255,6 @@ namespace RfBondManagement.WinForm
             this.lblPaperList.Size = new System.Drawing.Size(84, 15);
             this.lblPaperList.TabIndex = 0;
             this.lblPaperList.Text = "Список бумаг";
-            // 
-            // chIncome
-            // 
-            this.chIncome.Name = "chIncome";
-            this.chIncome.Text = "Доход";
-            // 
-            // chPositiveDate
-            // 
-            this.chPositiveDate.Name = "chPositiveDate";
-            this.chPositiveDate.Text = "В плюс после";
             // 
             // MainForm
             // 

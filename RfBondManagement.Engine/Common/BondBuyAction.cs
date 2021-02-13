@@ -1,4 +1,4 @@
-﻿namespace RfBondManagement.Engine
+﻿namespace RfBondManagement.Engine.Common
 {
     public class BondBuyAction : BaseAction
     {

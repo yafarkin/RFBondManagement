@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Windows.Forms;
 using RfBondManagement.Engine;
+using RfBondManagement.Engine.Common;
 
-namespace RfBondManagement.WinForm
+namespace RfBondManagement.WinForm.Forms
 {
     public partial class SettingsForm : Form
     {

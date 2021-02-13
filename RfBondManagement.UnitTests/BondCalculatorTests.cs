@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using RfBondManagement.Engine;
 using RfBondManagement.Engine.Calculations;
+using RfBondManagement.Engine.Common;
 
 namespace RfBondManagement.UnitTests
 {

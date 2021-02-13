@@ -1,19 +1,29 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Forms;
+using NLog;
 using RfBondManagement.Engine;
 using RfBondManagement.Engine.Calculations;
-using RfBondManagement.Engine.Database;
+using RfBondManagement.Engine.Common;
+using RfBondManagement.Engine.Interfaces;
+using RfBondManagement.WinForm.Forms;
+using Unity;
 
 namespace RfBondManagement.WinForm
 {
     public partial class MainForm : Form
     {
-        protected DatabaseLayer _db;
+        protected ILogger _logger;
+        protected IDatabaseLayer _db;
+        protected IUnityContainer _container;
+
         protected Settings _settings;
 
-        public MainForm()
+        public MainForm(ILogger logger, IDatabaseLayer db, IUnityContainer container)
         {
+            _logger = logger;
+            _container = container;
+            _db = db;
             InitializeComponent();
         }
 
@@ -24,7 +34,7 @@ namespace RfBondManagement.WinForm
 
         private void menuItemGeneralSettings_Click(object sender, EventArgs e)
         {
-            using (var f = new SettingsForm())
+            using (var f = _container.Resolve<SettingsForm>())
             {
                 f.Settings = _settings;
                 if (f.ShowDialog() == DialogResult.OK)
@@ -37,7 +47,6 @@ namespace RfBondManagement.WinForm
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            _db = new DatabaseLayer();
             _settings = _db.LoadSettings();
 
             var papers = _db.GetPapersInPortfolio();
@@ -46,7 +55,7 @@ namespace RfBondManagement.WinForm
             foreach (var paperInPortfolio in papers.OfType<BaseBondPaperInPortfolio>())
             {
                 var bondPaper = paperInPortfolio.BondPaper;
-                var calc = new BondCalculator();
+                var calc = _container.Resolve<IBondCalculator>();
                 var biiToClose = new BondIncomeInfo
                 {
                     PaperInPortfolio = paperInPortfolio

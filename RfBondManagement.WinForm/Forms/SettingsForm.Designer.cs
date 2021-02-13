@@ -1,5 +1,5 @@
 ﻿
-namespace RfBondManagement.WinForm
+namespace RfBondManagement.WinForm.Forms
 {
     partial class SettingsForm
     {

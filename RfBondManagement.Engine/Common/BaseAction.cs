@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RfBondManagement.Engine
+namespace RfBondManagement.Engine.Common
 {
     public abstract class BaseAction
     {

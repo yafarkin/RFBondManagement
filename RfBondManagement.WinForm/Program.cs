@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using NLog;
+using RfBondManagement.Engine;
+using Unity;
 
 namespace RfBondManagement.WinForm
 {
@@ -14,10 +14,17 @@ namespace RfBondManagement.WinForm
         [STAThread]
         static void Main()
         {
+            var container = ConfigureDI.Configure();
+            var logger = container.Resolve<ILogger>();
+
+            logger.Info("Start application");
+
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            Application.Run(container.Resolve<MainForm>());
+
+            logger.Info("End application");
         }
     }
 }

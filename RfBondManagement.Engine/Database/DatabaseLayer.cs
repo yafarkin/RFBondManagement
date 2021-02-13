@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using LiteDB;
+using RfBondManagement.Engine.Common;
+using RfBondManagement.Engine.Interfaces;
 
 namespace RfBondManagement.Engine.Database
 {
-    public class DatabaseLayer
+    public class DatabaseLayer : IDatabaseLayer
     {
         protected LiteDatabase _database;
 

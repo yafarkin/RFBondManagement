@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace RfBondManagement.Engine
+namespace RfBondManagement.Engine.Common
 {
     public class BaseStockPaperInPortfolio
     {

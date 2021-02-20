@@ -2,14 +2,8 @@
 
 namespace RfBondManagement.Engine.Common
 {
-    public class BaseBondPaperInPortfolio : BaseStockPaperInPortfolio
+    public class BaseBondPaperInPortfolio : BaseStockPaperInPortfolio<BaseBondPaper>
     {
-        public BaseBondPaper BondPaper
-        {
-            get => Paper as BaseBondPaper;
-            set => Paper = value;
-        }
-
         public decimal TotalBuyNKD => Actions.OfType<BondBuyAction>().Sum(a => a.NKD * a.Count);
     }
 }

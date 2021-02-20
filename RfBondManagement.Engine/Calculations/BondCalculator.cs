@@ -43,10 +43,10 @@ namespace RfBondManagement.Engine.Calculations
         {
             var nkd = buyAction.NKD;
 
-            decimal buyPrice = (bondIncomeInfo.PaperInPortfolio.BondPaper.BondPar * (bondIncomeInfo.PaperInPortfolio.AvgBuySum / 100) + nkd) *
+            decimal buyPrice = (bondIncomeInfo.PaperInPortfolio.Paper.BondPar * (bondIncomeInfo.PaperInPortfolio.AvgBuySum / 100) + nkd) *
                                (1 + (settings?.Comissions / 100 ?? 0));
 
-            decimal balance = -buyPrice + bondIncomeInfo.PaperInPortfolio.BondPaper.BondPar;
+            decimal balance = -buyPrice + bondIncomeInfo.PaperInPortfolio.Paper.BondPar;
 
             bondIncomeInfo.BalanceOnBuy = buyPrice;
 
@@ -63,22 +63,22 @@ namespace RfBondManagement.Engine.Calculations
                     totalDays = 1;
                 }
 
-                bondIncomeInfo.RealIncomePercent =  balance / buyAction.BondPaper.BondPar * 100 / (totalDays / 365m);
+                bondIncomeInfo.RealIncomePercent =  balance / buyAction.Paper.BondPar * 100 / (totalDays / 365m);
 
-                if (fromDate == buyAction.BondPaper.MaturityDate)
+                if (fromDate == buyAction.Paper.MaturityDate)
                 {
-                    bondIncomeInfo.SellPrice = buyAction.BondPaper.BondPar;
+                    bondIncomeInfo.SellPrice = buyAction.Paper.BondPar;
                     bondIncomeInfo.CloseByMaturityDate = true;
 
-                    balance += buyAction.BondPaper.BondPar;
+                    balance += buyAction.Paper.BondPar;
                 }
                 else
                 {
-                    var sellPrice = buyAction.BondPaper.BondPar * bondIncomeInfo.SellPrice / 100;
+                    var sellPrice = buyAction.Paper.BondPar * bondIncomeInfo.SellPrice / 100;
                     if (bondIncomeInfo.SellPrice > buyAction.Price)
                     {
                         var sellTax = (bondIncomeInfo.SellPrice - buyAction.Price) *
-                                   buyAction.BondPaper.BondPar *
+                                   buyAction.Paper.BondPar *
                                    (settings?.Tax / 100 ?? 1);
                         sellPrice -= sellTax;
                         bondIncomeInfo.SellTax = sellTax;
@@ -91,7 +91,7 @@ namespace RfBondManagement.Engine.Calculations
                 return;
             }
 
-            var nextCoupon = NextNearestCoupon(buyAction.BondPaper, fromDate);
+            var nextCoupon = NextNearestCoupon(buyAction.Paper, fromDate);
 
             decimal nkd;
             if (nextCoupon.Date <= toDate)
@@ -100,7 +100,7 @@ namespace RfBondManagement.Engine.Calculations
             }
             else
             {
-                var nextFutureCoupon = NextFutureCoupon(buyAction.BondPaper, toDate);
+                var nextFutureCoupon = NextFutureCoupon(buyAction.Paper, toDate);
                 var daysBetweenCoupons = (nextFutureCoupon.Date - nextCoupon.Date).Days;
                 var diffDays = (nextFutureCoupon.Date - toDate).Days;
                 nkd = (decimal)diffDays / daysBetweenCoupons * nextFutureCoupon.Value;

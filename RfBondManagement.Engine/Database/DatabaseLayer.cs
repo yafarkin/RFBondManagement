@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using LiteDB;
+using NLog.Targets;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 
@@ -13,14 +14,14 @@ namespace RfBondManagement.Engine.Database
 
         protected ILiteCollection<Settings> _settingsSet;
         protected ILiteCollection<BaseStockPaper> _papersList;
-        protected ILiteCollection<BaseStockPaperInPortfolio> _papersInPortfolio;
+        protected ILiteCollection<BaseBondPaperInPortfolio> _bonds;
 
         public DatabaseLayer()
         {
             _database = new LiteDatabase("bondmanagement.db");
             _settingsSet = _database.GetCollection<Settings>("settings");
             _papersList = _database.GetCollection<BaseStockPaper>("papersList");
-            _papersInPortfolio = _database.GetCollection<BaseStockPaperInPortfolio>("papersInPortfolio");
+            _bonds = _database.GetCollection<BaseBondPaperInPortfolio>("bondsInPortfolio");
         }
 
         public Settings LoadSettings()
@@ -41,20 +42,20 @@ namespace RfBondManagement.Engine.Database
             _settingsSet.Insert(settings);
         }
 
-        public IEnumerable<BaseStockPaperInPortfolio> GetPapersInPortfolio()
+        public IEnumerable<BaseBondPaperInPortfolio> GetBondsInPortfolio()
         {
-            var r = new List<BaseStockPaperInPortfolio>();
+            var r = new List<BaseBondPaperInPortfolio>();
             var p = GetPapers().OfType<BaseBondPaper>().First();
 
             r.Add(new BaseBondPaperInPortfolio
             {
                 Paper = p,
-                Actions = new List<BaseAction>
+                Actions = new List<BaseAction<BaseBondPaper>>
                 {
                     new BondBuyAction
                     {
                         IsBuy = true,
-                        BondPaper = p,
+                        Paper = p,
                         NKD = 29.56m,
                         Date = new DateTime(2021, 2, 12),
                         Count = 1,

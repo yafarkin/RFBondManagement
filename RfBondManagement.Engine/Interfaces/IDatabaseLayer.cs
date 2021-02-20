@@ -8,7 +8,7 @@ namespace RfBondManagement.Engine.Interfaces
         Settings LoadSettings();
         void SaveSettings(Settings settings);
 
-        IEnumerable<BaseStockPaperInPortfolio> GetPapersInPortfolio();
+        IEnumerable<BaseBondPaperInPortfolio> GetBondsInPortfolio();
         IEnumerable<BaseStockPaper> GetPapers();
     }
 }

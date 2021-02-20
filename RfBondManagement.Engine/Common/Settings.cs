@@ -6,5 +6,7 @@
         public decimal Comissions { get; set; }
 
         public decimal Tax { get; set; }
+
+        public decimal Inflation { get; set; }
     }
 }

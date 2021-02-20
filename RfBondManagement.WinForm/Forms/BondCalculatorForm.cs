@@ -140,12 +140,12 @@ namespace RfBondManagement.WinForm.Forms
             var bii = new BondIncomeInfo();
             bii.PaperInPortfolio = new BaseBondPaperInPortfolio
             {
-                BondPaper = bondPaper,
-                Actions = new List<BaseAction>
+                Paper = bondPaper,
+                Actions = new List<BaseAction<BaseBondPaper>>
                 {
                     new BondBuyAction
                     {
-                        BondPaper = bondPaper,
+                        Paper = bondPaper,
                         Count = count,
                         Price = buyPrice,
                         Date = dtpBuyDate.Value

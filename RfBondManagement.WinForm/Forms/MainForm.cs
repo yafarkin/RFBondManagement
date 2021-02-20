@@ -47,12 +47,12 @@ namespace RfBondManagement.WinForm.Forms
         {
             _settings = _db.LoadSettings();
 
-            var papers = _db.GetPapersInPortfolio();
+            var papers = _db.GetBondsInPortfolio();
 
             lvPapers.Items.Clear();
             foreach (var paperInPortfolio in papers.OfType<BaseBondPaperInPortfolio>())
             {
-                var bondPaper = paperInPortfolio.BondPaper;
+                var bondPaper = paperInPortfolio.Paper;
                 var calc = _container.Resolve<IBondCalculator>();
                 var biiToClose = new BondIncomeInfo
                 {

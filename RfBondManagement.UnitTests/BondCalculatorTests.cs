@@ -83,8 +83,8 @@ namespace RfBondManagement.UnitTests
             {
                 PaperInPortfolio = new BaseBondPaperInPortfolio
                 {
-                    Actions = new List<BaseAction> {buyAction},
-                    BondPaper = BondPaper
+                    Actions = new List<BaseAction<BaseBondPaper>> {buyAction},
+                    Paper = BondPaper
                 }
             };
 
@@ -113,8 +113,8 @@ namespace RfBondManagement.UnitTests
             {
                 PaperInPortfolio = new BaseBondPaperInPortfolio
                 {
-                    Actions = new List<BaseAction> {buyAction},
-                    BondPaper = BondPaper
+                    Actions = new List<BaseAction<BaseBondPaper>> {buyAction},
+                    Paper = BondPaper
                 }
             };
 
@@ -188,8 +188,8 @@ namespace RfBondManagement.UnitTests
             {
                 PaperInPortfolio = new BaseBondPaperInPortfolio
                 {
-                    Actions = new List<BaseAction> { buyAction },
-                    BondPaper = BondPaper
+                    Actions = new List<BaseAction<BaseBondPaper>> { buyAction },
+                    Paper = BondPaper
                 }
             };
 

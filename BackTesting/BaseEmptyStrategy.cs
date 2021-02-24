@@ -20,13 +20,66 @@ namespace BackTesting
 
         public abstract string Description { get; }
         public abstract void Init(Portfolio portfolio, DateTime date);
-        public abstract bool Process(DateTime date);
 
         protected BaseEmptyStrategy(ILogger logger, IHistoryDatabaseLayer history, IBondCalculator bondCalculator)
         {
             _logger = logger;
             _history = history;
             _bondCalculator = bondCalculator;
+        }
+
+        public virtual bool Process(DateTime date)
+        {
+            CalculateIncomeCoupons(date);
+            return true;
+        }
+
+        protected decimal CalculateIncomeCoupons(DateTime date)
+        {
+            decimal incomeCoupons = 0;
+
+            if (0 == _portfolio.Bonds.Count)
+            {
+                return incomeCoupons;
+            }
+
+            foreach (var bondPaperInPortfolio in _portfolio.Bonds)
+            {
+                var bond = bondPaperInPortfolio.Paper;
+                var coupon = bond.Coupons.FirstOrDefault(c => c.Date == date);
+                if (null == coupon)
+                {
+                    continue;
+                }
+
+                var nkd = coupon.Value * bondPaperInPortfolio.Count;
+                var tax = nkd * _portfolio.Settings.Tax/100;
+                var totalSum = nkd - tax;
+
+                _portfolio.Sum += totalSum;
+                incomeCoupons += totalSum;
+
+                _portfolio.MoneyMoves.Add(new BaseMoneyMove
+                {
+                    Comment = $"Income coupons {bond.Code}, value: {coupon.Value}, tax: {tax:C}, total sum: {totalSum:C}",
+                    Date = date,
+                    MoneyMoveType = MoneyMoveType.IncomeCoupon,
+                    Sum = totalSum,
+                });
+
+                if (tax > 0)
+                {
+                    _portfolio.MoneyMoves.Add(new BaseMoneyMove
+                    {
+                        Comment = $"Income coupons {bond.Code}, tax: {tax:C}",
+                        Date = date,
+                        MoneyMoveType = MoneyMoveType.OutcomeTax,
+                        Sum = -tax,
+                    });
+                }
+            }
+
+            return incomeCoupons;
         }
 
         protected virtual void BuyPaper(DateTime date, BaseStockPaper paper, long count)

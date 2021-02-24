@@ -6,5 +6,7 @@ namespace RfBondManagement.Engine.Interfaces
     public interface IBondCalculator
     {
         void CalculateIncome(BondIncomeInfo bondIncomeInfo, Settings settings, DateTime toDate);
+
+        decimal CalculateNkd(BaseBondPaper paper, DateTime toDate);
     }
 }

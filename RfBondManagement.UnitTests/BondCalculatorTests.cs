@@ -19,7 +19,7 @@ namespace RfBondManagement.UnitTests
         {
             Settings = new Settings
             {
-                Comissions = 0.061m,
+                Commissions = 0.061m,
                 Tax = 13.0m
             };
 
@@ -74,7 +74,7 @@ namespace RfBondManagement.UnitTests
             {
                 Count = 1,
                 Date = new DateTime(2020, 9, 2),
-                NKD = 0,
+                Nkd = 0,
                 Paper = BondPaper,
                 Price = 100
             };
@@ -104,7 +104,7 @@ namespace RfBondManagement.UnitTests
             {
                 Count = 1,
                 Date = new DateTime(2020, 9, 2),
-                NKD = 0,
+                Nkd = 0,
                 Paper = BondPaper,
                 Price = 100
             };
@@ -179,7 +179,7 @@ namespace RfBondManagement.UnitTests
             {
                 Count = 1,
                 Date = new DateTime(2021, 2, 4),
-                NKD = 27.6m,
+                Nkd = 27.6m,
                 Paper = realPaper,
                 Price = 103.75m
             };

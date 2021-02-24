@@ -2,7 +2,7 @@
 {
     public class BondBuyAction : BaseBondAction
     {
-        public decimal NKD { get; set; }
+        public decimal Nkd { get; set; }
 
         public override bool IsBuy => true;
     }

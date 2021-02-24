@@ -31,7 +31,7 @@ namespace RfBondManagement.WinForm.Forms
                 return;
             }
 
-            Settings.Comissions = comissions;
+            Settings.Commissions = comissions;
             Settings.Tax = tax;
 
             DialogResult = DialogResult.OK;
@@ -39,7 +39,7 @@ namespace RfBondManagement.WinForm.Forms
 
         private void SettingsForm_Load(object sender, EventArgs e)
         {
-            tbComission.Text = Settings.Comissions.ToString("F3");
+            tbComission.Text = Settings.Commissions.ToString("F3");
             tbTax.Text = Settings.Tax.ToString("F");
         }
     }

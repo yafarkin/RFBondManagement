@@ -33,7 +33,7 @@ namespace RfBondManagement.Main.Windows
         public void DataBind(Settings settings)
         {
             Settings = settings;
-            _comissionText.Text = Settings.Comissions.ToString("F");
+            _comissionText.Text = Settings.Commissions.ToString("F");
             _taxText.Text = Settings.Tax.ToString("F");
         }
 
@@ -102,7 +102,7 @@ namespace RfBondManagement.Main.Windows
                     return;
                 }
 
-                Settings.Comissions = comissions;
+                Settings.Commissions = comissions;
                 Settings.Tax = tax;
 
                 OnSave?.Invoke(Settings);

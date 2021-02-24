@@ -8,6 +8,21 @@ namespace RfBondManagement.Engine.Calculations
 {
     public class BondCalculator : IBondCalculator
     {
+        public decimal CalculateNkd(BaseBondPaper paper, DateTime toDate)
+        {
+            var nextCoupon = NearFutureCoupon(paper, toDate);
+            if (nextCoupon.Date == toDate)
+            {
+                return 0;
+            }
+
+            var prevCoupon = NearPastCoupon(paper, toDate);
+            var daysBetweenCoupons = (nextCoupon.Date - prevCoupon.Date).Days;
+            var diffDays = (toDate - prevCoupon.Date).Days;
+            var nkd = (decimal)diffDays / daysBetweenCoupons * nextCoupon.Value;
+            return nkd;
+        }
+
         public void CalculateIncome(BondIncomeInfo bondIncomeInfo, Settings settings, DateTime toDate)
         {
             var buyActions = bondIncomeInfo.PaperInPortfolio.Actions.OfType<BondBuyAction>();
@@ -41,10 +56,10 @@ namespace RfBondManagement.Engine.Calculations
 
         public void StartCalculateIncome(BondIncomeInfo bondIncomeInfo, BondBuyAction buyAction, Settings settings, DateTime toDate)
         {
-            var nkd = buyAction.NKD;
+            var nkd = buyAction.Nkd;
 
             decimal buyPrice = (bondIncomeInfo.PaperInPortfolio.Paper.BondPar * (bondIncomeInfo.PaperInPortfolio.AvgBuySum / 100) + nkd) *
-                               (1 + (settings?.Comissions / 100 ?? 0));
+                               (1 + (settings?.Commissions / 100 ?? 0));
 
             decimal balance = -buyPrice + bondIncomeInfo.PaperInPortfolio.Paper.BondPar;
 
@@ -91,20 +106,9 @@ namespace RfBondManagement.Engine.Calculations
                 return;
             }
 
-            var nextCoupon = NextNearestCoupon(buyAction.Paper, fromDate);
+            var nextCoupon = NearFutureCoupon(buyAction.Paper, fromDate);
 
-            decimal nkd;
-            if (nextCoupon.Date <= toDate)
-            {
-                nkd = nextCoupon.Value;
-            }
-            else
-            {
-                var nextFutureCoupon = NextFutureCoupon(buyAction.Paper, toDate);
-                var daysBetweenCoupons = (nextFutureCoupon.Date - nextCoupon.Date).Days;
-                var diffDays = (nextFutureCoupon.Date - toDate).Days;
-                nkd = (decimal)diffDays / daysBetweenCoupons * nextFutureCoupon.Value;
-            }
+            var nkd = nextCoupon.Date <= toDate ? nextCoupon.Value : CalculateNkd(buyAction.Paper, toDate);
 
             var nextDate = nextCoupon.Date;
 
@@ -122,16 +126,16 @@ namespace RfBondManagement.Engine.Calculations
             ContinueCalculateIncome(bondIncomeInfo, buyAction, settings, nextDate, toDate, ref balance);
         }
 
-        protected BondCoupon NextNearestCoupon(BaseBondPaper bond, DateTime toDate)
+        protected BondCoupon NearFutureCoupon(BaseBondPaper bond, DateTime toDate)
         {
             var coupons = bond.Coupons.Where(c => c.Date > toDate).ToList();
 
             return 0 == coupons.Count ? bond.Coupons.Last() : coupons.First();
         }
 
-        protected BondCoupon NextFutureCoupon(BaseBondPaper bond, DateTime toDate)
+        protected BondCoupon NearPastCoupon(BaseBondPaper bond, DateTime toDate)
         {
-            var coupons = bond.Coupons.Where(c => c.Date <= toDate).ToList();
+            var coupons = bond.Coupons.Where(c => c.Date < toDate).ToList();
 
             return 0 == coupons.Count ? bond.Coupons.Last() : coupons.Last();
         }

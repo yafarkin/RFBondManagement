@@ -36,7 +36,7 @@ namespace RfBondManagement.WinForm.Forms
             cbUntilMaturityDate.Checked = true;
 
             var settings = _db.LoadSettings();
-            tbComission.Text = settings.Comissions.ToString("F3");
+            tbComission.Text = settings.Commissions.ToString("F3");
             tbTax.Text = settings.Tax.ToString("F");
             tbInflation.Text = 0.ToString("F");
 
@@ -160,7 +160,7 @@ namespace RfBondManagement.WinForm.Forms
 
             var settings = new Settings
             {
-                Comissions = comissions,
+                Commissions = comissions,
                 Tax = tax
             };
 

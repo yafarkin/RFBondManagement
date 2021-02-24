@@ -10,7 +10,7 @@ namespace RfBondManagement.Engine.Database
 {
     public class DatabaseLayer : IDatabaseLayer
     {
-        protected LiteDatabase _database;
+        protected ILiteDatabase _database;
 
         protected ILiteCollection<Settings> _settingsSet;
         protected ILiteCollection<BaseStockPaper> _papersList;
@@ -56,7 +56,7 @@ namespace RfBondManagement.Engine.Database
                     {
                         IsBuy = true,
                         Paper = p,
-                        NKD = 29.56m,
+                        Nkd = 29.56m,
                         Date = new DateTime(2021, 2, 12),
                         Count = 1,
                         Price = p.LastPrice.Price,

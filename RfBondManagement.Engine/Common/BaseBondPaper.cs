@@ -14,7 +14,6 @@ namespace RfBondManagement.Engine.Common
         public decimal BondPar { get; set; }
         public string Currency { get; set; }
 
-        public decimal NKD { get; set; }
         public string Rating { get; set; }
 
         public List<BondCoupon> Coupons { get; set; }

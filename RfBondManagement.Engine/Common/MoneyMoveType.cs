@@ -6,6 +6,7 @@
         IncomeDividend = 2,
         IncomeCoupon = 3,
         IncomeSellOnMarket = 4,
+        IncomeCloseBond = 5,
 
         OutcomeBuyOnMarket = 101,
         OutcomeCommission = 102,

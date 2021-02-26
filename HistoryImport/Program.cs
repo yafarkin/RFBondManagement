@@ -15,6 +15,9 @@ namespace HistoryImport
             var logger = container.Resolve<ILogger>();
             logger.Info("Start import historical data");
 
+            var historyImport = container.Resolve<HistoryImport>();
+            historyImport.Run();
+
         }
     }
 }

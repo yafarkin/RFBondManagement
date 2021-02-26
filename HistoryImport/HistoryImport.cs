@@ -10,7 +10,7 @@ using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using Unity.Injection;
 
-namespace BackTesting
+namespace HistoryImport
 {
     public class HistoryImport
     {

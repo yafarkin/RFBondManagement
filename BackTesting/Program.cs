@@ -22,10 +22,6 @@ namespace BackTesting
             container.RegisterType<IBacktestEngine, BacktestEngine>();
 
             var logger = container.Resolve<ILogger>();
-            logger.Info("Start import historical data");
-
-            var historyImport = container.Resolve<HistoryImport>();
-            historyImport.Run();
 
             logger.Info("Start back testing");
 

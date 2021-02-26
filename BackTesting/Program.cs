@@ -22,7 +22,6 @@ namespace BackTesting
             container.RegisterType<IBacktestEngine, BacktestEngine>();
 
             var logger = container.Resolve<ILogger>();
-
             logger.Info("Start import historical data");
 
             var historyImport = container.Resolve<HistoryImport>();
@@ -31,14 +30,13 @@ namespace BackTesting
             logger.Info("Start back testing");
 
             var history = container.Resolve<IHistoryDatabaseLayer>();
-
             var strategy = container.Resolve<BuyAndHoldStrategy>();
 
-            decimal initialSum = 100000;
+            decimal initialSum = 10000;
 
             var portfolio = strategy.Configure(true, initialSum, 10000, new List<Tuple<string, decimal>>
             {
-                //new Tuple<string, decimal>("FXIT", 100),
+                //new Tuple<string, decimal>("SBERP", 100),
                 new Tuple<string, decimal>("SBERP", 20),
                 new Tuple<string, decimal>("MTSS", 20),
                 new Tuple<string, decimal>("FXIT", 15),
@@ -51,7 +49,7 @@ namespace BackTesting
                 Tax = 13
             });
 
-            var startDate = new DateTime(2015, 1, 1);
+            var startDate = new DateTime(2019, 1, 1);
             var endDate = new DateTime(2020, 12, 31);
 
             var backtest = container.Resolve<IBacktestEngine>();

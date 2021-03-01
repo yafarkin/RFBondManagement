@@ -5,7 +5,7 @@ namespace RfBondManagement.Engine.Common
 {
     public class DividendInfo
     {
-        public ObjectId DividendInfoId { get; set; }
+        public Guid Id { get; set; }
 
         public string Code { get; set; }
 

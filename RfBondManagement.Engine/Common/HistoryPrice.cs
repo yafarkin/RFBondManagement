@@ -1,10 +1,11 @@
-﻿using LiteDB;
+﻿using System;
+using LiteDB;
 
 namespace RfBondManagement.Engine.Common
 {
     public class HistoryPrice : PriceOnDate
     {
-        public ObjectId HistoryPriceId { get; set; }
+        public Guid Id { get; set; }
 
         public string PaperCode { get; set; }
 

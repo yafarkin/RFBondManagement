@@ -133,5 +133,11 @@ namespace RfBondManagement.Engine.Database
 
             //return _papersList.FindAll();
         }
+
+        public void Dispose()
+        {
+            _database?.Dispose();
+            _database = null;
+        }
     }
 }

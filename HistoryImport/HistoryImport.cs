@@ -5,6 +5,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Xml.Linq;
+using System.Xml.Serialization;
 using NLog;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
@@ -19,6 +22,8 @@ namespace HistoryImport
         protected const string SPLIT_FILE = "split.csv";
         protected const string DIVIDENDS_FILE = "dividends.csv";
 
+        public static readonly DateTime MinDate = new DateTime(2000, 1, 1);
+
         protected ILogger _logger;
         protected IHistoryDatabaseLayer _history;
 
@@ -30,7 +35,53 @@ namespace HistoryImport
             _history = history;
         }
 
-        public void Run()
+        public void RunOnline()
+        {
+            ImportCourseCbrf();
+        }
+
+        private void ImportCourseCbrf()
+        {
+            _logger.Info("Import from CbRf");
+
+            var usdCourse = _history.GetCourses("usd").ToDictionary(x => x.Date);
+
+            var imported = 0;
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            var serializer = new XmlSerializer(typeof(ValCurs));
+
+            var dateReq1 = MinDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
+            var dateReq2 = DateTime.Today.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
+            var url = $"http://www.cbr.ru/scripts/XML_dynamic.asp?date_req1={dateReq1}&date_req2={dateReq2}&VAL_NM_RQ=R01235";
+            var xdoc = XDocument.Load(url);
+            using (var reader = xdoc.CreateReader())
+            {
+                var course = serializer.Deserialize(reader) as ValCurs;
+                if (null == course?.Record || 0 == course.Record.Length)
+                {
+                    _logger.Error("Fail to retrieve course");
+                }
+                else
+                {
+                    foreach (var valCursRecord in course.Record)
+                    {
+                        var importDate = DateTimeOffset.Parse(valCursRecord.Date);
+                        importDate = importDate.ToUniversalTime().ToLocalTime();
+                        var courseValue = decimal.Parse(valCursRecord.Value) / valCursRecord.Nominal;
+
+                        _history.AddCurrencyCourse("usd", importDate, courseValue);
+                        imported++;
+                    }
+                }
+            }
+
+            _logger.Info($"Imported {imported} record(s)");
+
+            var usdCourse2 = _history.GetCourses("usd").ToDictionary(x => x.Date);
+        }
+
+        public void RunLocally()
         {
             if (!Directory.Exists(HISTORY_FOLDER))
             {
@@ -174,7 +225,7 @@ namespace HistoryImport
 
             _logger.Info("Import USDRUB course");
 
-            var courses = _history.GetUsdRubCourses().ToDictionary(x => x.Date);
+            var courses = _history.GetCourses("usd").ToDictionary(x => x.Date);
 
             using (var f = new StreamReader(file))
             {
@@ -210,7 +261,7 @@ namespace HistoryImport
 
                     if (!courses.ContainsKey(data.date))
                     {
-                        var c = _history.AddUsdRub(data.date, data.course);
+                        var c = _history.AddCurrencyCourse("usd", data.date, data.course);
                         courses.Add(data.date, c);
                         added++;
                     }

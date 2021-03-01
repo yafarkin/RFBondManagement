@@ -14,28 +14,28 @@ namespace RfBondManagement.Engine.Database
 
         protected ILiteCollection<BaseStockPaper> _papers;
         protected ILiteCollection<HistoryPrice> _prices;
-        protected ILiteCollection<CurrencyCourse> _usdRubCourse;
+        protected ILiteCollection<CurrencyCourse> _courses;
         protected ILiteCollection<SplitInfo> _splits;
         protected ILiteCollection<DividendInfo> _dividends;
 
-        protected IDictionary<DateTime, CurrencyCourse> _usdRubCourseCache;
+        protected IDictionary<DateTimeOffset, CurrencyCourse> _usdRubCourseCache;
 
         public HistoryDatabaseLayer()
         {
             _database = new LiteDatabase("history.db");
             _papers = _database.GetCollection<BaseStockPaper>("papers");
             _prices = _database.GetCollection<HistoryPrice>("prices");
-            _usdRubCourse = _database.GetCollection<CurrencyCourse>("usdrub_course");
+            _courses = _database.GetCollection<CurrencyCourse>("usdrub_course");
             _splits = _database.GetCollection<SplitInfo>("splits");
             _dividends = _database.GetCollection<DividendInfo>("dividends");
 
             _papers.EnsureIndex(p => p.Code);
             _prices.EnsureIndex(p => p.IndexCode);
-            _usdRubCourse.EnsureIndex(p => p.Date);
+            _courses.EnsureIndex(p => p.IndexCode);
             _splits.EnsureIndex(p => p.Date);
             _dividends.EnsureIndex(p => p.CutOffDate);
 
-            _usdRubCourseCache = GetUsdRubCourses().ToDictionary(x => x.Date);
+            _usdRubCourseCache = GetCourses("usd").ToDictionary(x => x.Date);
         }
 
         public IList<DividendInfo> GetDividendInfo()
@@ -48,9 +48,10 @@ namespace RfBondManagement.Engine.Database
             return _splits.FindAll().ToList();
         }
 
-        public IList<CurrencyCourse> GetUsdRubCourses()
+        public IList<CurrencyCourse> GetCourses(string currency)
         {
-            return _usdRubCourse.FindAll().ToList();
+            //return _courses.Find(c => c.Currency == currency).ToList();
+            return _courses.FindAll().ToList();
         }
 
         public IList<BaseStockPaper> GetHistoryPapers()
@@ -121,7 +122,6 @@ namespace RfBondManagement.Engine.Database
             {
                 d = new DividendInfo
                 {
-                    DividendInfoId = ObjectId.NewObjectId(),
                     Code = code,
                     T2Date = t2Date,
                     CutOffDate = cutoffDate,
@@ -147,7 +147,6 @@ namespace RfBondManagement.Engine.Database
             {
                 s = new SplitInfo
                 {
-                    SplitInfoId = ObjectId.NewObjectId(),
                     Date = date,
                     Code = code,
                     Multiplier = multiplier
@@ -164,24 +163,34 @@ namespace RfBondManagement.Engine.Database
             return s;
         }
 
-        public CurrencyCourse AddUsdRub(DateTime date, decimal course)
+        public CurrencyCourse AddCurrencyCourse(string currency, DateTimeOffset date, decimal course)
         {
-            var c = _usdRubCourse.FindOne(p => p.Date == date);
+            date = date.Date;
+            var indexCode = $"{currency}{date}";
+
+            var c = _courses.FindOne(p => p.IndexCode == indexCode);
             if (null == c)
             {
                 c = new CurrencyCourse
                 {
-                    UsdRubCourseId = ObjectId.NewObjectId(),
+                    Currency = currency,
                     Date = date,
                     Course = course
                 };
 
-                _usdRubCourse.Insert(c);
+                //var q = _courses.Find(x => x.Date == date).ToList();
+
+                _courses.Insert(c);
+                var d = _courses.FindOne(p => p.IndexCode == c.IndexCode);
+                if (null == d || d.Date != c.Date)
+                {
+
+                }
             }
             else
             {
                 c.Course = course;
-                _usdRubCourse.Update(c);
+                _courses.Update(c);
             }
 
             return c;
@@ -191,7 +200,6 @@ namespace RfBondManagement.Engine.Database
         {
             if (null == _papers.FindOne(p => p.Code == paper.Code))
             {
-                paper.BaseStockPaperId = ObjectId.NewObjectId();
                 _papers.Insert(paper);
             }
         }
@@ -201,7 +209,6 @@ namespace RfBondManagement.Engine.Database
             var hp = _prices.FindOne(p => p.IndexCode == historyPrice.IndexCode);
             if (null == hp)
             {
-                historyPrice.HistoryPriceId = ObjectId.NewObjectId();
                 _prices.Insert(historyPrice);
                 return true;
             }
@@ -216,6 +223,12 @@ namespace RfBondManagement.Engine.Database
                 _prices.Update(hp);
                 return false;
             }
+        }
+
+        public void Dispose()
+        {
+            _database?.Dispose();
+            _database = null;
         }
     }
 }

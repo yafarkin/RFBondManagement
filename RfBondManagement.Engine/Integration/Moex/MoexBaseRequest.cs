@@ -1,4 +1,5 @@
-﻿using RestSharp;
+﻿using Newtonsoft.Json;
+using RestSharp;
 
 namespace RfBondManagement.Engine.Integration.Moex
 {
@@ -21,9 +22,11 @@ namespace RfBondManagement.Engine.Integration.Moex
         {
             var request = new RestRequest($"{url}.json", _method) {RequestFormat = DataFormat.Json};
 
-            var result = _client.Execute<T>(request);
+            var response = _client.Execute(request);
 
-            return result.Data;
+            var result = JsonConvert.DeserializeObject<T>(response.Content);
+
+            return result;
         }
     }
 }

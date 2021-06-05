@@ -1,0 +1,9 @@
+https://iss.moex.com/iss/reference/
+
+https://iss.moex.com/iss/securities/SBERP.xml
+https://iss.moex.com/iss/history/engines/stock/markets/shares/securities/SBERP.xml?start=0
+https://iss.moex.com/iss/history/engines/stock/markets/shares/securities/SBERP.xml?from=2021-02-1
+https://iss.moex.com/iss/history/engines/stock/markets/shares/securities/SBERP.xml?limit=100&date=2021-02-25&start=0
+
+https://iss.moex.com/iss/statistics/engines/currency/markets/selt/rates
+

@@ -16,8 +16,6 @@ namespace BackTesting.Strategies
         protected decimal _initialSum;
         protected decimal _monthlyIncome;
 
-        protected Portfolio _portfolio;
-
         protected DateTime _nextMonthlyIncome;
 
         protected Dictionary<string, BaseStockPaper> _papers;

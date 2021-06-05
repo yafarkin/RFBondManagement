@@ -8,12 +8,12 @@ namespace RfBondManagement.Engine.Integration.Moex
 {
     public class JsonBaseConverter : JsonConverter
     {
-        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             throw new NotImplementedException();
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             if (reader.TokenType == JsonToken.Null)
             {
@@ -25,12 +25,11 @@ namespace RfBondManagement.Engine.Integration.Moex
             var columnsToken = JToken.Load(reader);
             var dataToken = JToken.Load(reader);
 
-            var result = new JsonBase
-            {
-                Metadata = new List<JsonBaseMetadata>(),
-                Columns = new List<string>(),
-                Data = new List<Dictionary<string, string>>()
-            };
+            var result = Activator.CreateInstance(objectType) as JsonBase;
+
+            result.Metadata = new List<JsonBaseMetadata>();
+            result.Columns = new List<string>();
+            result.Data = new List<Dictionary<string, string>>();
 
             var metadatas = JObject.Load(metadataToken.First.CreateReader());
             foreach (var metaItem in metadatas)

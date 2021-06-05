@@ -4,9 +4,13 @@ namespace RfBondManagement.Engine.Integration.Moex
 {
     public class MoexBondCouponsRequest : MoexBaseRequest<JsonBondization>
     {
-        public override JsonBondization Read(string tiker)
+        protected string _ticker;
+
+        public MoexBondCouponsRequest(string ticker)
         {
-            return BaseRead($"/securities/{tiker}/bondization");
+            _ticker = ticker;
         }
+
+        protected override string _requestUrl => $"/securities/{_ticker}/bondization";
     }
 }

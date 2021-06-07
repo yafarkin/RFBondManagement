@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using System;
+using System.Linq;
+using NUnit.Framework;
 using RfBondManagement.Engine.Integration.Moex;
 using Shouldly;
 
@@ -68,13 +70,33 @@ namespace RfBondManagement.UnitTests
 
 
         [Test]
-        public void MapStockTest()
+        public void MapShareTest()
         {
             var request = new MoexPaperDefinitionRequest("SBERP");
             var jsonPaper = request.Read();
-            var localPaper = StockPaperConverter.Map(jsonPaper);
+            var sharePaper = StockPaperConverter.Map(jsonPaper);
 
-            localPaper.Isin.ShouldBe("RU0009029557");
+            sharePaper.Isin.ShouldBe("RU0009029557");
+        }
+
+        [Test]
+        public void MapBondTest()
+        {
+            var bondRequest = new MoexPaperDefinitionRequest("SU26208RMFS7");
+            var couponRequest = new MoexBondCouponsRequest("SU26208RMFS7");
+
+            var jsonBond = bondRequest.Read();
+            var jsonCoupon = couponRequest.Read();
+
+            var bondPaper = StockPaperConverter.Map(jsonBond, jsonCoupon);
+            bondPaper.ShouldNotBe(null);
+
+            bondPaper.Isin.ShouldBe("RU000A0JS4M5");
+            bondPaper.Coupons.Count.ShouldBe(14);
+            bondPaper.Coupons.First().Date.ShouldBe(new DateTime(2012, 9, 5));
+            bondPaper.Coupons.First().Value.ShouldBe(37.4m);
+            bondPaper.Coupons.Last().Date.ShouldBe(new DateTime(2019, 2, 27));
+            bondPaper.Coupons.Last().Value.ShouldBe(37.4m);
         }
 
     }

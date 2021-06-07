@@ -93,5 +93,13 @@ namespace RfBondManagement.WinForm.Forms
                 f.ShowDialog();
             }
         }
+
+        private void menuItemPapers_Click(object sender, EventArgs e)
+        {
+            using (var f = _container.Resolve<PaperListForm>())
+            {
+                f.ShowDialog();
+            }
+        }
     }
 }

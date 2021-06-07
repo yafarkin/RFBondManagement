@@ -54,6 +54,8 @@ namespace RfBondManagement.WinForm.Forms
             this.btnEditPaper = new System.Windows.Forms.Button();
             this.btnAddPaper = new System.Windows.Forms.Button();
             this.lblPaperList = new System.Windows.Forms.Label();
+            this.menuItemDictionary = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemPapers = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenu.SuspendLayout();
             this.pnlPaperDetails.SuspendLayout();
             this.pnlPapers.SuspendLayout();
@@ -64,7 +66,8 @@ namespace RfBondManagement.WinForm.Forms
             // 
             this.mainMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuItemFile,
-            this.menuItemSettings});
+            this.menuItemSettings,
+            this.menuItemDictionary});
             this.mainMenu.Location = new System.Drawing.Point(0, 0);
             this.mainMenu.Name = "mainMenu";
             this.mainMenu.Size = new System.Drawing.Size(844, 24);
@@ -266,6 +269,21 @@ namespace RfBondManagement.WinForm.Forms
             this.lblPaperList.TabIndex = 0;
             this.lblPaperList.Text = "Список бумаг";
             // 
+            // menuItemDictionary
+            // 
+            this.menuItemDictionary.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuItemPapers});
+            this.menuItemDictionary.Name = "menuItemDictionary";
+            this.menuItemDictionary.Size = new System.Drawing.Size(94, 20);
+            this.menuItemDictionary.Text = "Справочники";
+            // 
+            // menuItemPapers
+            // 
+            this.menuItemPapers.Name = "menuItemPapers";
+            this.menuItemPapers.Size = new System.Drawing.Size(180, 22);
+            this.menuItemPapers.Text = "Бумаги";
+            this.menuItemPapers.Click += new System.EventHandler(this.menuItemPapers_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -316,6 +334,8 @@ namespace RfBondManagement.WinForm.Forms
         private System.Windows.Forms.ColumnHeader chIncome;
         private System.Windows.Forms.ColumnHeader chPositiveDate;
         private System.Windows.Forms.ToolStripMenuItem menuItemBondCalculator;
+        private System.Windows.Forms.ToolStripMenuItem menuItemDictionary;
+        private System.Windows.Forms.ToolStripMenuItem menuItemPapers;
     }
 }
 

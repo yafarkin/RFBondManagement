@@ -56,6 +56,18 @@ namespace RfBondManagement.UnitTests
         }
 
         [Test]
+        public void DividendsRequestTest()
+        {
+            var request = new MoexDividendsRequest("SBER");
+            var dividends = request.Read();
+
+            dividends.ShouldNotBeNull();
+            var div = dividends.Dividends.GetDataForString("secid", "SBER", "isin");
+            div.ShouldBe("RU0009029540");
+        }
+
+
+        [Test]
         public void MapStockTest()
         {
             var request = new MoexPaperDefinitionRequest("SBERP");
@@ -64,5 +76,6 @@ namespace RfBondManagement.UnitTests
 
             localPaper.Isin.ShouldBe("RU0009029557");
         }
+
     }
 }

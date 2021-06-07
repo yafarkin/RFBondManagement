@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace RfBondManagement.Engine.Integration.Moex.Dto
@@ -16,7 +17,7 @@ namespace RfBondManagement.Engine.Integration.Moex.Dto
         public List<Dictionary<string, string>> Data { get; set; }
 
         public Dictionary<string, string> GetDataFor(string key, string value)
-        {
+        { 
             foreach (var dataItem in Data)
             {
                 if (dataItem.ContainsKey(key) && dataItem[key] == value)
@@ -27,6 +28,40 @@ namespace RfBondManagement.Engine.Integration.Moex.Dto
 
             return null;
         }
+
+        public string GetDataForString(string key, string value, string field)
+        {
+            var l = GetDataFor(key, value);
+            if (null == l || !l.ContainsKey(field))
+            {
+                return null;
+            }
+
+            return l[field];
+        }
+
+        public DateTime? GetDataForDateTime(string key, string value, string field)
+        {
+            var s = GetDataForString(key, value, field);
+            if (null == s)
+            {
+                return null;
+            }
+
+            return DateTime.TryParse(s, out var r) ? (DateTime?) r : null;
+        }
+
+        public decimal? GetDataForDecimal(string key, string value, string field)
+        {
+            var s = GetDataForString(key, value, field);
+            if (null == s)
+            {
+                return null;
+            }
+
+            return decimal.TryParse(s, out var r) ? (decimal?)r : null;
+        }
+
 
         public string GetDataFor(string key)
         {

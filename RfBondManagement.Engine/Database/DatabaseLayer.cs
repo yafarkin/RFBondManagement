@@ -74,7 +74,7 @@ namespace RfBondManagement.Engine.Database
             r.Add(new BaseBondPaper
             {
                 Name = "ОФЗ 26223",
-                ISIN = "RU000A0ZYU88",
+                Isin = "RU000A0ZYU88",
                 Code = "SU26223RMFS6",
                 PublishDate = new DateTime(2018, 2, 21),
                 MaturityDate = new DateTime(2024, 2, 28),

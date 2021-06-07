@@ -15,7 +15,7 @@ namespace RfBondManagement.UnitTests
 
             paper.ShouldNotBeNull();
             var name = paper.Description.GetDataFor("name", "NAME");
-            var isin = paper.Description.GetDataFor("name", "ISIN");
+            var isin = paper.Description.GetDataFor("name", "Isin");
             isin["value"].ShouldBe("RU0009029557");
             name["value"].ShouldBe("Сбербанк России ПАО ап");
 
@@ -24,7 +24,7 @@ namespace RfBondManagement.UnitTests
 
             paper.ShouldNotBeNull();
             name = paper.Description.GetDataFor("name", "NAME");
-            isin = paper.Description.GetDataFor("name", "ISIN");
+            isin = paper.Description.GetDataFor("name", "Isin");
 
             name["value"].ShouldBe("ОФЗ-ПД 26227 17/07/24");
             isin["value"].ShouldBe("RU000A1007F4");
@@ -53,6 +53,16 @@ namespace RfBondManagement.UnitTests
             var response = request.CursorRead();
 
             response.ShouldNotBeNull();
+        }
+
+        [Test]
+        public void MapStockTest()
+        {
+            var request = new MoexPaperDefinitionRequest("SBERP");
+            var jsonPaper = request.Read();
+            var localPaper = StockPaperConverter.Map(jsonPaper);
+
+            localPaper.Isin.ShouldBe("RU0009029557");
         }
     }
 }

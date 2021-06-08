@@ -99,5 +99,33 @@ namespace RfBondManagement.UnitTests
             bondPaper.Coupons.Last().Value.ShouldBe(37.4m);
         }
 
+        [Test]
+        public void GetLastPriceTest()
+        {
+            // price: PREVADMITTEDQUOTE
+
+            // share:
+            // https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/SBERP.json?iss.meta=off&securities.columns=SECID,PREVADMITTEDQUOTE
+
+            //etf:
+            // https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQTF/securities/FXIT.json
+
+            // ofz:
+            // https://iss.moex.com/iss/engines/stock/markets/bonds/boards/TQOB/securities/SU29006RMFS2.json
+
+            // bond:
+            // https://iss.moex.com/iss/engines/stock/markets/bonds/boards/TQCB/securities/RU000A1018X4.json
+
+            // history, field CLOSE
+            // http://iss.moex.com/iss/history/engines/stock/markets/shares/boards/TQBR/securities/SBER.json?iss.json=extended&from=2000-01-01
+
+        }
+
+        [Test]
+        public void GetNextCouponTest()
+        {
+
+        }
+
     }
 }

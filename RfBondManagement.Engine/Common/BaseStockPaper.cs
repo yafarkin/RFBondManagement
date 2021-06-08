@@ -42,7 +42,7 @@ namespace RfBondManagement.Engine.Common
         public DateTime? IssueDate { get; set; }
 
         /// <summary>
-        /// Вид\категория ценной бумагни
+        /// Вид/категория ценной бумагни
         /// </summary>
         public string TypeName { get; set; }
 
@@ -60,6 +60,21 @@ namespace RfBondManagement.Engine.Common
         /// Тип инструмента
         /// </summary>
         public string GroupName { get; set; }
+
+        public bool IsShare => string.Equals("stock_shares", Group, StringComparison.InvariantCultureIgnoreCase);
+
+        public bool IsPreferedShare => IsShare && string.Equals("preferred_share", Type, StringComparison.InvariantCultureIgnoreCase);
+
+        public bool IsEtf => string.Equals("stock_etf", Group, StringComparison.InvariantCultureIgnoreCase);
+
+        public bool IsBond => string.Equals("stock_bonds", Group, StringComparison.InvariantCultureIgnoreCase);
+
+        public bool IsOfzBond => IsBond && string.Equals("ofz_bond", Type, StringComparison.InvariantCultureIgnoreCase);
+
+        public IList<string> Boards { get; }
+
+        public string PreferedBoard { get; }
+
 
         [Obsolete]
         public string Code { get; set; }

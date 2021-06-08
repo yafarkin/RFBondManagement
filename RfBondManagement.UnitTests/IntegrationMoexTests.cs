@@ -68,7 +68,6 @@ namespace RfBondManagement.UnitTests
             div.ShouldBe("RU0009029540");
         }
 
-
         [Test]
         public void MapShareTest()
         {
@@ -109,30 +108,54 @@ namespace RfBondManagement.UnitTests
         [Test]
         public void GetLastPriceTest()
         {
-            var request = new MoexLastPriceRequest("shares", "TQBR", "SBERP");
-            var response = request.Read();
-            var lastPrice = response.Securities.GetDataForDecimal("SECID", "SBERP", "PREVADMITTEDQUOTE");
+            var requestPaper = new MoexPaperDefinitionRequest("SBERP");
+            var jsonPaper = requestPaper.Read();
+            var paper = StockPaperConverter.Map(jsonPaper);
 
+            var requestPrice = new MoexLastPriceRequest(paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId);
+            var response = requestPrice.Read();
+
+            var lastPrice = response.Securities.GetDataForDecimal("SECID", paper.SecId, "PREVADMITTEDQUOTE");
             lastPrice.ShouldNotBeNull();
             lastPrice.Value.ShouldBeGreaterThan(0.01m);
 
-            // price: PREVADMITTEDQUOTE
+            requestPaper = new MoexPaperDefinitionRequest("FXIT");
+            jsonPaper = requestPaper.Read();
+            paper = StockPaperConverter.Map(jsonPaper);
 
-            // share:
-            // https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/SBERP.json?iss.meta=off&securities.columns=SECID,PREVADMITTEDQUOTE
+            requestPrice = new MoexLastPriceRequest(paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId);
+            response = requestPrice.Read();
 
-            //etf:
-            // https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQTF/securities/FXIT.json
+            lastPrice = response.Securities.GetDataForDecimal("SECID", paper.SecId, "PREVADMITTEDQUOTE");
+            lastPrice.ShouldNotBeNull();
+            lastPrice.Value.ShouldBeGreaterThan(0.01m);
 
-            // ofz:
-            // https://iss.moex.com/iss/engines/stock/markets/bonds/boards/TQOB/securities/SU29006RMFS2.json
+            // ofz bond
+            requestPaper = new MoexPaperDefinitionRequest("SU29006RMFS2");
+            jsonPaper = requestPaper.Read();
+            paper = StockPaperConverter.Map(jsonPaper);
 
-            // bond:
-            // https://iss.moex.com/iss/engines/stock/markets/bonds/boards/TQCB/securities/RU000A1018X4.json
+            requestPrice = new MoexLastPriceRequest(paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId);
+            response = requestPrice.Read();
+
+            lastPrice = response.Securities.GetDataForDecimal("SECID", paper.SecId, "PREVADMITTEDQUOTE");
+            lastPrice.ShouldNotBeNull();
+            lastPrice.Value.ShouldBeGreaterThan(0.01m);
+
+            // corporate bond
+            requestPaper = new MoexPaperDefinitionRequest("RU000A1018X4");
+            jsonPaper = requestPaper.Read();
+            paper = StockPaperConverter.Map(jsonPaper);
+
+            requestPrice = new MoexLastPriceRequest(paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId);
+            response = requestPrice.Read();
+
+            lastPrice = response.Securities.GetDataForDecimal("SECID", paper.SecId, "PREVADMITTEDQUOTE");
+            lastPrice.ShouldNotBeNull();
+            lastPrice.Value.ShouldBeGreaterThan(0.01m);
 
             // history, field CLOSE
             // http://iss.moex.com/iss/history/engines/stock/markets/shares/boards/TQBR/securities/SBER.json?iss.json=extended&from=2000-01-01
-
         }
 
         [Test]

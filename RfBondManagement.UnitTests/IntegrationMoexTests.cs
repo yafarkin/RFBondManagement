@@ -77,6 +77,9 @@ namespace RfBondManagement.UnitTests
             var sharePaper = StockPaperConverter.Map(jsonPaper);
 
             sharePaper.Isin.ShouldBe("RU0009029557");
+            sharePaper.IsShare.ShouldBeTrue();
+            sharePaper.IsPreferedShare.ShouldBeTrue();
+            sharePaper.PrimaryBoard.BoardId.ShouldBe("TQBR");
         }
 
         [Test]
@@ -97,11 +100,22 @@ namespace RfBondManagement.UnitTests
             bondPaper.Coupons.First().Value.ShouldBe(37.4m);
             bondPaper.Coupons.Last().Date.ShouldBe(new DateTime(2019, 2, 27));
             bondPaper.Coupons.Last().Value.ShouldBe(37.4m);
+
+            bondPaper.IsBond.ShouldBeTrue();
+            bondPaper.IsOfzBond.ShouldBeTrue();
+            bondPaper.PrimaryBoard.BoardId.ShouldBe("TQOB");
         }
 
         [Test]
         public void GetLastPriceTest()
         {
+            var request = new MoexLastPriceRequest("shares", "TQBR", "SBERP");
+            var response = request.Read();
+            var lastPrice = response.Securities.GetDataForDecimal("SECID", "SBERP", "PREVADMITTEDQUOTE");
+
+            lastPrice.ShouldNotBeNull();
+            lastPrice.Value.ShouldBeGreaterThan(0.01m);
+
             // price: PREVADMITTEDQUOTE
 
             // share:

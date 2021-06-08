@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Newtonsoft.Json;
 
 namespace RfBondManagement.Engine.Integration.Moex.Dto
@@ -59,9 +60,8 @@ namespace RfBondManagement.Engine.Integration.Moex.Dto
                 return null;
             }
 
-            return decimal.TryParse(s, out var r) ? (decimal?)r : null;
+            return decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var r) ? (decimal?)r : null;
         }
-
 
         public string GetDataFor(string key)
         {

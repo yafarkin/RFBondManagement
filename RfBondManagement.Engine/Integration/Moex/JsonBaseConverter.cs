@@ -21,9 +21,38 @@ namespace RfBondManagement.Engine.Integration.Moex
             }
 
             reader.Read();
-            var metadataToken = JToken.Load(reader);
-            var columnsToken = JToken.Load(reader);
-            var dataToken = JToken.Load(reader);
+
+            JToken metadataToken = null;
+            JToken columnsToken = null;
+            JToken dataToken = null;
+
+            while (null == metadataToken || null == columnsToken || null == dataToken)
+            {
+                var v = reader.Value + string.Empty;
+                if (string.IsNullOrWhiteSpace(v))
+                {
+                    break;
+                }
+
+                var token = JToken.Load(reader);
+
+                if (v == "columns")
+                {
+                    columnsToken = token;
+                }
+                else if (v == "data")
+                {
+                    dataToken = token;
+                }
+                else if (v == "metadata")
+                {
+                    metadataToken = token;
+                }
+            }
+
+            //var metadataToken = JToken.Load(reader);
+            //var columnsToken = JToken.Load(reader);
+            //var dataToken = JToken.Load(reader);
 
             var result = Activator.CreateInstance(objectType) as JsonBase;
 
@@ -31,36 +60,45 @@ namespace RfBondManagement.Engine.Integration.Moex
             result.Columns = new List<string>();
             result.Data = new List<Dictionary<string, string>>();
 
-            var metadatas = JObject.Load(metadataToken.First.CreateReader());
-            foreach (var metaItem in metadatas)
+            if (metadataToken != null)
             {
-                var metaData = new JsonBaseMetadata
+                var metadatas = JObject.Load(metadataToken.First.CreateReader());
+                foreach (var metaItem in metadatas)
                 {
-                    Name = metaItem.Key,
-                    Properties = metaItem.Value?.ToObject<JsonBaseMetadataProperty>()
-                };
+                    var metaData = new JsonBaseMetadata
+                    {
+                        Name = metaItem.Key,
+                        Properties = metaItem.Value?.ToObject<JsonBaseMetadataProperty>()
+                    };
 
-                result.Metadata.Add(metaData);
-            }
-
-            var columns = JArray.Load(columnsToken.First.CreateReader());
-            foreach (var column in columns)
-            {
-                result.Columns.Add(column.Value<string>());
-            }
-
-            var datas = JArray.Load(dataToken.First.CreateReader());
-            foreach (var dataItem in datas)
-            {
-                var dataLineItems = JArray.Load(dataItem.CreateReader());
-                var dataResultItem = new Dictionary<string, string>();
-
-                for (var i = 0; i < dataLineItems.Count; i++)
-                {
-                    dataResultItem.Add(result.Columns[i], dataLineItems[i].Value<string>());
+                    result.Metadata.Add(metaData);
                 }
+            }
 
-                result.Data.Add(dataResultItem);
+            if (columnsToken != null)
+            {
+                var columns = JArray.Load(columnsToken.First.CreateReader());
+                foreach (var column in columns)
+                {
+                    result.Columns.Add(column.Value<string>());
+                }
+            }
+
+            if (dataToken != null)
+            {
+                var datas = JArray.Load(dataToken.First.CreateReader());
+                foreach (var dataItem in datas)
+                {
+                    var dataLineItems = JArray.Load(dataItem.CreateReader());
+                    var dataResultItem = new Dictionary<string, string>();
+
+                    for (var i = 0; i < dataLineItems.Count; i++)
+                    {
+                        dataResultItem.Add(result.Columns[i], dataLineItems[i].Value<string>());
+                    }
+
+                    result.Data.Add(dataResultItem);
+                }
             }
 
             return result;

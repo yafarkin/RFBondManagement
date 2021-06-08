@@ -1,4 +1,6 @@
-﻿using RfBondManagement.Engine.Integration.Moex.Dto;
+﻿using System;
+using System.Collections.Generic;
+using RfBondManagement.Engine.Integration.Moex.Dto;
 
 namespace RfBondManagement.Engine.Integration.Moex
 {
@@ -9,6 +11,12 @@ namespace RfBondManagement.Engine.Integration.Moex
         protected string _ticker;
 
         protected override string _requestUrl => $"/engines/stock/markets/{_market}/boards/{_board}/securities/{_ticker}";
+
+        protected override IEnumerable<Tuple<string, string>> _additionalParams => new List<Tuple<string, string>>
+        {
+            new Tuple<string, string>("iss.meta", "off"),
+            new Tuple<string, string>("securities.columns", "SECID,PREVADMITTEDQUOTE")
+        };
 
         public MoexLastPriceRequest(string market, string board, string ticker)
         {

@@ -26,6 +26,23 @@ namespace RfBondManagement.Engine.Integration.Moex
             result.Group = paper.Description.GetDataForString("name", "GROUP", "value");
             result.Type = paper.Description.GetDataForString("name", "TYPE", "value");
 
+            result.Boards = new List<PaperBoard>(paper.Boards.Data.Count);
+            foreach (var board in paper.Boards.Data)
+            {
+                var paperBoard = new PaperBoard();
+                paperBoard.BoardId = board["boardid"];
+                paperBoard.Title = board["title"];
+                paperBoard.Market = board["market"];
+                paperBoard.Engine = board["engine"];
+                paperBoard.IsTraded = board["is_traded"] == "1";
+                paperBoard.HistoryFrom = Convert.ToDateTime(board["history_from"]);
+                paperBoard.HistoryTill = Convert.ToDateTime(board["history_till"]);
+                paperBoard.IsPrimary = board["is_primary"] == "1";
+                paperBoard.Currency = board["currencyid"];
+
+                result.Boards.Add(paperBoard);
+            }
+
             return result;
         }
 

@@ -15,6 +15,8 @@ namespace RfBondManagement.Engine.Integration.Moex
 
         protected abstract string _requestUrl { get; }
 
+        protected virtual IEnumerable<Tuple<string, string>> _additionalParams { get; }
+
         protected MoexBaseRequest()
         {
             _client = new RestClient(BASE_MOEX_URL);
@@ -23,11 +25,21 @@ namespace RfBondManagement.Engine.Integration.Moex
         public virtual TMoex Read(IEnumerable<Tuple<string, string>> getParams = null)
         {
             var request = new RestRequest($"{BASE_MOEX_URL}{_requestUrl}.json", _method) {RequestFormat = DataFormat.Json};
+
+            var ap = _additionalParams;
+            if (ap != null)
+            {
+                foreach (var p in ap)
+                {
+                    request.AddParameter(p.Item1, p.Item2, ParameterType.QueryString);
+                }
+            }
+
             if (getParams != null)
             {
-                foreach (var getParam in getParams)
+                foreach (var p in getParams)
                 {
-                    request.AddParameter(getParam.Item1, getParam.Item2, ParameterType.QueryString);
+                    request.AddParameter(p.Item1, p.Item2, ParameterType.QueryString);
                 }
             }
 

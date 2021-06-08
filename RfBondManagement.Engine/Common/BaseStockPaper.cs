@@ -71,9 +71,9 @@ namespace RfBondManagement.Engine.Common
 
         public bool IsOfzBond => IsBond && string.Equals("ofz_bond", Type, StringComparison.InvariantCultureIgnoreCase);
 
-        public IList<string> Boards { get; }
+        public IList<PaperBoard> Boards { get; set; }
 
-        public string PreferedBoard { get; }
+        public PaperBoard PrimaryBoard => Boards?.Single(b => b.IsPrimary);
 
 
         [Obsolete]

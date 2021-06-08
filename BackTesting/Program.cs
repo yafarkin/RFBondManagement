@@ -9,7 +9,6 @@ using RfBondManagement.Engine;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using Unity;
-using Unity.Storage;
 
 namespace BackTesting
 {
@@ -92,18 +91,18 @@ namespace BackTesting
 
             foreach (var bp in portfolio.Bonds)
             {
-                var currPrice = history.GetNearHistoryPriceOnDate(bp.Paper.Code, nearEndDate);
+                var currPrice = history.GetNearHistoryPriceOnDate(bp.Paper.SecId, nearEndDate);
                 var totalSum = bp.Count * currPrice.Price;
                 var part = totalSum / statistic.PortfolioCost;
-                logger.Info($"Bond {bp.Paper.Code}; count: {bp.Count}; part in portfolio: {part:P}; avg price: {bp.AvgBuySum:C} (market: {currPrice.Price:C}); sum: {bp.Count * bp.AvgBuySum:C} (market: {totalSum:C})");
+                logger.Info($"Bond {bp.Paper.SecId}; count: {bp.Count}; part in portfolio: {part:P}; avg price: {bp.AvgBuySum:C} (market: {currPrice.Price:C}); sum: {bp.Count * bp.AvgBuySum:C} (market: {totalSum:C})");
             }
 
             foreach (var sp in portfolio.Shares)
             {
-                var currPrice = history.GetNearHistoryPriceOnDate(sp.Paper.Code, nearEndDate);
+                var currPrice = history.GetNearHistoryPriceOnDate(sp.Paper.SecId, nearEndDate);
                 var totalSum = sp.Count * currPrice.Price;
                 var part = totalSum / statistic.PortfolioCost;
-                logger.Info($"Share {sp.Paper.Code}; count: {sp.Count}; part in portfolio: {part:P}; avg price: {sp.AvgBuySum:C} (market: {currPrice.Price:C}); sum: {sp.Count * sp.AvgBuySum:C} (market: {totalSum:C})");
+                logger.Info($"Share {sp.Paper.SecId}; count: {sp.Count}; part in portfolio: {part:P}; avg price: {sp.AvgBuySum:C} (market: {currPrice.Price:C}); sum: {sp.Count * sp.AvgBuySum:C} (market: {totalSum:C})");
             }
         }
     }

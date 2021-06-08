@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using LiteDB;
-using NLog.Targets;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 
@@ -75,7 +74,7 @@ namespace RfBondManagement.Engine.Database
             {
                 Name = "ОФЗ 26223",
                 Isin = "RU000A0ZYU88",
-                Code = "SU26223RMFS6",
+                SecId = "SU26223RMFS6",
                 PublishDate = new DateTime(2018, 2, 21),
                 MaturityDate = new DateTime(2024, 2, 28),
                 Price = new List<PriceOnDate>

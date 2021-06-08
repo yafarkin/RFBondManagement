@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace RfBondManagement.Engine.Common
 {
-    public abstract class BaseStockPaper
+    public class BaseStockPaper
     {
         /// <summary>
         /// Внутренний идентификатор
@@ -42,7 +42,7 @@ namespace RfBondManagement.Engine.Common
         public DateTime? IssueDate { get; set; }
 
         /// <summary>
-        /// Вид/категория ценной бумагни
+        /// Вид/категория ценной бумаги
         /// </summary>
         public string TypeName { get; set; }
 
@@ -71,13 +71,12 @@ namespace RfBondManagement.Engine.Common
 
         public bool IsOfzBond => IsBond && string.Equals("ofz_bond", Type, StringComparison.InvariantCultureIgnoreCase);
 
+        public bool IsDR => string.Equals("stock_dr", Group, StringComparison.InvariantCultureIgnoreCase);
+
         public IList<PaperBoard> Boards { get; set; }
 
         public PaperBoard PrimaryBoard => Boards?.Single(b => b.IsPrimary);
 
-
-        [Obsolete]
-        public string Code { get; set; }
 
         [Obsolete]
         public List<PriceOnDate> Price { get; set; }

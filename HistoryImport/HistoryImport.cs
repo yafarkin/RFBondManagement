@@ -349,25 +349,25 @@ namespace HistoryImport
 
                     lastParsedDate = data.datetime;
 
-                    if (null == lastPaper || lastPaper.Code != data.ticker)
+                    if (null == lastPaper || lastPaper.SecId != data.ticker)
                     {
-                        var paper = papers.FirstOrDefault(p => p.Code == data.ticker);
+                        var paper = papers.FirstOrDefault(p => p.SecId == data.ticker);
                         if (null == paper)
                         {
                             if (_allShare.HasValue)
                             {
                                 if (_allShare == true)
                                 {
-                                    paper = new BaseSharePaper
+                                    paper = new BaseStockPaper
                                     {
-                                        Code = data.ticker
+                                        SecId = data.ticker
                                     };
                                 }
                                 else
                                 {
-                                    paper = new BaseBondPaper()
+                                    paper = new BaseBondPaper
                                     {
-                                        Code = data.ticker
+                                        SecId = data.ticker
                                     };
                                 }
                             }
@@ -381,9 +381,9 @@ namespace HistoryImport
 
                                     if (o.Key == ConsoleKey.D1 || o.Key == ConsoleKey.D3)
                                     {
-                                        paper = new BaseSharePaper
+                                        paper = new BaseStockPaper
                                         {
-                                            Code = data.ticker
+                                            SecId = data.ticker
                                         };
 
                                         if (o.Key == ConsoleKey.D3)
@@ -395,9 +395,9 @@ namespace HistoryImport
                                     }
                                     else if (o.Key == ConsoleKey.D2 || o.Key == ConsoleKey.D4)
                                     {
-                                        paper = new BaseBondPaper()
+                                        paper = new BaseBondPaper
                                         {
-                                            Code = data.ticker
+                                            SecId = data.ticker
                                         };
 
                                         if (o.Key == ConsoleKey.D3)
@@ -418,7 +418,7 @@ namespace HistoryImport
 
                     var historyPrice = new HistoryPrice
                     {
-                        PaperCode = lastPaper.Code,
+                        PaperCode = lastPaper.SecId,
                         Date = data.datetime.Date,
                         ClosePrice = data.close,
                         HighPrice = data.high,

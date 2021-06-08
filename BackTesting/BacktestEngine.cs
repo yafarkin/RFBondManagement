@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using BackTesting.Interfaces;
 using NLog;
 using RfBondManagement.Engine.Common;
@@ -38,7 +37,7 @@ namespace BackTesting
                 var count = bond.Count;
                 papersCount += count;
 
-                var historyPrice = _history.GetHistoryPriceOnDate(bond.Paper.Code, date);
+                var historyPrice = _history.GetHistoryPriceOnDate(bond.Paper.SecId, date);
                 portfolioCost += count * historyPrice.Price;
             }
 
@@ -47,7 +46,7 @@ namespace BackTesting
                 var count = share.Count;
                 papersCount += count;
 
-                var historyPrice = _history.GetHistoryPriceOnDate(share.Paper.Code, date);
+                var historyPrice = _history.GetHistoryPriceOnDate(share.Paper.SecId, date);
                 portfolioCost += count * historyPrice.Price;
             }
 
@@ -127,7 +126,7 @@ namespace BackTesting
 
         protected void CalculateIncomeDividends(Portfolio portfolio, DateTime date)
         {
-            var codes = portfolio.Shares.Select(x => x.Paper.Code).ToList();
+            var codes = portfolio.Shares.Select(x => x.Paper.SecId).ToList();
             var dividendsOnDate = _dividends.Where(x => x.CutOffDate == date && codes.Contains(x.Code)).ToList();
             if (!dividendsOnDate.Any())
             {
@@ -140,7 +139,7 @@ namespace BackTesting
                 var dividend = dividendInfo.Dividend;
                 var dividendTax = dividend * portfolio.Settings.Tax / 100;
 
-                var paper = portfolio.Shares.Single(x => x.Paper.Code == code);
+                var paper = portfolio.Shares.Single(x => x.Paper.SecId == code);
 
                 var totalSum = (dividend - dividendTax) * paper.Count;
 
@@ -168,12 +167,12 @@ namespace BackTesting
 
             var splitCodes = splitOnDate.Select(x => x.Code).ToList();
 
-            var bondsInPortfolio = portfolio.Bonds.Where(x => splitCodes.Contains(x.Paper.Code)).ToList();
+            var bondsInPortfolio = portfolio.Bonds.Where(x => splitCodes.Contains(x.Paper.SecId)).ToList();
             foreach (var bondInPortfolio in bondsInPortfolio)
             {
-                var split = splitOnDate.First(x => x.Date == date && x.Code == bondInPortfolio.Paper.Code);
+                var split = splitOnDate.First(x => x.Date == date && x.Code == bondInPortfolio.Paper.SecId);
 
-                _logger.Info($"Perform split for {bondInPortfolio.Paper.Code}, multiplier {split.Multiplier:N4}");
+                _logger.Info($"Perform split for {bondInPortfolio.Paper.SecId}, multiplier {split.Multiplier:N4}");
 
                 foreach (var action in bondInPortfolio.Actions)
                 {
@@ -182,12 +181,12 @@ namespace BackTesting
                 }
             }
 
-            var sharesInPortfolio = portfolio.Shares.Where(x => splitCodes.Contains(x.Paper.Code)).ToList();
+            var sharesInPortfolio = portfolio.Shares.Where(x => splitCodes.Contains(x.Paper.SecId)).ToList();
             foreach (var shareInPortfolio in sharesInPortfolio)
             {
-                var split = splitOnDate.First(x => x.Date == date && x.Code == shareInPortfolio.Paper.Code);
+                var split = splitOnDate.First(x => x.Date == date && x.Code == shareInPortfolio.Paper.SecId);
 
-                _logger.Info($"Perform split for {shareInPortfolio.Paper.Code}, multiplier {split.Multiplier:N4}");
+                _logger.Info($"Perform split for {shareInPortfolio.Paper.SecId}, multiplier {split.Multiplier:N4}");
 
                 foreach (var action in shareInPortfolio.Actions)
                 {
@@ -224,7 +223,7 @@ namespace BackTesting
 
                 portfolio.MoneyMoves.Add(new BaseMoneyMove
                 {
-                    Comment = $"Income coupons {bond.Code}, value: {coupon.Value}, tax: {tax:C}, total sum: {totalSum:C}",
+                    Comment = $"Income coupons {bond.SecId}, value: {coupon.Value}, tax: {tax:C}, total sum: {totalSum:C}",
                     Date = date,
                     MoneyMoveType = MoneyMoveType.IncomeCoupon,
                     Sum = totalSum,
@@ -234,7 +233,7 @@ namespace BackTesting
                 {
                     portfolio.MoneyMoves.Add(new BaseMoneyMove
                     {
-                        Comment = $"Income coupons {bond.Code}, tax: {tax:C}",
+                        Comment = $"Income coupons {bond.SecId}, tax: {tax:C}",
                         Date = date,
                         MoneyMoveType = MoneyMoveType.OutcomeTax,
                         Sum = -tax,
@@ -274,7 +273,7 @@ namespace BackTesting
 
                     portfolio.MoneyMoves.Add(new BaseMoneyMove
                     {
-                        Comment = $"Close bond {bond.Code}, count: {bondInPortfolio.Count:N0}, close par: {bond.BondPar:C}, total sum: {totalSum:C}",
+                        Comment = $"Close bond {bond.SecId}, count: {bondInPortfolio.Count:N0}, close par: {bond.BondPar:C}, total sum: {totalSum:C}",
                         Date = date,
                         MoneyMoveType = MoneyMoveType.IncomeCloseBond,
                         Sum = totalSum,
@@ -287,7 +286,7 @@ namespace BackTesting
 
         public void BuyPaper(Portfolio portfolio, DateTime date, BaseStockPaper paper, long count, IBondCalculator bondCalculator)
         {
-            var historyPrice = _history.GetHistoryPriceOnDate(paper.Code, date);
+            var historyPrice = _history.GetHistoryPriceOnDate(paper.SecId, date);
             var price = historyPrice.Price;
 
             var sum = count * price;
@@ -301,7 +300,7 @@ namespace BackTesting
 
             portfolio.MoneyMoves.Add(new BaseMoneyMove
             {
-                Comment = $"Buy {paper.Code}, count: {count:N0}, price: {price:C}, sum: {sum:C}, commission: {commission:C}, total sum: {totalSum:C}",
+                Comment = $"Buy {paper.SecId}, count: {count:N0}, price: {price:C}, sum: {sum:C}, commission: {commission:C}, total sum: {totalSum:C}",
                 Date = date,
                 MoneyMoveType = MoneyMoveType.OutcomeBuyOnMarket,
                 Sum = -sum,
@@ -309,7 +308,7 @@ namespace BackTesting
 
             portfolio.MoneyMoves.Add(new BaseMoneyMove
             {
-                Comment = $"Buy {paper.Code}, commission: {commission:C}",
+                Comment = $"Buy {paper.SecId}, commission: {commission:C}",
                 Date = date,
                 MoneyMoveType = MoneyMoveType.OutcomeCommission,
                 Sum = -commission,
@@ -319,7 +318,7 @@ namespace BackTesting
 
             if (paper is BaseBondPaper bondPaper)
             {
-                var bp = portfolio.Bonds.FirstOrDefault(p => p.Paper.Code == paper.Code);
+                var bp = portfolio.Bonds.FirstOrDefault(p => p.Paper.SecId == paper.SecId);
 
                 if (null == bp)
                 {
@@ -343,16 +342,16 @@ namespace BackTesting
                     Price = price
                 });
             }
-            else if (paper is BaseSharePaper sharePaper)
+            else if (paper is BaseStockPaper sharePaper)
             {
-                var sp = portfolio.Shares.FirstOrDefault(p => p.Paper.Code == paper.Code);
+                var sp = portfolio.Shares.FirstOrDefault(p => p.Paper.SecId == paper.SecId);
 
                 if (null == sp)
                 {
                     sp = new BaseSharePaperInPortfolio
                     {
                         Paper = sharePaper,
-                        Actions = new List<BaseAction<BaseSharePaper>>()
+                        Actions = new List<BaseAction<BaseStockPaper>>()
                     };
 
                     portfolio.Shares.Add(sp);
@@ -374,7 +373,7 @@ namespace BackTesting
 
         public void SellPaper(Portfolio portfolio, DateTime date, BaseStockPaper paper, long count, IBondCalculator bondCalculator)
         {
-            var historyPrice = _history.GetHistoryPriceOnDate(paper.Code, date);
+            var historyPrice = _history.GetHistoryPriceOnDate(paper.SecId, date);
             var price = historyPrice.Price;
 
             bool isShare;
@@ -382,7 +381,7 @@ namespace BackTesting
             {
                 isShare = false;
             }
-            else if (paper is BaseSharePaper)
+            else if (paper is BaseStockPaper)
             {
                 isShare = true;
             }
@@ -398,12 +397,12 @@ namespace BackTesting
             BaseBondPaperInPortfolio bondInPortfolio = null;
             if (isShare)
             {
-                shareInPortfolio = portfolio.Shares.First(p => p.Paper.Code == paper.Code);
+                shareInPortfolio = portfolio.Shares.First(p => p.Paper.SecId == paper.SecId);
                 avgPrice = shareInPortfolio.AvgBuySum;
             }
             else
             {
-                bondInPortfolio = portfolio.Bonds.First(p => p.Paper.Code == paper.Code);
+                bondInPortfolio = portfolio.Bonds.First(p => p.Paper.SecId == paper.SecId);
                 avgPrice = bondInPortfolio.AvgBuySum;
                 nkd = bondCalculator.CalculateNkd(bondInPortfolio.Paper, date);
             }
@@ -415,7 +414,7 @@ namespace BackTesting
 
             portfolio.MoneyMoves.Add(new BaseMoneyMove
             {
-                Comment = $"Sell {paper.Code}, count: {count:N0}, price: {price:C}, sum: {sum:C}, commission: {commission:C}, tax: {tax:C}, nkd: {nkd:C}, total sum: {totalSum:C}",
+                Comment = $"Sell {paper.SecId}, count: {count:N0}, price: {price:C}, sum: {sum:C}, commission: {commission:C}, tax: {tax:C}, nkd: {nkd:C}, total sum: {totalSum:C}",
                 Date = date,
                 MoneyMoveType = MoneyMoveType.IncomeSellOnMarket,
                 Sum = sum,
@@ -425,7 +424,7 @@ namespace BackTesting
             {
                 portfolio.MoneyMoves.Add(new BaseMoneyMove
                 {
-                    Comment = $"Sell {paper.Code}, nkd: {nkd:C}",
+                    Comment = $"Sell {paper.SecId}, nkd: {nkd:C}",
                     Date = date,
                     MoneyMoveType = MoneyMoveType.IncomeCoupon,
                     Sum = nkd,
@@ -434,7 +433,7 @@ namespace BackTesting
 
             portfolio.MoneyMoves.Add(new BaseMoneyMove
             {
-                Comment = $"Sell {paper.Code}, commission: {commission:C}",
+                Comment = $"Sell {paper.SecId}, commission: {commission:C}",
                 Date = date,
                 MoneyMoveType = MoneyMoveType.OutcomeCommission,
                 Sum = -commission,
@@ -444,7 +443,7 @@ namespace BackTesting
             {
                 portfolio.MoneyMoves.Add(new BaseMoneyMove
                 {
-                    Comment = $"Sell {paper.Code}, tax: {tax:C}",
+                    Comment = $"Sell {paper.SecId}, tax: {tax:C}",
                     Date = date,
                     MoneyMoveType = MoneyMoveType.OutcomeTax,
                     Sum = -tax,
@@ -469,7 +468,7 @@ namespace BackTesting
                 shareInPortfolio.Actions.Add(new ShareSellAction
                 {
                     Date = date,
-                    Paper = paper as BaseSharePaper,
+                    Paper = paper,
                     Count = count,
                     Price = price
                 });

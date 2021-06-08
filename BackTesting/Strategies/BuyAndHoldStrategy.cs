@@ -38,7 +38,7 @@ namespace BackTesting.Strategies
                 Sum = initialSum
             };
 
-            _papers = _history.GetHistoryPapers().ToDictionary(x => x.Code);
+            _papers = _history.GetHistoryPapers().ToDictionary(x => x.SecId);
 
             return portfolio;
         }
@@ -99,7 +99,7 @@ namespace BackTesting.Strategies
             {
                 var count = bond.Count;
 
-                var historyPrice = _history.GetHistoryPriceOnDate(bond.Paper.Code, date);
+                var historyPrice = _history.GetHistoryPriceOnDate(bond.Paper.SecId, date);
                 portfolioCost += count * historyPrice.Price;
             }
 
@@ -107,7 +107,7 @@ namespace BackTesting.Strategies
             {
                 var count = share.Count;
 
-                var historyPrice = _history.GetHistoryPriceOnDate(share.Paper.Code, date);
+                var historyPrice = _history.GetHistoryPriceOnDate(share.Paper.SecId, date);
                 portfolioCost += count * historyPrice.Price;
             }
 
@@ -130,20 +130,20 @@ namespace BackTesting.Strategies
             {
                 decimal paperSum = 0;
 
-                var bp = _portfolio.Bonds.SingleOrDefault(x => x.Paper.Code == p.Item1);
+                var bp = _portfolio.Bonds.SingleOrDefault(x => x.Paper.SecId == p.Item1);
                 if (bp != null)
                 {
-                    var historyPrice = _history.GetHistoryPriceOnDate(bp.Paper.Code, date);
+                    var historyPrice = _history.GetHistoryPriceOnDate(bp.Paper.SecId, date);
                     var count = bp.Count;
                     paperSum = count * historyPrice.Price;
                 }
                 else
                 {
-                    var sp = _portfolio.Shares.SingleOrDefault(x => x.Paper.Code == p.Item1);
+                    var sp = _portfolio.Shares.SingleOrDefault(x => x.Paper.SecId == p.Item1);
 
                     if (sp != null)
                     {
-                        var historyPrice = _history.GetHistoryPriceOnDate(sp.Paper.Code, date);
+                        var historyPrice = _history.GetHistoryPriceOnDate(sp.Paper.SecId, date);
                         var count = sp.Count;
                         paperSum = count * historyPrice.Price;
                     }

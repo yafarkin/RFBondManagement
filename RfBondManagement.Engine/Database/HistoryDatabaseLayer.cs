@@ -28,7 +28,7 @@ namespace RfBondManagement.Engine.Database
             _splits = _database.GetCollection<SplitInfo>("splits");
             _dividends = _database.GetCollection<DividendInfo>("dividends");
 
-            _papers.EnsureIndex(p => p.Code);
+            _papers.EnsureIndex(p => p.SecId);
             _prices.EnsureIndex(p => p.IndexCode);
             _courses.EnsureIndex(p => p.IndexCode);
             _splits.EnsureIndex(p => p.Date);
@@ -197,7 +197,7 @@ namespace RfBondManagement.Engine.Database
 
         public void AddPaper(BaseStockPaper paper)
         {
-            if (null == _papers.FindOne(p => p.Code == paper.Code))
+            if (null == _papers.FindOne(p => p.SecId == paper.SecId))
             {
                 _papers.Insert(paper);
             }

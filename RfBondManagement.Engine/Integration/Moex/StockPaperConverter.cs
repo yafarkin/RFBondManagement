@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Threading.Channels;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Integration.Moex.Dto;
 
@@ -22,9 +21,10 @@ namespace RfBondManagement.Engine.Integration.Moex
             result.Isin = paper.Description.GetDataForString("name", "ISIN", "value");
             result.FaceValue = paper.Description.GetDataForDecimal("name", "FACEVALUE", "value");
             result.IssueDate = paper.Description.GetDataForDateTime("name", "ISSUEDATE", "value");
+            result.Type = paper.Description.GetDataForString("name", "TYPE", "value");
             result.TypeName = paper.Description.GetDataForString("name", "TYPENAME", "value");
             result.Group = paper.Description.GetDataForString("name", "GROUP", "value");
-            result.Type = paper.Description.GetDataForString("name", "TYPE", "value");
+            result.GroupName = paper.Description.GetDataForString("name", "GROUPNAME", "value");
 
             result.Boards = new List<PaperBoard>(paper.Boards.Data.Count);
             foreach (var board in paper.Boards.Data)
@@ -46,9 +46,9 @@ namespace RfBondManagement.Engine.Integration.Moex
             return result;
         }
 
-        public static BaseSharePaper Map(JsonPaperDefinition paper)
+        public static BaseStockPaper Map(JsonPaperDefinition paper)
         {
-            return Map<BaseSharePaper>(paper);
+            return Map<BaseStockPaper>(paper);
         }
 
         public static BaseBondPaper Map(JsonPaperDefinition paper, JsonBondization coupons)

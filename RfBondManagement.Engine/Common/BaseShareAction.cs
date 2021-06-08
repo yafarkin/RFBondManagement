@@ -1,6 +1,6 @@
 ﻿namespace RfBondManagement.Engine.Common
 {
-    public class BaseShareAction : BaseAction<BaseSharePaper>
+    public class BaseShareAction : BaseAction<BaseStockPaper>
     {
         
     }

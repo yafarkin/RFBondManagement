@@ -56,7 +56,7 @@ namespace RfBondManagement.WinForm.Controls
 
             var text = cbbPaper.Text.Trim().ToLower();
             cbbPaper.DataSource = _papers.Where(p => string.IsNullOrEmpty(text) ||
-                    p.Name.ToLower().Contains(text) || p.Code.ToLower().Contains(text) ||
+                    p.Name.ToLower().Contains(text) || p.SecId.ToLower().Contains(text) ||
                     p.Isin.ToLower().Contains(text))
                 .Take(TAKE_COUNT)
                 .ToList();

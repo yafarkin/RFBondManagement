@@ -1,6 +1,6 @@
 ﻿namespace RfBondManagement.Engine.Common
 {
-    public class BaseSharePaperInPortfolio : BaseStockPaperInPortfolio<BaseSharePaper>
+    public class BaseSharePaperInPortfolio : BaseStockPaperInPortfolio<BaseStockPaper>
     {
         
     }

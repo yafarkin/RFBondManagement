@@ -44,6 +44,7 @@ namespace RfBondManagement.WinForm.Forms
             this.chIsin = new System.Windows.Forms.ColumnHeader();
             this.chType = new System.Windows.Forms.ColumnHeader();
             this.chName = new System.Windows.Forms.ColumnHeader();
+            this.chSecId = new System.Windows.Forms.ColumnHeader();
             this.menuPapers.SuspendLayout();
             this.pnlSearch.SuspendLayout();
             this.pnlList.SuspendLayout();
@@ -147,6 +148,7 @@ namespace RfBondManagement.WinForm.Forms
             // lvPapers
             // 
             this.lvPapers.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.chSecId,
             this.chIsin,
             this.chType,
             this.chName});
@@ -173,6 +175,10 @@ namespace RfBondManagement.WinForm.Forms
             // chName
             // 
             this.chName.Text = "Имя";
+            // 
+            // chSecId
+            // 
+            this.chSecId.Text = "SecId";
             // 
             // PaperListForm
             // 
@@ -215,5 +221,6 @@ namespace RfBondManagement.WinForm.Forms
         private System.Windows.Forms.ColumnHeader chIsin;
         private System.Windows.Forms.ColumnHeader chType;
         private System.Windows.Forms.ColumnHeader chName;
+        private System.Windows.Forms.ColumnHeader chSecId;
     }
 }

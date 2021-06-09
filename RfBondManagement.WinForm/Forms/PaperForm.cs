@@ -1,11 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Integration.Moex;
@@ -19,8 +13,6 @@ namespace RfBondManagement.WinForm.Forms
         public PaperForm()
         {
             InitializeComponent();
-
-            DataBind();
         }
 
         private void DataBind()
@@ -35,6 +27,8 @@ namespace RfBondManagement.WinForm.Forms
             tbGroup.Text = Paper?.Group;
             tbType.Text = Paper?.Type;
             tbGroupName.Text = Paper?.GroupName;
+            tbPrimaryMarket.Text = Paper?.PrimaryBoard?.Market;
+            tbPrimaryBoardId.Text = Paper?.PrimaryBoard?.BoardId;
         }
 
         private async void btnSearch_Click(object sender, EventArgs e)
@@ -52,6 +46,20 @@ namespace RfBondManagement.WinForm.Forms
 
             DataBind();
 
+            lblLastPrice.Text = "---";
+            if (Paper?.PrimaryBoard != null)
+            {
+                var priceRequest = new MoexLastPriceRequest(Paper.PrimaryBoard.Market, Paper.PrimaryBoard.BoardId, Paper.SecId);
+                var priceResponse = await priceRequest.Read();
+
+                var lastPrice = priceResponse.Securities.GetDataForDecimal("SECID", Paper.SecId, "PREVADMITTEDQUOTE");
+
+                if (lastPrice.HasValue)
+                {
+                    lblLastPrice.Text = lastPrice.ToString();
+                }
+            }
+
             Cursor.Current = Cursors.Default;
         }
 
@@ -61,6 +69,33 @@ namespace RfBondManagement.WinForm.Forms
             {
                 btnSearch_Click(sender, e);
             }
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            if (null == Paper)
+            {
+                Paper = new BaseStockPaper {Boards = new List<PaperBoard> {new PaperBoard {IsPrimary = true}}};
+            }
+
+            Paper.SecId = tbSecId.Text;
+            Paper.Name = tbName.Text;
+            Paper.ShortName = tbShortName.Text;
+            Paper.Isin = tbIsin.Text;
+            Paper.FaceValue = string.IsNullOrWhiteSpace(tbFaceValue.Text) ? null : Convert.ToDecimal(tbFaceValue.Text);
+            Paper.IssueDate = string.IsNullOrWhiteSpace(tbIssueDate.Text) ? null : Convert.ToDateTime(tbIssueDate.Text);
+            Paper.TypeName = tbTypeName.Text;
+            Paper.Group = tbGroup.Text;
+            Paper.TypeName = tbType.Text;
+            Paper.GroupName = tbGroupName.Text;
+
+            Paper.PrimaryBoard.Market = tbPrimaryMarket.Text;
+            Paper.PrimaryBoard.BoardId = tbPrimaryBoardId.Text;
+        }
+
+        private void PaperForm_Load(object sender, EventArgs e)
+        {
+            DataBind();
         }
     }
 }

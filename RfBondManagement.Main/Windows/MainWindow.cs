@@ -35,7 +35,7 @@ namespace RfBondManagement.Main.Windows
             //{
             //    PaperSource = () =>
             //    {
-            //        //_db.GetPapers().ToList()
+            //        //_db.SelectPapers().ToList()
             //        var result = new List<BaseStockPaper>()
             //        {
             //            new BaseBondPaper {BondPar = 1000, Currency = "RUR", Name = "test1"},

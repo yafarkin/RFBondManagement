@@ -41,96 +41,31 @@ namespace RfBondManagement.Engine.Database
             _settingsSet.Insert(settings);
         }
 
-        public IEnumerable<BaseBondPaperInPortfolio> GetBondsInPortfolio()
+        public IEnumerable<BaseStockPaperInPortfolio<BaseBondPaper>> GetPapersInPortfolio()
         {
-            var r = new List<BaseBondPaperInPortfolio>();
-            var p = GetPapers().OfType<BaseBondPaper>().First();
-
-            r.Add(new BaseBondPaperInPortfolio
-            {
-                Paper = p,
-                Actions = new List<BaseAction<BaseBondPaper>>
-                {
-                    new BondBuyAction
-                    {
-                        IsBuy = true,
-                        Paper = p,
-                        Nkd = 29.56m,
-                        Date = new DateTime(2021, 2, 12),
-                        Count = 1,
-                        Price = p.LastPrice.Price,
-                    }
-                }
-            });
-
-            return r;
+            return _bonds.FindAll();
         }
 
-        public IEnumerable<BaseStockPaper> GetPapers()
+        public IEnumerable<BaseStockPaper> SelectPapers()
         {
-            var r = new List<BaseStockPaper>();
+            return _papersList.FindAll();
+        }
 
-            r.Add(new BaseBondPaper
-            {
-                Name = "ОФЗ 26223",
-                Isin = "RU000A0ZYU88",
-                SecId = "SU26223RMFS6",
-                PublishDate = new DateTime(2018, 2, 21),
-                MaturityDate = new DateTime(2024, 2, 28),
-                Price = new List<PriceOnDate>
-                {
-                    new PriceOnDate
-                    {
-                        Date = new DateTime(2021, 2, 12),
-                        Price = 103.001m
-                    }
-                },
-                Duration = 999,
-                BondPar = 1000,
-                Currency = "RUR",
-                Coupons = new List<BondCoupon>
-                {
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2021, 3, 3),
-                        Value = 32.41m
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2021, 9, 1),
-                        Value = 32.41m
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2022, 3, 2),
-                        Value = 32.41m
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2022, 8, 31),
-                        Value = 32.41m
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2023, 3, 1),
-                        Value = 32.41m
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2023, 8, 30),
-                        Value = 32.41m
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2024, 2, 28),
-                        Value = 32.41m
-                    }
-                }
-            });
+        public BaseStockPaper InsertPaper(BaseStockPaper paper)
+        {
+            paper.Id = Guid.NewGuid();
+            _papersList.Insert(paper);
+            return paper;
+        }
 
-            return r;
+        public void UpdatePaper(BaseStockPaper paper)
+        {
+            _papersList.Update(paper);
+        }
 
-            //return _papersList.FindAll();
+        public void DeletePaper(Guid id)
+        {
+            _papersList.DeleteMany(x => x.Id == id);
         }
 
         public void Dispose()

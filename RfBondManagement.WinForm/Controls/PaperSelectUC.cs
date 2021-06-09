@@ -43,7 +43,7 @@ namespace RfBondManagement.WinForm.Controls
             cbbPaper.DisplayMember = "Name";
             cbbPaper.ValueMember = "Code";
 
-            _papers = _db.GetPapers();
+            _papers = _db.SelectPapers();
             cbbPaper.DataSource = _papers.Take(TAKE_COUNT).ToList();
         }
 

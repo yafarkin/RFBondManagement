@@ -27,7 +27,7 @@ namespace RfBondManagement.WinForm.Forms
             _db = db;
             _container = container;
 
-            _papers = _db.GetPapers().ToList();
+            _papers = _db.SelectPapers().ToList();
 
             InitializeComponent();
         }
@@ -41,11 +41,25 @@ namespace RfBondManagement.WinForm.Forms
         {
             tbSearch.Focus();
 
+            DataBind();
+        }
+
+        private void DataBind()
+        {
+            var selectedPaper = 0 == lvPapers.SelectedItems.Count ? null : lvPapers.SelectedItems[0].Tag as BaseStockPaper;
+
+            lvPapers.Items.Clear();
+
             foreach (var paper in _papers)
             {
-                var itemText = new[] {paper.Isin, paper.Type, paper.Name};
-                var lvi = new ListViewItem(itemText) {Tag = paper};
+                var itemText = new[] {paper.SecId, paper.Isin, paper.Type, paper.Name};
+                var lvi = new ListViewItem(itemText) { Tag = paper };
                 lvPapers.Items.Add(lvi);
+
+                if (paper.Id == selectedPaper?.Id)
+                {
+                    lvi.Selected = true;
+                }
             }
 
             lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
@@ -55,12 +69,29 @@ namespace RfBondManagement.WinForm.Forms
         {
             using (var f = _container.Resolve<PaperForm>())
             {
-                if (f.ShowDialog() != DialogResult.OK)
+                while (true)
                 {
-                    return;
-                }
+                    if (f.ShowDialog() != DialogResult.OK)
+                    {
+                        return;
+                    }
 
-                throw new NotImplementedException();
+                    var paper = f.Paper;
+                    if (_papers.Any(p => p.SecId == paper.SecId))
+                    {
+                        MessageBox.Show("Бумага с таким SECID уже есть в системе", "Ошибка", MessageBoxButtons.OK,
+                            MessageBoxIcon.Error);
+                        continue;
+
+                    }
+
+                    paper = _db.InsertPaper(paper);
+                    _papers.Add(paper);
+
+                    DataBind();
+
+                    break;
+                }
             }
         }
 
@@ -73,10 +104,33 @@ namespace RfBondManagement.WinForm.Forms
 
             using (var f = _container.Resolve<PaperForm>())
             {
-                f.Paper = lvPapers.SelectedItems[0].Tag as BaseStockPaper;
-                if (f.ShowDialog() == DialogResult.OK)
+                var originalPaper = lvPapers.SelectedItems[0].Tag as BaseStockPaper;
+                f.Paper = originalPaper;
+
+                while (true)
                 {
-                    throw new NotImplementedException();
+                    if (f.ShowDialog() != DialogResult.OK)
+                    {
+                        return;
+                    }
+
+                    var paper = f.Paper;
+                    if (_papers.Any(p => p.SecId == paper.SecId && p.Id != paper.Id))
+                    {
+                        MessageBox.Show("Бумага с таким SECID уже есть в системе", "Ошибка", MessageBoxButtons.OK,
+                            MessageBoxIcon.Error);
+                        continue;
+
+                    }
+
+                    _db.UpdatePaper(paper);
+
+                    _papers.Remove(originalPaper);
+                    _papers.Add(paper);
+
+                    DataBind();
+
+                    break;
                 }
             }
         }
@@ -88,13 +142,15 @@ namespace RfBondManagement.WinForm.Forms
                 return;
             }
 
-            if (MessageBox.Show("Подтвердите удаление бумаги", "Удаление бумаги", MessageBoxButtons.OKCancel) !=
-                DialogResult.OK)
+            if (MessageBox.Show("Подтвердите удаление бумаги", "Удаление бумаги", MessageBoxButtons.OKCancel) != DialogResult.OK)
             {
                 return;
             }
 
-            throw new NotImplementedException();
+            var paper = lvPapers.SelectedItems[0].Tag as BaseStockPaper;
+            _db.DeletePaper(paper.Id);
+            _papers.Remove(paper);
+            DataBind();
         }
     }
 }

@@ -47,7 +47,7 @@ namespace RfBondManagement.WinForm.Forms
         {
             _settings = _db.LoadSettings();
 
-            var papers = _db.GetBondsInPortfolio();
+            var papers = _db.GetPapersInPortfolio();
 
             lvPapers.Items.Clear();
             foreach (var paperInPortfolio in papers.OfType<BaseBondPaperInPortfolio>())

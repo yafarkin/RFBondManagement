@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using RfBondManagement.Engine.Integration.Moex;
 using Shouldly;
@@ -10,35 +11,35 @@ namespace RfBondManagement.UnitTests
     public class IntegrationMoexTests
     {
         [Test]
-        public void PaperDefinitionTest()
+        public async Task PaperDefinitionTest()
         {
             var request = new MoexPaperDefinitionRequest("SBERP");
-            var paper = request.Read();
+            var paper = await request.Read();
 
             paper.ShouldNotBeNull();
             var name = paper.Description.GetDataFor("name", "NAME");
-            var isin = paper.Description.GetDataFor("name", "Isin");
+            var isin = paper.Description.GetDataFor("name", "ISIN");
             isin["value"].ShouldBe("RU0009029557");
             name["value"].ShouldBe("Сбербанк России ПАО ап");
 
             request = new MoexPaperDefinitionRequest("SU26227RMFS7");
-            paper = request.Read();
+            paper = await request.Read();
 
             paper.ShouldNotBeNull();
             name = paper.Description.GetDataFor("name", "NAME");
-            isin = paper.Description.GetDataFor("name", "Isin");
+            isin = paper.Description.GetDataFor("name", "ISIN");
 
             name["value"].ShouldBe("ОФЗ-ПД 26227 17/07/24");
             isin["value"].ShouldBe("RU000A1007F4");
         }
 
         [Test]
-        public void BondCouponsTest()
+        public async Task BondCouponsTest()
         {
             // https://smart-lab.ru/q/bonds/SU26227RMFS7/, ОФЗ 26227
             var request = new MoexBondCouponsRequest("SU26227RMFS7");
 
-            var coupons = request.Read();
+            var coupons = await request.Read();
 
             coupons.ShouldNotBeNull();
             coupons.Coupons.Data.Count.ShouldBe(11);
@@ -48,20 +49,20 @@ namespace RfBondManagement.UnitTests
         }
 
         [Test]
-        public void HistoryTest()
+        public async Task HistoryTest()
         {
             var request = new MoexSecurityHistoryRequest("stock", "bonds", "SU26208RMFS7");
 
-            var response = request.CursorRead();
+            var response = await request.CursorRead();
 
             response.ShouldNotBeNull();
         }
 
         [Test]
-        public void DividendsRequestTest()
+        public async Task DividendsRequestTest()
         {
             var request = new MoexDividendsRequest("SBER");
-            var dividends = request.Read();
+            var dividends = await request.Read();
 
             dividends.ShouldNotBeNull();
             var div = dividends.Dividends.GetDataForString("secid", "SBER", "isin");
@@ -69,10 +70,10 @@ namespace RfBondManagement.UnitTests
         }
 
         [Test]
-        public void MapShareTest()
+        public async Task MapShareTest()
         {
             var request = new MoexPaperDefinitionRequest("SBERP");
-            var jsonPaper = request.Read();
+            var jsonPaper = await request.Read();
             var sharePaper = StockPaperConverter.Map(jsonPaper);
 
             sharePaper.Isin.ShouldBe("RU0009029557");
@@ -82,13 +83,13 @@ namespace RfBondManagement.UnitTests
         }
 
         [Test]
-        public void MapBondTest()
+        public async Task MapBondTest()
         {
             var bondRequest = new MoexPaperDefinitionRequest("SU26208RMFS7");
             var couponRequest = new MoexBondCouponsRequest("SU26208RMFS7");
 
-            var jsonBond = bondRequest.Read();
-            var jsonCoupon = couponRequest.Read();
+            var jsonBond = await bondRequest.Read();
+            var jsonCoupon = await couponRequest.Read();
 
             var bondPaper = StockPaperConverter.Map(jsonBond, jsonCoupon);
             bondPaper.ShouldNotBe(null);
@@ -106,25 +107,25 @@ namespace RfBondManagement.UnitTests
         }
 
         [Test]
-        public void GetLastPriceTest()
+        public async Task GetLastPriceTest()
         {
             var requestPaper = new MoexPaperDefinitionRequest("SBERP");
-            var jsonPaper = requestPaper.Read();
+            var jsonPaper = await requestPaper.Read();
             var paper = StockPaperConverter.Map(jsonPaper);
 
             var requestPrice = new MoexLastPriceRequest(paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId);
-            var response = requestPrice.Read();
+            var response = await requestPrice.Read();
 
             var lastPrice = response.Securities.GetDataForDecimal("SECID", paper.SecId, "PREVADMITTEDQUOTE");
             lastPrice.ShouldNotBeNull();
             lastPrice.Value.ShouldBeGreaterThan(0.01m);
 
             requestPaper = new MoexPaperDefinitionRequest("FXIT");
-            jsonPaper = requestPaper.Read();
+            jsonPaper = await requestPaper.Read();
             paper = StockPaperConverter.Map(jsonPaper);
 
             requestPrice = new MoexLastPriceRequest(paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId);
-            response = requestPrice.Read();
+            response = await requestPrice.Read();
 
             lastPrice = response.Securities.GetDataForDecimal("SECID", paper.SecId, "PREVADMITTEDQUOTE");
             lastPrice.ShouldNotBeNull();
@@ -132,11 +133,11 @@ namespace RfBondManagement.UnitTests
 
             // ofz bond
             requestPaper = new MoexPaperDefinitionRequest("SU29006RMFS2");
-            jsonPaper = requestPaper.Read();
+            jsonPaper = await requestPaper.Read();
             paper = StockPaperConverter.Map(jsonPaper);
 
             requestPrice = new MoexLastPriceRequest(paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId);
-            response = requestPrice.Read();
+            response = await requestPrice.Read();
 
             lastPrice = response.Securities.GetDataForDecimal("SECID", paper.SecId, "PREVADMITTEDQUOTE");
             lastPrice.ShouldNotBeNull();
@@ -144,11 +145,11 @@ namespace RfBondManagement.UnitTests
 
             // corporate bond
             requestPaper = new MoexPaperDefinitionRequest("RU000A1018X4");
-            jsonPaper = requestPaper.Read();
+            jsonPaper = await requestPaper.Read();
             paper = StockPaperConverter.Map(jsonPaper);
 
             requestPrice = new MoexLastPriceRequest(paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId);
-            response = requestPrice.Read();
+            response = await requestPrice.Read();
 
             lastPrice = response.Securities.GetDataForDecimal("SECID", paper.SecId, "PREVADMITTEDQUOTE");
             lastPrice.ShouldNotBeNull();

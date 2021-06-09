@@ -37,18 +37,22 @@ namespace RfBondManagement.WinForm.Forms
             tbGroupName.Text = Paper?.GroupName;
         }
 
-        private void btnSearch_Click(object sender, EventArgs e)
+        private async void btnSearch_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(tbSearch.Text))
             {
                 return;
             }
 
+            Cursor.Current = Cursors.WaitCursor;
+
             var request = new MoexPaperDefinitionRequest(tbSearch.Text.Trim());
-            var response = request.Read();
+            var response = await request.Read();
             Paper = StockPaperConverter.Map(response);
 
             DataBind();
+
+            Cursor.Current = Cursors.Default;
         }
 
         private void tbSearch_KeyUp(object sender, KeyEventArgs e)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using RfBondManagement.Engine.Integration.Moex.Dto;
 
 namespace RfBondManagement.Engine.Integration.Moex
@@ -8,9 +9,9 @@ namespace RfBondManagement.Engine.Integration.Moex
     {
         protected IList<Tuple<string, string>> _addGetParams;
 
-        public virtual JsonBase CursorRead(long start = 0, long count = 0)
+        public virtual async Task<JsonBase> CursorRead(long start = 0, long count = 0)
         {
-            var firstPage = CursorReadHistory(start);
+            var firstPage = await CursorReadHistory(start);
 
             var result = firstPage.History;
             var lastItemsCount = firstPage.History.Data.Count;
@@ -24,7 +25,7 @@ namespace RfBondManagement.Engine.Integration.Moex
             while (start + lastItemsCount < total)
             {
                 start += lastItemsCount;
-                var nextPage = CursorReadHistory(start);
+                var nextPage = await CursorReadHistory(start);
                 result.Data.AddRange(nextPage.History.Data);
 
                 lastItemsCount = nextPage.History.Data.Count;
@@ -37,7 +38,7 @@ namespace RfBondManagement.Engine.Integration.Moex
             return result;
         }
 
-        protected JsonHistoryData CursorReadHistory(long start)
+        protected async Task<JsonHistoryData> CursorReadHistory(long start)
         {
             var getParams = new List<Tuple<string, string>>();
             if (_addGetParams != null)
@@ -50,7 +51,7 @@ namespace RfBondManagement.Engine.Integration.Moex
                 getParams.Add(new Tuple<string, string>("start", start.ToString()));
             }
 
-            var result = Read(getParams);
+            var result = await Read(getParams);
 
             return result;
         }

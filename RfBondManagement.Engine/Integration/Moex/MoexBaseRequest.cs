@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RestSharp;
 
@@ -22,7 +23,7 @@ namespace RfBondManagement.Engine.Integration.Moex
             _client = new RestClient(BASE_MOEX_URL);
         }
 
-        public virtual TMoex Read(IEnumerable<Tuple<string, string>> getParams = null)
+        public virtual async Task<TMoex> Read(IEnumerable<Tuple<string, string>> getParams = null)
         {
             var request = new RestRequest($"{BASE_MOEX_URL}{_requestUrl}.json", _method) {RequestFormat = DataFormat.Json};
 
@@ -43,7 +44,7 @@ namespace RfBondManagement.Engine.Integration.Moex
                 }
             }
 
-            var response = _client.Execute(request);
+            var response = await _client.ExecuteAsync(request);
 
             var result = JsonConvert.DeserializeObject<TMoex>(response.Content);
 

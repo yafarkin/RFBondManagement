@@ -43,7 +43,7 @@ namespace RfBondManagement.WinForm.Forms
             this.pnlPapers = new System.Windows.Forms.Panel();
             this.lvPapers = new System.Windows.Forms.ListView();
             this.chPaperName = new System.Windows.Forms.ColumnHeader();
-            this.chFaceValue = new System.Windows.Forms.ColumnHeader();
+            this.chBondPar = new System.Windows.Forms.ColumnHeader();
             this.chCount = new System.Windows.Forms.ColumnHeader();
             this.chSummToClose = new System.Windows.Forms.ColumnHeader();
             this.chIncome = new System.Windows.Forms.ColumnHeader();
@@ -167,7 +167,7 @@ namespace RfBondManagement.WinForm.Forms
             this.lvPapers.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lvPapers.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.chPaperName,
-            this.chFaceValue,
+            this.chBondPar,
             this.chCount,
             this.chSummToClose,
             this.chIncome,
@@ -191,10 +191,10 @@ namespace RfBondManagement.WinForm.Forms
             this.chPaperName.Name = "chPaperName";
             this.chPaperName.Text = "Бумага";
             // 
-            // chFaceValue
+            // chBondPar
             // 
-            this.chFaceValue.Name = "chBondPar";
-            this.chFaceValue.Text = "Номинал";
+            this.chBondPar.Name = "chBondPar";
+            this.chBondPar.Text = "Номинал";
             // 
             // chCount
             // 
@@ -260,13 +260,13 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // btnAddPaper
             // 
-            this.btnAddPaper.Enabled = false;
             this.btnAddPaper.Location = new System.Drawing.Point(12, 8);
             this.btnAddPaper.Name = "btnAddPaper";
             this.btnAddPaper.Size = new System.Drawing.Size(75, 23);
             this.btnAddPaper.TabIndex = 0;
             this.btnAddPaper.Text = "Добавить";
             this.btnAddPaper.UseVisualStyleBackColor = true;
+            this.btnAddPaper.Click += new System.EventHandler(this.btnAddPaper_Click);
             // 
             // lblPaperList
             // 
@@ -328,6 +328,7 @@ namespace RfBondManagement.WinForm.Forms
         private System.Windows.Forms.ToolStripMenuItem menuItemBondCalculator;
         private System.Windows.Forms.ToolStripMenuItem menuItemDictionary;
         private System.Windows.Forms.ToolStripMenuItem menuItemPapers;
+        private System.Windows.Forms.ColumnHeader chBondPar;
     }
 }
 

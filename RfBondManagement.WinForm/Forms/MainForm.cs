@@ -100,5 +100,13 @@ namespace RfBondManagement.WinForm.Forms
                 f.ShowDialog();
             }
         }
+
+        private void btnAddPaper_Click(object sender, EventArgs e)
+        {
+            using (var f = _container.Resolve<PaperActionForm>())
+            {
+                f.ShowDialog();
+            }
+        }
     }
 }

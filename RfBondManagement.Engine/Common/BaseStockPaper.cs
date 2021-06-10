@@ -42,6 +42,11 @@ namespace RfBondManagement.Engine.Common
         public DateTime? IssueDate { get; set; }
 
         /// <summary>
+        /// Объем выпуска
+        /// </summary>
+        public long IssueSize { get; set; }
+
+        /// <summary>
         /// Вид/категория ценной бумаги
         /// </summary>
         public string TypeName { get; set; }
@@ -61,6 +66,26 @@ namespace RfBondManagement.Engine.Common
         /// </summary>
         public string GroupName { get; set; }
 
+        /// <summary>
+        /// Дата погашения
+        /// </summary>
+        public DateTime? MatDate { get; set; }
+
+        /// <summary>
+        /// Первоначальная номинальная стоимость
+        /// </summary>
+        public decimal? InitialFaceValue { get; set; }
+
+        /// <summary>
+        /// Периодичность выплаты купона в год
+        /// </summary>
+        public long? CouponFrequency { get; set; }
+
+        /// <summary>
+        /// Возможен досрочный выкуп
+        /// </summary>
+        public bool EarlyRepayment { get; set; }
+
         public bool IsShare => string.Equals("stock_shares", Group, StringComparison.InvariantCultureIgnoreCase);
 
         public bool IsPreferedShare => IsShare && string.Equals("preferred_share", Type, StringComparison.InvariantCultureIgnoreCase);
@@ -73,9 +98,24 @@ namespace RfBondManagement.Engine.Common
 
         public bool IsDR => string.Equals("stock_dr", Group, StringComparison.InvariantCultureIgnoreCase);
 
+        /// <summary>
+        /// Список досок
+        /// </summary>
         public IList<PaperBoard> Boards { get; set; }
 
         public PaperBoard PrimaryBoard => Boards?.Single(b => b.IsPrimary);
+
+        /// <summary>
+        /// Список офферов (по выкупу), для облигаций
+        /// </summary>
+        public IList<PaperOffer> Offers { get; set; }
+
+        public DateTime? OfferDate => Offers != null && Offers.Count > 0 ? Offers[0].OfferDate : (DateTime?)null;
+
+        /// <summary>
+        /// Список выплат по купонам, для облигаций
+        /// </summary>
+        public List<BondCoupon> Coupons { get; set; }
 
 
         [Obsolete]

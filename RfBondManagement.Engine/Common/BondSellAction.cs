@@ -1,6 +1,6 @@
 ﻿namespace RfBondManagement.Engine.Common
 {
-    public class BondSellAction : BaseBondAction
+    public class BondSellAction : BaseAction
     {
         public decimal Nkd { get; set; }
 

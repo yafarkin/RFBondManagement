@@ -10,7 +10,7 @@ namespace RfBondManagement.Engine.Interfaces
         void SaveSettings(Settings settings);
 
         [Obsolete]
-        IEnumerable<BaseStockPaperInPortfolio<BaseBondPaper>> GetPapersInPortfolio();
+        IEnumerable<BaseStockPaperInPortfolio<BaseStockPaper>> GetPapersInPortfolio();
 
         IEnumerable<BaseStockPaper> SelectPapers();
         BaseStockPaper InsertPaper(BaseStockPaper paper);

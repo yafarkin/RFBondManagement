@@ -65,20 +65,19 @@ namespace RfBondManagement.WinForm.Forms
                     SellPrice = bondPaper.LastPrice.Price
                 };
 
-                calc.CalculateIncome(biiToClose, _settings, bondPaper.MaturityDate);
+                calc.CalculateIncome(biiToClose, _settings, bondPaper.MatDate.GetValueOrDefault());
                 calc.CalculateIncome(biiToToday, _settings, DateTime.Today.AddDays(30));
 
                 var lvi = new ListViewItem(new[]
                 {
                     bondPaper.Name,
-                    bondPaper.Currency,
-                    bondPaper.BondPar.ToString("C"),
+                    bondPaper.FaceValue.GetValueOrDefault().ToString("C"),
                     paperInPortfolio.Count.ToString("### ### ###"),
                     biiToClose.BalanceOnSell.ToString("C"),
                     biiToClose.ExpectedIncome.ToString("C"),
                     (biiToClose.RealIncomePercent/100).ToString("P"),
                     biiToClose.BreakevenDate.ToShortDateString(),
-                    (bondPaper.MaturityDate - DateTime.Today).Days.ToString(),
+                    (bondPaper.MatDate.GetValueOrDefault() - DateTime.Today).Days.ToString(),
                 });
                 lvPapers.Items.Add(lvi);
             }

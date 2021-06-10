@@ -176,9 +176,9 @@ namespace BackTesting.Strategies
                 var price = paperPrice.Price;
 
                 var paper = _papers[code];
-                if (paper is BaseBondPaper bondPaper)
+                if (paper.IsBond)
                 {
-                    var nkd = _bondCalculator.CalculateNkd(bondPaper, date);
+                    var nkd = _bondCalculator.CalculateNkd(paper, date);
                     price += nkd;
                 }
 

@@ -21,6 +21,7 @@ namespace RfBondManagement.WinForm.Forms
             InitializeComponent();
 
             psBond.InitDI(_db);
+            psBond.WhereFilter = p => p.IsBond;
         }
 
         private void cbUntilMaturityDate_CheckedChanged(object sender, EventArgs e)
@@ -135,17 +136,15 @@ namespace RfBondManagement.WinForm.Forms
                 }
             }
 
-            var bondPaper = obj as BaseBondPaper;
-
             var bii = new BondIncomeInfo();
             bii.PaperInPortfolio = new BaseBondPaperInPortfolio
             {
-                Paper = bondPaper,
-                Actions = new List<BaseAction<BaseBondPaper>>
+                Paper = obj,
+                Actions = new List<BaseAction>
                 {
                     new BondBuyAction
                     {
-                        Paper = bondPaper,
+                        Paper = obj,
                         Count = count,
                         Price = buyPrice,
                         Date = dtpBuyDate.Value
@@ -164,7 +163,7 @@ namespace RfBondManagement.WinForm.Forms
                 Tax = tax
             };
 
-            _calculator.CalculateIncome(bii, settings, untilMaturity ? bondPaper.MaturityDate : dtpSellDate.Value);
+            _calculator.CalculateIncome(bii, settings, untilMaturity ? obj.MatDate.GetValueOrDefault() : dtpSellDate.Value);
 
             lblRealIncomePercent.Text = (bii.RealIncomePercent/100m).ToString("P");
             lblExpectedIncome.Text = bii.ExpectedIncome.ToString("C");

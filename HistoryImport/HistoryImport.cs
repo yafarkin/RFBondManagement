@@ -365,7 +365,7 @@ namespace HistoryImport
                                 }
                                 else
                                 {
-                                    paper = new BaseBondPaper
+                                    paper = new BaseStockPaper
                                     {
                                         SecId = data.ticker
                                     };
@@ -395,7 +395,7 @@ namespace HistoryImport
                                     }
                                     else if (o.Key == ConsoleKey.D2 || o.Key == ConsoleKey.D4)
                                     {
-                                        paper = new BaseBondPaper
+                                        paper = new BaseStockPaper
                                         {
                                             SecId = data.ticker
                                         };

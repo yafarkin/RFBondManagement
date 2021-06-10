@@ -36,13 +36,14 @@ namespace RfBondManagement.WinForm.Forms
             this.menuItemExit = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemSettings = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemGeneralSettings = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemDictionary = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemPapers = new System.Windows.Forms.ToolStripMenuItem();
             this.pnlPaperDetails = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
             this.pnlPapers = new System.Windows.Forms.Panel();
             this.lvPapers = new System.Windows.Forms.ListView();
             this.chPaperName = new System.Windows.Forms.ColumnHeader();
-            this.chCurrency = new System.Windows.Forms.ColumnHeader();
-            this.chBondPar = new System.Windows.Forms.ColumnHeader();
+            this.chFaceValue = new System.Windows.Forms.ColumnHeader();
             this.chCount = new System.Windows.Forms.ColumnHeader();
             this.chSummToClose = new System.Windows.Forms.ColumnHeader();
             this.chIncome = new System.Windows.Forms.ColumnHeader();
@@ -54,8 +55,6 @@ namespace RfBondManagement.WinForm.Forms
             this.btnEditPaper = new System.Windows.Forms.Button();
             this.btnAddPaper = new System.Windows.Forms.Button();
             this.lblPaperList = new System.Windows.Forms.Label();
-            this.menuItemDictionary = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuItemPapers = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenu.SuspendLayout();
             this.pnlPaperDetails.SuspendLayout();
             this.pnlPapers.SuspendLayout();
@@ -115,6 +114,21 @@ namespace RfBondManagement.WinForm.Forms
             this.menuItemGeneralSettings.Text = "Общие настройки";
             this.menuItemGeneralSettings.Click += new System.EventHandler(this.menuItemGeneralSettings_Click);
             // 
+            // menuItemDictionary
+            // 
+            this.menuItemDictionary.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuItemPapers});
+            this.menuItemDictionary.Name = "menuItemDictionary";
+            this.menuItemDictionary.Size = new System.Drawing.Size(94, 20);
+            this.menuItemDictionary.Text = "Справочники";
+            // 
+            // menuItemPapers
+            // 
+            this.menuItemPapers.Name = "menuItemPapers";
+            this.menuItemPapers.Size = new System.Drawing.Size(114, 22);
+            this.menuItemPapers.Text = "Бумаги";
+            this.menuItemPapers.Click += new System.EventHandler(this.menuItemPapers_Click);
+            // 
             // pnlPaperDetails
             // 
             this.pnlPaperDetails.Controls.Add(this.label1);
@@ -153,8 +167,7 @@ namespace RfBondManagement.WinForm.Forms
             this.lvPapers.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lvPapers.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.chPaperName,
-            this.chCurrency,
-            this.chBondPar,
+            this.chFaceValue,
             this.chCount,
             this.chSummToClose,
             this.chIncome,
@@ -178,15 +191,10 @@ namespace RfBondManagement.WinForm.Forms
             this.chPaperName.Name = "chPaperName";
             this.chPaperName.Text = "Бумага";
             // 
-            // chCurrency
+            // chFaceValue
             // 
-            this.chCurrency.Name = "chCurrency";
-            this.chCurrency.Text = "Валюта";
-            // 
-            // chBondPar
-            // 
-            this.chBondPar.Name = "chBondPar";
-            this.chBondPar.Text = "Номинал";
+            this.chFaceValue.Name = "chBondPar";
+            this.chFaceValue.Text = "Номинал";
             // 
             // chCount
             // 
@@ -269,21 +277,6 @@ namespace RfBondManagement.WinForm.Forms
             this.lblPaperList.TabIndex = 0;
             this.lblPaperList.Text = "Список бумаг";
             // 
-            // menuItemDictionary
-            // 
-            this.menuItemDictionary.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuItemPapers});
-            this.menuItemDictionary.Name = "menuItemDictionary";
-            this.menuItemDictionary.Size = new System.Drawing.Size(94, 20);
-            this.menuItemDictionary.Text = "Справочники";
-            // 
-            // menuItemPapers
-            // 
-            this.menuItemPapers.Name = "menuItemPapers";
-            this.menuItemPapers.Size = new System.Drawing.Size(180, 22);
-            this.menuItemPapers.Text = "Бумаги";
-            this.menuItemPapers.Click += new System.EventHandler(this.menuItemPapers_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -325,11 +318,10 @@ namespace RfBondManagement.WinForm.Forms
         private System.Windows.Forms.ListView lvPapers;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ColumnHeader chPaperName;
-        private System.Windows.Forms.ColumnHeader chCurrency;
         private System.Windows.Forms.ColumnHeader chSummToClose;
         private System.Windows.Forms.ColumnHeader chPercent;
         private System.Windows.Forms.ColumnHeader chDaysToClose;
-        private System.Windows.Forms.ColumnHeader chBondPar;
+        private System.Windows.Forms.ColumnHeader chFaceValue;
         private System.Windows.Forms.ColumnHeader chCount;
         private System.Windows.Forms.ColumnHeader chIncome;
         private System.Windows.Forms.ColumnHeader chPositiveDate;

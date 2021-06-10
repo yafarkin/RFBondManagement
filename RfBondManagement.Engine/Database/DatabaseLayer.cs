@@ -41,7 +41,7 @@ namespace RfBondManagement.Engine.Database
             _settingsSet.Insert(settings);
         }
 
-        public IEnumerable<BaseStockPaperInPortfolio<BaseBondPaper>> GetPapersInPortfolio()
+        public IEnumerable<BaseStockPaperInPortfolio<BaseStockPaper>> GetPapersInPortfolio()
         {
             return _bonds.FindAll();
         }

@@ -15,6 +15,8 @@ namespace RfBondManagement.WinForm.Controls
 
         protected const int TAKE_COUNT = 25;
 
+        public Func<BaseStockPaper, bool> WhereFilter;
+
 
         [Browsable(true)]
         [Category("Action")]
@@ -44,6 +46,11 @@ namespace RfBondManagement.WinForm.Controls
             cbbPaper.ValueMember = "Code";
 
             _papers = _db.SelectPapers();
+            if (WhereFilter != null)
+            {
+                _papers = _papers.Where(WhereFilter);
+            }
+
             cbbPaper.DataSource = _papers.Take(TAKE_COUNT).ToList();
         }
 
@@ -55,11 +62,10 @@ namespace RfBondManagement.WinForm.Controls
             }
 
             var text = cbbPaper.Text.Trim().ToLower();
-            cbbPaper.DataSource = _papers.Where(p => string.IsNullOrEmpty(text) ||
-                    p.Name.ToLower().Contains(text) || p.SecId.ToLower().Contains(text) ||
-                    p.Isin.ToLower().Contains(text))
-                .Take(TAKE_COUNT)
-                .ToList();
+            var query = _papers.Where(p => string.IsNullOrEmpty(text) ||
+                                           p.Name.ToLower().Contains(text) || p.SecId.ToLower().Contains(text) ||
+                                           p.Isin.ToLower().Contains(text));
+            cbbPaper.DataSource =query.Take(TAKE_COUNT).ToList();
         }
 
         private void cbPaper_SelectionChangeCommitted(object sender, EventArgs e)

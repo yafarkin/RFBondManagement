@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using RfBondManagement.Engine;
 using RfBondManagement.Engine.Calculations;
 using RfBondManagement.Engine.Common;
 
@@ -11,7 +10,7 @@ namespace RfBondManagement.UnitTests
     public class BondCalculatorTests
     {
         public BondCalculator Calculator;
-        public BaseBondPaper BondPaper;
+        public BaseStockPaper BondPaper;
         public Settings Settings;
 
         [SetUp]
@@ -25,12 +24,11 @@ namespace RfBondManagement.UnitTests
 
             Calculator = new BondCalculator();
 
-            BondPaper = new BaseBondPaper
+            BondPaper = new BaseStockPaper
             {
-                BondPar = 1000,
+                FaceValue = 1000,
                 Name = "Test Bond",
-                Currency = "RUR",
-                MaturityDate = new DateTime(2023, 8, 30),
+                MatDate = new DateTime(2023, 8, 30),
                 Coupons = new List<BondCoupon>
                 {
                     new BondCoupon
@@ -83,12 +81,12 @@ namespace RfBondManagement.UnitTests
             {
                 PaperInPortfolio = new BaseBondPaperInPortfolio
                 {
-                    Actions = new List<BaseAction<BaseBondPaper>> {buyAction},
+                    Actions = new List<BaseAction> {buyAction},
                     Paper = BondPaper
                 }
             };
 
-            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, null, BondPaper.MaturityDate);
+            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, null, BondPaper.MatDate.GetValueOrDefault());
             Assert.IsTrue(bondIncomeInfo.CloseByMaturityDate);
             Assert.AreEqual(1000m, bondIncomeInfo.BalanceOnBuy);
             Assert.AreEqual(1300m, bondIncomeInfo.BalanceOnSell);
@@ -113,12 +111,12 @@ namespace RfBondManagement.UnitTests
             {
                 PaperInPortfolio = new BaseBondPaperInPortfolio
                 {
-                    Actions = new List<BaseAction<BaseBondPaper>> {buyAction},
+                    Actions = new List<BaseAction> {buyAction},
                     Paper = BondPaper
                 }
             };
 
-            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, Settings, BondPaper.MaturityDate);
+            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, Settings, BondPaper.MatDate.GetValueOrDefault());
             Assert.IsTrue(bondIncomeInfo.CloseByMaturityDate);
             Assert.AreEqual(1000.61m, bondIncomeInfo.BalanceOnBuy);
             Assert.AreEqual(1261m, bondIncomeInfo.BalanceOnSell);
@@ -130,11 +128,11 @@ namespace RfBondManagement.UnitTests
         [Test]
         public void RealBondPaper()
         {
-            var realPaper = new BaseBondPaper
+            var realPaper = new BaseStockPaper
             {
                 Name = "ОФЗ 26223",
-                BondPar = 1000,
-                MaturityDate = new DateTime(2024, 2, 28),
+                FaceValue = 1000,
+                MatDate = new DateTime(2024, 2, 28),
                 Coupons = new List<BondCoupon>
                 {
                     new BondCoupon
@@ -188,12 +186,12 @@ namespace RfBondManagement.UnitTests
             {
                 PaperInPortfolio = new BaseBondPaperInPortfolio
                 {
-                    Actions = new List<BaseAction<BaseBondPaper>> { buyAction },
+                    Actions = new List<BaseAction> { buyAction },
                     Paper = BondPaper
                 }
             };
 
-            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, Settings, realPaper.MaturityDate);
+            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, Settings, realPaper.MatDate.GetValueOrDefault());
 
             Assert.IsTrue(bondIncomeInfo.CloseByMaturityDate);
             Assert.AreEqual(1065.75m, Math.Round(bondIncomeInfo.BalanceOnBuy, 2));

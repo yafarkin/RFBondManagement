@@ -63,6 +63,17 @@ namespace RfBondManagement.Engine.Integration.Moex.Dto
             return decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var r) ? (decimal?)r : null;
         }
 
+        public long? GetDataForLong(string key, string value, string field)
+        {
+            var s = GetDataForString(key, value, field);
+            if (null == s)
+            {
+                return null;
+            }
+
+            return long.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var r) ? (long?)r : null;
+        }
+
         public string GetDataFor(string key)
         {
             foreach (var dataItem in Data)

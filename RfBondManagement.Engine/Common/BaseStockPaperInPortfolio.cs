@@ -12,6 +12,6 @@ namespace RfBondManagement.Engine.Common
         public decimal AvgBuySum => Actions.Where(a => a.IsBuy).Sum(a => a.Count * a.Price) /
                                     Actions.Where(a => a.IsBuy).Sum(a => a.Count);
 
-        public List<BaseAction<T>> Actions { get; set; }
+        public List<BaseAction> Actions { get; set; }
     }
 }

@@ -256,9 +256,9 @@ namespace BackTesting
             foreach (var bondInPortfolio in portfolio.Bonds)
             {
                 var bond = bondInPortfolio.Paper;
-                if (bond.MaturityDate == date || bond.OfferDate == date)
+                if (bond.MatDate == date || bond.OfferDate == date)
                 {
-                    var totalSum = bond.BondPar * bondInPortfolio.Count;
+                    var totalSum = bond.FaceValue.GetValueOrDefault() * bondInPortfolio.Count;
 
                     portfolio.Sum += totalSum;
 
@@ -268,12 +268,12 @@ namespace BackTesting
                         Date = date,
                         Paper = bond,
                         Count = bondInPortfolio.Count,
-                        Price = bond.BondPar
+                        Price = bond.FaceValue.GetValueOrDefault()
                     });
 
                     portfolio.MoneyMoves.Add(new BaseMoneyMove
                     {
-                        Comment = $"Close bond {bond.SecId}, count: {bondInPortfolio.Count:N0}, close par: {bond.BondPar:C}, total sum: {totalSum:C}",
+                        Comment = $"Close bond {bond.SecId}, count: {bondInPortfolio.Count:N0}, close par: {bond.FaceValue:C}, total sum: {totalSum:C}",
                         Date = date,
                         MoneyMoveType = MoneyMoveType.IncomeCloseBond,
                         Sum = totalSum,
@@ -316,7 +316,7 @@ namespace BackTesting
 
             portfolio.Sum -= totalSum;
 
-            if (paper is BaseBondPaper bondPaper)
+            if (paper.IsBond)
             {
                 var bp = portfolio.Bonds.FirstOrDefault(p => p.Paper.SecId == paper.SecId);
 
@@ -324,20 +324,20 @@ namespace BackTesting
                 {
                     bp = new BaseBondPaperInPortfolio
                     {
-                        Paper = bondPaper,
-                        Actions = new List<BaseAction<BaseBondPaper>>()
+                        Paper = paper,
+                        Actions = new List<BaseAction>()
                     };
 
                     portfolio.Bonds.Add(bp);
                 }
 
-                var nkd = bondCalculator.CalculateNkd(bondPaper, date);
+                var nkd = bondCalculator.CalculateNkd(paper, date);
 
                 bp.Actions.Add(new BondBuyAction
                 {
                     Nkd = nkd * count,
                     Date = date,
-                    Paper = bondPaper,
+                    Paper = paper,
                     Count = count,
                     Price = price
                 });
@@ -351,7 +351,7 @@ namespace BackTesting
                     sp = new BaseSharePaperInPortfolio
                     {
                         Paper = sharePaper,
-                        Actions = new List<BaseAction<BaseStockPaper>>()
+                        Actions = new List<BaseAction>()
                     };
 
                     portfolio.Shares.Add(sp);
@@ -377,17 +377,17 @@ namespace BackTesting
             var price = historyPrice.Price;
 
             bool isShare;
-            if (paper is BaseBondPaper)
+            if (paper.IsBond)
             {
                 isShare = false;
             }
-            else if (paper is BaseStockPaper)
+            else if (paper.IsShare)
             {
                 isShare = true;
             }
             else
             {
-                throw new NotSupportedException($"Unknown paper type: {paper.GetType()}");
+                throw new NotSupportedException($"Unknown paper type: {paper.Group}");
             }
 
             decimal avgPrice;
@@ -458,7 +458,7 @@ namespace BackTesting
                 {
                     Nkd = nkd * count,
                     Date = date,
-                    Paper = paper as BaseBondPaper,
+                    Paper = paper,
                     Count = count,
                     Price = price
                 });

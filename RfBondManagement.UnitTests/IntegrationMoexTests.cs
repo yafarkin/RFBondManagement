@@ -91,8 +91,9 @@ namespace RfBondManagement.UnitTests
             var jsonBond = await bondRequest.Read();
             var jsonCoupon = await couponRequest.Read();
 
-            var bondPaper = StockPaperConverter.Map(jsonBond, jsonCoupon);
+            var bondPaper = StockPaperConverter.Map(jsonBond);
             bondPaper.ShouldNotBe(null);
+            StockPaperConverter.MapBond(bondPaper, jsonCoupon);
 
             bondPaper.Isin.ShouldBe("RU000A0JS4M5");
             bondPaper.Coupons.Count.ShouldBe(14);

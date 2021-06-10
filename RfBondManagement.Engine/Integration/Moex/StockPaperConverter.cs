@@ -8,9 +8,9 @@ namespace RfBondManagement.Engine.Integration.Moex
 {
     public static class StockPaperConverter
     {
-        private static T Map<T>(JsonPaperDefinition paper) where T : BaseStockPaper, new()
+        public static BaseStockPaper Map(JsonPaperDefinition paper)
         {
-            var result = new T
+            var result = new BaseStockPaper
             {
                 Id = Guid.NewGuid()
             };
@@ -21,10 +21,15 @@ namespace RfBondManagement.Engine.Integration.Moex
             result.Isin = paper.Description.GetDataForString("name", "ISIN", "value");
             result.FaceValue = paper.Description.GetDataForDecimal("name", "FACEVALUE", "value");
             result.IssueDate = paper.Description.GetDataForDateTime("name", "ISSUEDATE", "value");
+            result.IssueSize = paper.Description.GetDataForLong("name", "ISSUESIZE", "value").GetValueOrDefault();
             result.Type = paper.Description.GetDataForString("name", "TYPE", "value");
             result.TypeName = paper.Description.GetDataForString("name", "TYPENAME", "value");
             result.Group = paper.Description.GetDataForString("name", "GROUP", "value");
             result.GroupName = paper.Description.GetDataForString("name", "GROUPNAME", "value");
+            result.MatDate = paper.Description.GetDataForDateTime("name", "MATDATE", "value");
+            result.InitialFaceValue = paper.Description.GetDataForDecimal("name", "INITIALFACEVALUE", "value");
+            result.CouponFrequency = paper.Description.GetDataForLong("name", "COUPONFREQUENCY", "value");
+            result.EarlyRepayment = paper.Description.GetDataForString("name", "EARLYREPAYMENT", "value") == "1";
 
             result.Boards = new List<PaperBoard>(paper.Boards.Data.Count);
             foreach (var board in paper.Boards.Data)
@@ -46,16 +51,15 @@ namespace RfBondManagement.Engine.Integration.Moex
             return result;
         }
 
-        public static BaseStockPaper Map(JsonPaperDefinition paper)
+        // TODO: Add dividends info
+        public static BaseStockPaper MapShare(BaseStockPaper paper, JsonBase dividends)
         {
-            return Map<BaseStockPaper>(paper);
+            return paper;
         }
 
-        public static BaseBondPaper Map(JsonPaperDefinition paper, JsonBondization coupons)
+        public static void MapBond(BaseStockPaper paper, JsonBondization coupons)
         {
-            var result = Map<BaseBondPaper>(paper);
-
-            result.Coupons = new List<BondCoupon>(coupons.Coupons.Data.Count);
+            paper.Coupons = new List<BondCoupon>(coupons.Coupons.Data.Count);
 
             foreach (var jsonCoupon in coupons.Coupons.Data)
             {
@@ -63,10 +67,25 @@ namespace RfBondManagement.Engine.Integration.Moex
                 coupon.Date = Convert.ToDateTime(jsonCoupon["coupondate"]);
                 coupon.Value = Convert.ToDecimal(jsonCoupon["value"], CultureInfo.InvariantCulture);
 
-                result.Coupons.Add(coupon);
+                paper.Coupons.Add(coupon);
             }
 
-            return result;
+            paper.Offers = new List<PaperOffer>();
+            foreach (var jsonOffer in coupons.Offers.Data)
+            {
+                var offer = new PaperOffer();
+                offer.OfferDate = Convert.ToDateTime(jsonOffer["offerdate"]);
+                offer.OfferDateStart = string.IsNullOrWhiteSpace(jsonOffer["offerdatestart"])
+                    ? (DateTime?)null
+                    : Convert.ToDateTime(jsonOffer["offerdatestart"]);
+                offer.OfferDateEnd = string.IsNullOrWhiteSpace(jsonOffer["offerdateend"])
+                    ? (DateTime?)null
+                    : Convert.ToDateTime(jsonOffer["offerdateend"]);
+                offer.Price = Convert.ToDecimal(jsonOffer["price"], CultureInfo.InvariantCulture);
+                offer.OfferType = jsonOffer["offertype"];
+
+                paper.Offers.Add(offer);
+            }
         }
     }
 }

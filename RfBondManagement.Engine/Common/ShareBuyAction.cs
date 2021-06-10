@@ -1,6 +1,6 @@
 ﻿namespace RfBondManagement.Engine.Common
 {
-    public class ShareBuyAction : BaseShareAction
+    public class ShareBuyAction : BaseAction
     {
         public override bool IsBuy => true;
     }

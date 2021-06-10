@@ -44,6 +44,18 @@ namespace RfBondManagement.WinForm.Forms
             var response = await request.Read();
             Paper = StockPaperConverter.Map(response);
 
+            if (Paper.IsBond)
+            {
+                var couponsRequest = new MoexBondCouponsRequest(Paper.SecId);
+                var couponsResponse = await couponsRequest.Read();
+                StockPaperConverter.MapBond(Paper, couponsResponse);
+            }
+            else if (Paper.IsShare)
+            {
+                //TODO: Add dividends
+            }
+
+
             DataBind();
 
             lblLastPrice.Text = "---";

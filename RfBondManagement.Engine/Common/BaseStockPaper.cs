@@ -34,7 +34,7 @@ namespace RfBondManagement.Engine.Common
         /// <summary>
         /// Номинальная стоимость
         /// </summary>
-        public decimal? FaceValue { get; set; }
+        public decimal FaceValue { get; set; }
 
         /// <summary>
         /// Дата начала торгов

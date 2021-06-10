@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RfBondManagement.WinForm", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BackTesting", "BackTesting\BackTesting.csproj", "{3B4F1A2A-BEA0-40AD-ADFF-0A32BCBD3876}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HistoryImport", "HistoryImport\HistoryImport.csproj", "{80072FD9-B46F-4298-B890-332A9A8D28BE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HistoryImport", "HistoryImport\HistoryImport.csproj", "{80072FD9-B46F-4298-B890-332A9A8D28BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RfFondPortfolio.Common", "RfFondPortfolio.Common\RfFondPortfolio.Common.csproj", "{7B4641CC-A954-45B7-8647-305C942DFC53}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{80072FD9-B46F-4298-B890-332A9A8D28BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{80072FD9-B46F-4298-B890-332A9A8D28BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{80072FD9-B46F-4298-B890-332A9A8D28BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B4641CC-A954-45B7-8647-305C942DFC53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B4641CC-A954-45B7-8647-305C942DFC53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B4641CC-A954-45B7-8647-305C942DFC53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B4641CC-A954-45B7-8647-305C942DFC53}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

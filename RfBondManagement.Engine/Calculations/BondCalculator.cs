@@ -63,10 +63,10 @@ namespace RfBondManagement.Engine.Calculations
         {
             var nkd = buyAction.Nkd;
 
-            decimal buyPrice = (bondIncomeInfo.PaperInPortfolio.Paper.FaceValue.GetValueOrDefault() * (bondIncomeInfo.PaperInPortfolio.AvgBuySum / 100) + nkd) *
+            decimal buyPrice = (bondIncomeInfo.PaperInPortfolio.Paper.FaceValue * (bondIncomeInfo.PaperInPortfolio.AvgBuySum / 100) + nkd) *
                                (1 + (settings?.Commissions / 100 ?? 0));
 
-            decimal balance = -buyPrice + bondIncomeInfo.PaperInPortfolio.Paper.FaceValue.GetValueOrDefault();
+            decimal balance = -buyPrice + bondIncomeInfo.PaperInPortfolio.Paper.FaceValue;
 
             bondIncomeInfo.BalanceOnBuy = buyPrice;
 
@@ -83,22 +83,22 @@ namespace RfBondManagement.Engine.Calculations
                     totalDays = 1;
                 }
 
-                bondIncomeInfo.RealIncomePercent =  balance / buyAction.Paper.FaceValue.GetValueOrDefault() * 100 / (totalDays / 365m);
+                bondIncomeInfo.RealIncomePercent =  balance / buyAction.Paper.FaceValue * 100 / (totalDays / 365m);
 
                 if (fromDate == buyAction.Paper.MatDate)
                 {
-                    bondIncomeInfo.SellPrice = buyAction.Paper.FaceValue.GetValueOrDefault();
+                    bondIncomeInfo.SellPrice = buyAction.Paper.FaceValue;
                     bondIncomeInfo.CloseByMaturityDate = true;
 
-                    balance += buyAction.Paper.FaceValue.GetValueOrDefault();
+                    balance += buyAction.Paper.FaceValue;
                 }
                 else
                 {
-                    var sellPrice = buyAction.Paper.FaceValue.GetValueOrDefault() * bondIncomeInfo.SellPrice / 100;
+                    var sellPrice = buyAction.Paper.FaceValue * bondIncomeInfo.SellPrice / 100;
                     if (bondIncomeInfo.SellPrice > buyAction.Price)
                     {
                         var sellTax = (bondIncomeInfo.SellPrice - buyAction.Price) *
-                                   buyAction.Paper.FaceValue.GetValueOrDefault() *
+                                   buyAction.Paper.FaceValue *
                                    (settings?.Tax / 100 ?? 1);
                         sellPrice -= sellTax;
                         bondIncomeInfo.SellTax = sellTax;

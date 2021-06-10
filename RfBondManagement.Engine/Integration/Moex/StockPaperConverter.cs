@@ -19,7 +19,7 @@ namespace RfBondManagement.Engine.Integration.Moex
             result.Name = paper.Description.GetDataForString("name", "NAME", "value");
             result.ShortName = paper.Description.GetDataForString("name", "SHORTNAME", "value");
             result.Isin = paper.Description.GetDataForString("name", "ISIN", "value");
-            result.FaceValue = paper.Description.GetDataForDecimal("name", "FACEVALUE", "value");
+            result.FaceValue = paper.Description.GetDataForDecimal("name", "FACEVALUE", "value").GetValueOrDefault();
             result.IssueDate = paper.Description.GetDataForDateTime("name", "ISSUEDATE", "value");
             result.IssueSize = paper.Description.GetDataForLong("name", "ISSUESIZE", "value").GetValueOrDefault();
             result.Type = paper.Description.GetDataForString("name", "TYPE", "value");

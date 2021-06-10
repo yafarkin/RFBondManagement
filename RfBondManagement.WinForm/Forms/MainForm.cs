@@ -71,7 +71,7 @@ namespace RfBondManagement.WinForm.Forms
                 var lvi = new ListViewItem(new[]
                 {
                     bondPaper.Name,
-                    bondPaper.FaceValue.GetValueOrDefault().ToString("C"),
+                    bondPaper.FaceValue.ToString("C"),
                     paperInPortfolio.Count.ToString("### ### ###"),
                     biiToClose.BalanceOnSell.ToString("C"),
                     biiToClose.ExpectedIncome.ToString("C"),

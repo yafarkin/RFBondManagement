@@ -21,7 +21,7 @@ namespace RfBondManagement.WinForm.Forms
             tbName.Text = Paper?.Name;
             tbShortName.Text = Paper?.ShortName;
             tbIsin.Text = Paper?.Isin;
-            tbFaceValue.Text = Paper?.FaceValue?.ToString();
+            tbFaceValue.Text = Paper?.FaceValue.ToString();
             tbIssueDate.Text = Paper?.IssueDate?.ToShortDateString();
             tbTypeName.Text = Paper?.TypeName;
             tbGroup.Text = Paper?.Group;
@@ -94,7 +94,7 @@ namespace RfBondManagement.WinForm.Forms
             Paper.Name = tbName.Text;
             Paper.ShortName = tbShortName.Text;
             Paper.Isin = tbIsin.Text;
-            Paper.FaceValue = string.IsNullOrWhiteSpace(tbFaceValue.Text) ? null : Convert.ToDecimal(tbFaceValue.Text);
+            Paper.FaceValue = string.IsNullOrWhiteSpace(tbFaceValue.Text) ? 0 : Convert.ToDecimal(tbFaceValue.Text);
             Paper.IssueDate = string.IsNullOrWhiteSpace(tbIssueDate.Text) ? null : Convert.ToDateTime(tbIssueDate.Text);
             Paper.TypeName = tbTypeName.Text;
             Paper.Group = tbGroup.Text;

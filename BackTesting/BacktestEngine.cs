@@ -258,7 +258,7 @@ namespace BackTesting
                 var bond = bondInPortfolio.Paper;
                 if (bond.MatDate == date || bond.OfferDate == date)
                 {
-                    var totalSum = bond.FaceValue.GetValueOrDefault() * bondInPortfolio.Count;
+                    var totalSum = bond.FaceValue * bondInPortfolio.Count;
 
                     portfolio.Sum += totalSum;
 
@@ -268,7 +268,7 @@ namespace BackTesting
                         Date = date,
                         Paper = bond,
                         Count = bondInPortfolio.Count,
-                        Price = bond.FaceValue.GetValueOrDefault()
+                        Price = bond.FaceValue
                     });
 
                     portfolio.MoneyMoves.Add(new BaseMoneyMove

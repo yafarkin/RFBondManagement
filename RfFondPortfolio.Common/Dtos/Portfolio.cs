@@ -1,18 +1,10 @@
-﻿using System;
-using RfFondPortfolio.Common.Logic;
-
-namespace RfFondPortfolio.Common.Dtos
+﻿namespace RfFondPortfolio.Common.Dtos
 {
     /// <summary>
     /// Параметры портфеля
     /// </summary>
-    public class Portfolio
+    public class Portfolio : BaseEntity
     {
-        /// <summary>
-        /// Уникальный идентификатор
-        /// </summary>
-        public Guid Id { get; set; }
-
         /// <summary>
         /// Актуальный ли портфель
         /// </summary>
@@ -37,11 +29,5 @@ namespace RfFondPortfolio.Common.Dtos
         /// Налог на доход
         /// </summary>
         public decimal Tax { get; set; }
-
-        /// <summary>
-        /// Содержание портфеля
-        /// </summary>
-        /// <remarks>Строится через вызов <see cref="PortfolioBuilder.Build"/></remarks>
-        public PortfolioAggregatedContent AggregatedContent { get; set; }
     }
 }

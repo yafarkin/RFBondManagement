@@ -11,7 +11,7 @@ namespace RfBondManagement.Main
             Application.Init();
 
             var db = new DatabaseLayer();
-            var settings = db.LoadSettings();
+            var portfolio = db.LoadSettings();
 
             var mainWindow = new MainWindow(db);
 
@@ -20,12 +20,12 @@ namespace RfBondManagement.Main
             mainMenu.OnChangeSettings += () =>
             {
                 var settingsWindow = new GeneralSettingsWindow(mainWindow);
-                settingsWindow.DataBind(settings);
+                settingsWindow.DataBind(portfolio);
 
                 settingsWindow.OnSave += newSettings =>
                 {
-                    settings = newSettings;
-                    db.SaveSettings(settings);
+                    portfolio = newSettings;
+                    db.SaveSettings(portfolio);
                 };
 
                 mainWindow.Add(settingsWindow);

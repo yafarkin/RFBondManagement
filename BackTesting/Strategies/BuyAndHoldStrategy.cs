@@ -178,7 +178,7 @@ namespace BackTesting.Strategies
                 var paper = _papers[code];
                 if (paper.IsBond)
                 {
-                    var nkd = _bondCalculator.CalculateNkd(paper, date);
+                    var nkd = _bondCalculator.CalculateAci(paper, date);
                     price += nkd;
                 }
 

@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using RfFondPortfolio.Common.Dtos;
 
 namespace RfFondPortfolio.Common.Interfaces
 {
-    public interface IGenericRepository<T>
+    public interface IGenericRepository<T> where T : BaseEntity
     {
         IEnumerable<T> Get();
 

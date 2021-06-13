@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using RfBondManagement.Engine.Calculations;
 using RfBondManagement.Engine.Common;
+using RfFondPortfolio.Common.Dtos;
+using Shouldly;
 
 namespace RfBondManagement.UnitTests
 {
@@ -10,13 +12,13 @@ namespace RfBondManagement.UnitTests
     public class BondCalculatorTests
     {
         public BondCalculator Calculator;
-        public BaseStockPaper BondPaper;
-        public Settings Settings;
+        public BondPaper BondPaper;
+        public Portfolio Portfolio;
 
         [SetUp]
         public void Setup()
         {
-            Settings = new Settings
+            Portfolio = new Portfolio
             {
                 Commissions = 0.061m,
                 Tax = 13.0m
@@ -24,43 +26,19 @@ namespace RfBondManagement.UnitTests
 
             Calculator = new BondCalculator();
 
-            BondPaper = new BaseStockPaper
+            BondPaper = new BondPaper
             {
                 FaceValue = 1000,
                 Name = "Test Bond",
                 MatDate = new DateTime(2023, 8, 30),
                 Coupons = new List<BondCoupon>
                 {
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2021, 3, 3),
-                        Value = 50
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2021, 9, 1),
-                        Value = 50
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2022, 3, 2),
-                        Value = 50
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2022, 8, 31),
-                        Value = 50
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2023, 3, 1),
-                        Value = 50
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2023, 8, 30),
-                        Value = 50
-                    }
+                    new BondCoupon {CouponDate = new DateTime(2021, 3, 3), Value = 50},
+                    new BondCoupon {CouponDate = new DateTime(2021, 9, 1), Value = 50},
+                    new BondCoupon {CouponDate = new DateTime(2022, 3, 2), Value = 50},
+                    new BondCoupon {CouponDate = new DateTime(2022, 8, 31), Value = 50},
+                    new BondCoupon {CouponDate = new DateTime(2023, 3, 1), Value = 50},
+                    new BondCoupon {CouponDate = new DateTime(2023, 8, 30), Value = 50}
                 }
             };
         }
@@ -68,130 +46,153 @@ namespace RfBondManagement.UnitTests
         [Test]
         public void TenPercents_Clear()
         {
-            var buyAction = new BondBuyAction
+            var buyAction = new PortfolioPaperAction
             {
                 Count = 1,
-                Date = new DateTime(2020, 9, 2),
-                Nkd = 0,
-                Paper = BondPaper,
-                Price = 100
+                When = new DateTime(2020, 9, 2),
+                Value = 100,
+                PaperAction = PaperActionType.Buy
             };
 
             var bondIncomeInfo = new BondIncomeInfo
             {
-                PaperInPortfolio = new BaseBondPaperInPortfolio
+                BondInPortfolio = new BondInPortfolio(BondPaper)
                 {
-                    Actions = new List<BaseAction> {buyAction},
-                    Paper = BondPaper
+                    Actions = new List<PortfolioPaperAction> {buyAction},
+                    AveragePrice = buyAction.Value
                 }
             };
 
-            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, null, BondPaper.MatDate.GetValueOrDefault());
+            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, null, BondPaper.MatDate);
             Assert.IsTrue(bondIncomeInfo.CloseByMaturityDate);
-            Assert.AreEqual(1000m, bondIncomeInfo.BalanceOnBuy);
+            Assert.AreEqual(1060m, bondIncomeInfo.BalanceOnBuy);
             Assert.AreEqual(1300m, bondIncomeInfo.BalanceOnSell);
             Assert.AreEqual(300m, bondIncomeInfo.IncomeByCoupons);
-            Assert.AreEqual(300m, bondIncomeInfo.ExpectedIncome);
-            Assert.AreEqual(10.03m, Math.Round(bondIncomeInfo.RealIncomePercent, 2));
+            Assert.AreEqual(240m, bondIncomeInfo.ExpectedIncome);
+            Assert.AreEqual(8.02m, Math.Round(bondIncomeInfo.RealIncomePercent, 2));
         }
 
         [Test]
         public void TenPercents_withSettings()
         {
-            var buyAction = new BondBuyAction
+            var buyAction = new PortfolioPaperAction
             {
                 Count = 1,
-                Date = new DateTime(2020, 9, 2),
-                Nkd = 0,
-                Paper = BondPaper,
-                Price = 100
+                When = new DateTime(2020, 9, 2),
+                Value = 100,
+                PaperAction = PaperActionType.Buy
             };
 
             var bondIncomeInfo = new BondIncomeInfo
             {
-                PaperInPortfolio = new BaseBondPaperInPortfolio
+                BondInPortfolio = new BondInPortfolio(BondPaper)
                 {
-                    Actions = new List<BaseAction> {buyAction},
-                    Paper = BondPaper
+                    Actions = new List<PortfolioPaperAction> {buyAction},
+                    AveragePrice = buyAction.Value
                 }
             };
 
-            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, Settings, BondPaper.MatDate.GetValueOrDefault());
+            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, Portfolio, BondPaper.MatDate);
             Assert.IsTrue(bondIncomeInfo.CloseByMaturityDate);
-            Assert.AreEqual(1000.61m, bondIncomeInfo.BalanceOnBuy);
+            Assert.AreEqual(1060.6466m, bondIncomeInfo.BalanceOnBuy);
             Assert.AreEqual(1261m, bondIncomeInfo.BalanceOnSell);
             Assert.AreEqual(261m, bondIncomeInfo.IncomeByCoupons);
-            Assert.AreEqual(260.39m, bondIncomeInfo.ExpectedIncome);
-            Assert.AreEqual(8.7m, Math.Round(bondIncomeInfo.RealIncomePercent, 2));
+            Assert.AreEqual(200.3534m, bondIncomeInfo.ExpectedIncome);
+            Assert.AreEqual(6.7m, Math.Round(bondIncomeInfo.RealIncomePercent, 2));
+        }
+
+        [Test]
+        public void CalculateAci_NoCoupons()
+        {
+            var paper = new BondPaper
+            {
+                Name = "ОФЗ 26223",
+                FaceValue = 1000,
+                MatDate = new DateTime(2024, 2, 28),
+                Coupons = new List<BondCoupon>()
+            };
+
+            var aci = Calculator.CalculateAci(paper, DateTime.Now);
+            aci.ShouldBe(0);
+        }
+
+        [Test]
+        public void CalculateAci_AskDate_BeforeIssueDate()
+        {
+            var paper = new BondPaper
+            {
+                Name = "ОФЗ 26223",
+                FaceValue = 1000,
+                IssueDate = DateTime.Today,
+                MatDate = new DateTime(2024, 2, 28),
+                Coupons = new List<BondCoupon>()
+            };
+
+            var aci = Calculator.CalculateAci(paper, DateTime.Today.AddDays(-1));
+            aci.ShouldBe(0);
+        }
+
+        [Test]
+        public void CalculateAci_AskDate_AfterMatDate()
+        {
+            var paper = new BondPaper
+            {
+                Name = "ОФЗ 26223",
+                FaceValue = 1000,
+                MatDate = new DateTime(2024, 2, 28),
+                Coupons = new List<BondCoupon>()
+            };
+
+            var aci = Calculator.CalculateAci(paper, paper.MatDate.AddDays(1));
+            aci.ShouldBe(0);
         }
 
         [Test]
         public void RealBondPaper()
         {
-            var realPaper = new BaseStockPaper
+            var realPaper = new BondPaper
             {
                 Name = "ОФЗ 26223",
                 FaceValue = 1000,
                 MatDate = new DateTime(2024, 2, 28),
                 Coupons = new List<BondCoupon>
                 {
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2021, 3, 3),
-                        Value = 32.41m
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2021, 9, 1),
-                        Value = 32.41m
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2022, 3, 2),
-                        Value = 32.41m
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2022, 8, 31),
-                        Value = 32.41m
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2023, 3, 1),
-                        Value = 32.41m
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2023, 8, 30),
-                        Value = 32.41m
-                    },
-                    new BondCoupon
-                    {
-                        Date = new DateTime(2024, 2, 28),
-                        Value = 32.41m
-                    },
+                    new BondCoupon {CouponDate = new DateTime(2018, 9, 5), Value = 34.9m},
+                    new BondCoupon {CouponDate = new DateTime(2019, 3, 6), Value = 32.41m},
+                    new BondCoupon {CouponDate = new DateTime(2019, 9, 4), Value = 32.41m},
+                    new BondCoupon {CouponDate = new DateTime(2020, 3, 4), Value = 32.41m},
+                    new BondCoupon {CouponDate = new DateTime(2020, 9, 2), Value = 32.41m},
+                    new BondCoupon {CouponDate = new DateTime(2021, 3, 3), Value = 32.41m},
+                    new BondCoupon {CouponDate = new DateTime(2021, 9, 1), Value = 32.41m},
+                    new BondCoupon {CouponDate = new DateTime(2022, 3, 2), Value = 32.41m},
+                    new BondCoupon {CouponDate = new DateTime(2022, 8, 31), Value = 32.41m},
+                    new BondCoupon {CouponDate = new DateTime(2023, 3, 1), Value = 32.41m},
+                    new BondCoupon {CouponDate = new DateTime(2023, 8, 30), Value = 32.41m},
+                    new BondCoupon {CouponDate = new DateTime(2024, 2, 28), Value = 32.41m}
                 }
             };
 
-            var buyAction = new BondBuyAction
+            var buyAction = new PortfolioPaperAction
             {
                 Count = 1,
-                Date = new DateTime(2021, 2, 4),
-                Nkd = 27.6m,
-                Paper = realPaper,
-                Price = 103.75m
+                When = new DateTime(2021, 2, 4),
+                Value = 103.75m,
+                PaperAction = PaperActionType.Buy
             };
+
+            var aci = Calculator.CalculateAci(realPaper, buyAction.When);
+            aci.ShouldBe(27.6m);
 
             var bondIncomeInfo = new BondIncomeInfo
             {
-                PaperInPortfolio = new BaseBondPaperInPortfolio
+                BondInPortfolio = new BondInPortfolio(realPaper)
                 {
-                    Actions = new List<BaseAction> { buyAction },
-                    Paper = BondPaper
+                    Actions = new List<PortfolioPaperAction> {buyAction},
+                    AveragePrice = buyAction.Value
                 }
             };
 
-            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, Settings, realPaper.MatDate.GetValueOrDefault());
+            Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, Portfolio, realPaper.MatDate);
 
             Assert.IsTrue(bondIncomeInfo.CloseByMaturityDate);
             Assert.AreEqual(1065.75m, Math.Round(bondIncomeInfo.BalanceOnBuy, 2));

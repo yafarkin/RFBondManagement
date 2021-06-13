@@ -60,4 +60,23 @@
         /// </summary>
         OutcomeDelayTaxPay = 105,
     }
+
+    public static class MoneyActionTypeHelper
+    {
+        public static readonly MoneyActionType[] IncomeTypes = new[] {
+            MoneyActionType.IncomeExternal,
+            MoneyActionType.IncomeDividend,
+            MoneyActionType.IncomeCoupon,
+            MoneyActionType.IncomeSellOnMarket,
+            MoneyActionType.IncomeCloseBond
+        };
+
+        public static readonly MoneyActionType[] OutcomeTypes = new[] {
+            MoneyActionType.OutcomeExternal,
+            MoneyActionType.OutcomeBuyOnMarket,
+            MoneyActionType.OutcomeCommission,
+            MoneyActionType.OutcomeTax,
+            MoneyActionType.OutcomeDelayTaxPay
+        };
+    }
 }

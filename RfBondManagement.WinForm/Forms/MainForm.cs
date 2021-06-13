@@ -2,8 +2,11 @@
 using System.Linq;
 using System.Windows.Forms;
 using NLog;
+using RfBondManagement.Engine.Calculations;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
+using RfFondPortfolio.Common.Dtos;
+using RfFondPortfolio.Common.Interfaces;
 using Unity;
 
 namespace RfBondManagement.WinForm.Forms
@@ -11,16 +14,16 @@ namespace RfBondManagement.WinForm.Forms
     public partial class MainForm : Form
     {
         protected ILogger _logger;
-        protected IDatabaseLayer _db;
+        protected IPortfolioRepository _portfolioRepository;
         protected IUnityContainer _container;
 
-        protected Settings _settings;
+        protected Portfolio _portfolio;
 
-        public MainForm(ILogger logger, IDatabaseLayer db, IUnityContainer container)
+        public MainForm(ILogger logger, IPortfolioRepository portfolioRepository, IUnityContainer container)
         {
             _logger = logger;
             _container = container;
-            _db = db;
+            _portfolioRepository = portfolioRepository;
 
             InitializeComponent();
         }
@@ -34,52 +37,61 @@ namespace RfBondManagement.WinForm.Forms
         {
             using (var f = _container.Resolve<SettingsForm>())
             {
-                f.Settings = _settings;
+                f.Portfolio = _portfolio;
                 if (f.ShowDialog() == DialogResult.OK)
                 {
-                    _settings = f.Settings;
-                    _db.SaveSettings(_settings);
+                    _portfolio = f.Portfolio;
+                    _portfolioRepository.Update(_portfolio);
                 }
             }
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
+        private async void MainForm_Load(object sender, EventArgs e)
         {
-            _settings = _db.LoadSettings();
+            _portfolio = _portfolioRepository.Get().FirstOrDefault() ?? new Portfolio();
 
-            var papers = _db.GetPapersInPortfolio();
+            var engine = _container.Resolve<PortfolioEngine>();
+            var content = await engine.Build(null, true);
+
+            var papers = content.Papers;
 
             lvPapers.Items.Clear();
-            foreach (var paperInPortfolio in papers.OfType<BaseBondPaperInPortfolio>())
+            foreach (var paperInPortfolio in papers)
             {
-                var bondPaper = paperInPortfolio.Paper;
-                var calc = _container.Resolve<IBondCalculator>();
-                var biiToClose = new BondIncomeInfo
+                var paper = paperInPortfolio.Paper;
+                if (paper.PaperType == PaperType.Bond)
                 {
-                    PaperInPortfolio = paperInPortfolio
-                };
+                    var bondPaper = paper as BondPaper;
+                    var bondInPortfolio = paperInPortfolio as BondInPortfolio;
 
-                var biiToToday = new BondIncomeInfo
-                {
-                    PaperInPortfolio = paperInPortfolio,
-                    SellPrice = bondPaper.LastPrice.Price
-                };
+                    var calc = _container.Resolve<IBondCalculator>();
+                    var biiToClose = new BondIncomeInfo
+                    {
+                        BondInPortfolio = bondInPortfolio
+                    };
 
-                calc.CalculateIncome(biiToClose, _settings, bondPaper.MatDate.GetValueOrDefault());
-                calc.CalculateIncome(biiToToday, _settings, DateTime.Today.AddDays(30));
+                    var biiToToday = new BondIncomeInfo
+                    {
+                        BondInPortfolio = bondInPortfolio,
+                        SellPrice = paperInPortfolio.MarketPrice
+                    };
 
-                var lvi = new ListViewItem(new[]
-                {
-                    bondPaper.Name,
-                    bondPaper.FaceValue.ToString("C"),
-                    paperInPortfolio.Count.ToString("### ### ###"),
-                    biiToClose.BalanceOnSell.ToString("C"),
-                    biiToClose.ExpectedIncome.ToString("C"),
-                    (biiToClose.RealIncomePercent/100).ToString("P"),
-                    biiToClose.BreakevenDate.ToShortDateString(),
-                    (bondPaper.MatDate.GetValueOrDefault() - DateTime.Today).Days.ToString(),
-                });
-                lvPapers.Items.Add(lvi);
+                    calc.CalculateIncome(biiToClose, _portfolio, bondPaper.MatDate);
+                    calc.CalculateIncome(biiToToday, _portfolio, DateTime.Today.AddDays(30));
+
+                    var lvi = new ListViewItem(new[]
+                    {
+                        paper.Name,
+                        paper.FaceValue.ToString("C"),
+                        paperInPortfolio.Count.ToString("### ### ###"),
+                        biiToClose.BalanceOnSell.ToString("C"),
+                        biiToClose.ExpectedIncome.ToString("C"),
+                        (biiToClose.RealIncomePercent / 100).ToString("P"),
+                        biiToClose.BreakevenDate.ToShortDateString(),
+                        (bondPaper.MatDate - DateTime.Today).Days.ToString(),
+                    });
+                    lvPapers.Items.Add(lvi);
+                }
             }
 
             lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);

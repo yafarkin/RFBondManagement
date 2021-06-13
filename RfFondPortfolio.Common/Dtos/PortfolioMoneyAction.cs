@@ -10,6 +10,6 @@
         /// <summary>
         /// Сумма действия.
         /// </summary>
-        public decimal Sum { get; set; }
+        public override decimal Sum { get; set; }
     }
 }

@@ -331,7 +331,7 @@ namespace BackTesting
                     portfolio.Bonds.Add(bp);
                 }
 
-                var nkd = bondCalculator.CalculateNkd(paper, date);
+                var nkd = bondCalculator.CalculateAci(paper, date);
 
                 bp.Actions.Add(new BondBuyAction
                 {
@@ -404,7 +404,7 @@ namespace BackTesting
             {
                 bondInPortfolio = portfolio.Bonds.First(p => p.Paper.SecId == paper.SecId);
                 avgPrice = bondInPortfolio.AvgBuySum;
-                nkd = bondCalculator.CalculateNkd(bondInPortfolio.Paper, date);
+                nkd = bondCalculator.CalculateAci(bondInPortfolio.Paper, date);
             }
 
             var sum = count * price;

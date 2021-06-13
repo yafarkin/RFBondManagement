@@ -15,10 +15,13 @@ namespace RfBondManagement.Engine
 
             container
                 .RegisterType<IDatabaseLayer, DatabaseLayer>(TypeLifetime.Singleton)
-                .RegisterType<IHistoryDatabaseLayer, HistoryDatabaseLayer>(TypeLifetime.Singleton)
+                //.RegisterType<IHistoryDatabaseLayer, HistoryDatabaseLayer>(TypeLifetime.Singleton)
                 .RegisterType<IBondCalculator, BondCalculator>()
                 .RegisterType<IExternalImport, MoexImport>()
-                .RegisterType<IPaperRepository, PaperRepository>();
+                .RegisterType<IPaperRepository, PaperRepository>()
+                .RegisterType<IPortfolioMoneyActionRepository, PortfolioMoneyActionRepository>()
+                .RegisterType<IPortfolioPaperActionRepository, PortfolioPaperActionRepository>()
+                ;
 
             container.AddNewExtension<NLogExtension>();
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
@@ -10,15 +11,15 @@ namespace RfBondManagement.WinForm.Forms
 {
     public partial class BondCalculatorForm : Form
     {
-        public BaseBondPaperInPortfolio SelectedPaper;
+        public BondInPortfolio SelectedPaper;
 
-        protected readonly IDatabaseLayer _db;
+        protected readonly IPortfolioRepository _portfolioRepository;
         protected readonly IPaperRepository _paperRepository;
         protected readonly IBondCalculator _calculator;
 
-        public BondCalculatorForm(IDatabaseLayer db, IPaperRepository paperRepository, IBondCalculator calculator)
+        public BondCalculatorForm(IPortfolioRepository portfolioRepository, IPaperRepository paperRepository, IBondCalculator calculator)
         {
-            _db = db;
+            _portfolioRepository = portfolioRepository;
             _paperRepository = paperRepository;
             _calculator = calculator;
 
@@ -40,26 +41,26 @@ namespace RfBondManagement.WinForm.Forms
         {
             cbUntilMaturityDate.Checked = true;
 
-            var settings = _db.LoadSettings();
-            tbComission.Text = settings.Commissions.ToString("F3");
-            tbTax.Text = settings.Tax.ToString("F");
+            var portfolio = _portfolioRepository.Get().FirstOrDefault() ?? new Portfolio();
+            tbComission.Text = portfolio.Commissions.ToString("F3");
+            tbTax.Text = portfolio.Tax.ToString("F");
             tbInflation.Text = 0.ToString("F");
 
             if (SelectedPaper != null)
             {
                 tbCount.Text = SelectedPaper.Count.ToString();
-                tbBuyPrice.Text = SelectedPaper.AvgBuySum.ToString("F");
-                tbNKD.Text = SelectedPaper.TotalBuyNKD.ToString("F");
+                tbBuyPrice.Text = SelectedPaper.AveragePrice.ToString("F");
+                tbAci.Text = (SelectedPaper.Aci * SelectedPaper.Count).ToString("F");
             }
             else
             {
                 tbCount.Text = "1";
                 tbBuyPrice.Text = 100.ToString("F");
-                tbNKD.Text = 0.ToString("F");
+                tbAci.Text = 0.ToString("F");
             }
         }
 
-        private void psBond_OnSelectStockPaper(BaseStockPaper obj)
+        private void psBond_OnSelectStockPaper(BondPaper obj)
         {
             decimal comissions, tax, inflation, buyPrice, nkd, sellPrice = 0;
             long count;
@@ -112,9 +113,9 @@ namespace RfBondManagement.WinForm.Forms
                 return;
             }
 
-            if (!decimal.TryParse(tbNKD.Text, out nkd))
+            if (!decimal.TryParse(tbAci.Text, out nkd))
             {
-                tbNKD.Focus();
+                tbAci.Focus();
                 MessageBox.Show($"Укажите корректное значение в поле '{label6.Text}'", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -141,17 +142,15 @@ namespace RfBondManagement.WinForm.Forms
             }
 
             var bii = new BondIncomeInfo();
-            bii.PaperInPortfolio = new BaseBondPaperInPortfolio
+            bii.BondInPortfolio = new BondInPortfolio(obj)
             {
-                Paper = obj,
-                Actions = new List<BaseAction>
+                Actions = new List<PortfolioPaperAction>
                 {
-                    new BondBuyAction
+                    new PortfolioPaperAction
                     {
-                        Paper = obj,
+                        When = dtpBuyDate.Value,
                         Count = count,
-                        Price = buyPrice,
-                        Date = dtpBuyDate.Value
+                        Value = buyPrice,
                     }
                 }
             };
@@ -161,13 +160,13 @@ namespace RfBondManagement.WinForm.Forms
                 bii.SellPrice = sellPrice;
             }
 
-            var settings = new Settings
+            var portfolio = new Portfolio
             {
                 Commissions = comissions,
                 Tax = tax
             };
 
-            _calculator.CalculateIncome(bii, settings, untilMaturity ? obj.MatDate.GetValueOrDefault() : dtpSellDate.Value);
+            _calculator.CalculateIncome(bii, portfolio, untilMaturity ? obj.MatDate : dtpSellDate.Value);
 
             lblRealIncomePercent.Text = (bii.RealIncomePercent/100m).ToString("P");
             lblExpectedIncome.Text = bii.ExpectedIncome.ToString("C");

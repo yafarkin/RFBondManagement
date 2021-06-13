@@ -5,7 +5,7 @@ namespace RfFondPortfolio.Common.Dtos
     /// <summary>
     /// Стоимость бумаги на текущий момент времени
     /// </summary>
-    public class PaperPrice
+    public class PaperPrice : BaseSecurityEntity
     {
         /// <summary>
         /// Уникальный идентификатор

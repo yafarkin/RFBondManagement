@@ -5,22 +5,12 @@ namespace RfFondPortfolio.Common.Dtos
     /// <summary>
     /// Стоимость бумаги, исторические данные
     /// </summary>
-    public class HistoryPrice
+    public class HistoryPrice : BaseSecurityEntity
     {
-        /// <summary>
-        /// Уникальный идентификатор
-        /// </summary>
-        public Guid Id { get; set; }
-
         /// <summary>
         /// Дата и время
         /// </summary>
         public DateTime When { get; set; }
-
-        /// <summary>
-        /// Код бумаги
-        /// </summary>
-        public string SecId { get; set; }
 
         public long NumTrades { get; set; }
 

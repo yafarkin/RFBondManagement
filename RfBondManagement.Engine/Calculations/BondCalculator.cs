@@ -3,45 +3,51 @@ using System.Collections.Generic;
 using System.Linq;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
+using RfFondPortfolio.Common.Dtos;
 
 namespace RfBondManagement.Engine.Calculations
 {
     public class BondCalculator : IBondCalculator
     {
-        public decimal CalculateNkd(BaseStockPaper paper, DateTime toDate)
+        public decimal CalculateAci(BondPaper paper, DateTime toDate)
         {
-            if (!paper.IsBond)
+            if (null == paper.Coupons || 0 == paper.Coupons.Count)
             {
-                throw new InvalidOperationException("Некорректный тип бумаги");
+                return 0;
+            }
+
+            if (toDate < paper.IssueDate || toDate > paper.MatDate)
+            {
+                return 0;
             }
 
             var nextCoupon = NearFutureCoupon(paper, toDate);
-            if (nextCoupon.Date == toDate)
+            if (nextCoupon.CouponDate == toDate)
             {
                 return 0;
             }
 
             var prevCoupon = NearPastCoupon(paper, toDate);
-            var daysBetweenCoupons = (nextCoupon.Date - prevCoupon.Date).Days;
-            var diffDays = (toDate - prevCoupon.Date).Days;
-            var nkd = (decimal)diffDays / daysBetweenCoupons * nextCoupon.Value;
-            return nkd;
+            var daysBetweenCoupons = (nextCoupon.CouponDate - prevCoupon.CouponDate).Days;
+            var diffDays = (toDate - prevCoupon.CouponDate).Days;
+            var aci =Math.Round((decimal)diffDays / daysBetweenCoupons * nextCoupon.Value, 2);
+            return aci;
         }
 
-        public void CalculateIncome(BondIncomeInfo bondIncomeInfo, Settings settings, DateTime toDate)
+        public void CalculateIncome(BondIncomeInfo bondIncomeInfo, Portfolio portfolio, DateTime toDate)
         {
-            var buyActions = bondIncomeInfo.PaperInPortfolio.Actions.OfType<BondBuyAction>();
+            var buyActions = bondIncomeInfo.BondInPortfolio.Actions.Where(a => a.PaperAction == PaperActionType.Buy);
             var realIncomePercent = new List<decimal>();
             var avgSellPrice = new List<decimal>();
             foreach (var buyAction in buyActions)
             {
                 var bii = new BondIncomeInfo
                 {
-                    PaperInPortfolio = bondIncomeInfo.PaperInPortfolio,
+                    BondInPortfolio = bondIncomeInfo.BondInPortfolio,
                     SellPrice = bondIncomeInfo.SellPrice
                 };
 
-                StartCalculateIncome(bii, buyAction, settings, toDate);
+                StartCalculateIncome(bii, buyAction, portfolio, toDate);
 
                 bondIncomeInfo.CloseByMaturityDate = bii.CloseByMaturityDate;
                 bondIncomeInfo.BalanceOnBuy += bii.BalanceOnBuy * buyAction.Count;
@@ -59,47 +65,50 @@ namespace RfBondManagement.Engine.Calculations
             bondIncomeInfo.SellPrice = avgSellPrice.Average();
         }
 
-        public void StartCalculateIncome(BondIncomeInfo bondIncomeInfo, BondBuyAction buyAction, Settings settings, DateTime toDate)
+        public void StartCalculateIncome(BondIncomeInfo bondIncomeInfo, PortfolioPaperAction buyAction, Portfolio portfolio, DateTime toDate)
         {
-            var nkd = buyAction.Nkd;
+            var paper = bondIncomeInfo.BondInPortfolio.Paper;
+            var aci = CalculateAci(paper, buyAction.When);
 
-            decimal buyPrice = (bondIncomeInfo.PaperInPortfolio.Paper.FaceValue * (bondIncomeInfo.PaperInPortfolio.AvgBuySum / 100) + nkd) *
-                               (1 + (settings?.Commissions / 100 ?? 0));
+            var buyPrice = (paper.FaceValue * (bondIncomeInfo.BondInPortfolio.AveragePrice / 100) + aci) *
+                           (1 + (portfolio?.Commissions / 100 ?? 0));
 
-            decimal balance = -buyPrice + bondIncomeInfo.PaperInPortfolio.Paper.FaceValue;
+            var balance = -buyPrice + bondIncomeInfo.BondInPortfolio.Paper.FaceValue;
 
             bondIncomeInfo.BalanceOnBuy = buyPrice;
 
-            ContinueCalculateIncome(bondIncomeInfo, buyAction, settings, buyAction.Date, toDate, ref balance);
+            ContinueCalculateIncome(bondIncomeInfo, buyAction, portfolio, buyAction.When, toDate, ref balance);
         }
 
-        protected void ContinueCalculateIncome(BondIncomeInfo bondIncomeInfo, BondBuyAction buyAction, Settings settings, DateTime fromDate, DateTime toDate, ref decimal balance)
+        protected void ContinueCalculateIncome(BondIncomeInfo bondIncomeInfo, PortfolioPaperAction buyAction, Portfolio portfolio, DateTime fromDate, DateTime toDate, ref decimal balance)
         {
+            var paper = bondIncomeInfo.BondInPortfolio.Paper;
+
             if (fromDate >= toDate)
             {
-                var totalDays = (toDate - buyAction.Date).Days;
+                var totalDays = (toDate - buyAction.When).Days;
                 if (0 == totalDays)
                 {
                     totalDays = 1;
                 }
 
-                bondIncomeInfo.RealIncomePercent =  balance / buyAction.Paper.FaceValue * 100 / (totalDays / 365m);
+                bondIncomeInfo.RealIncomePercent =  balance / paper.FaceValue * 100 / (totalDays / 365m);
 
-                if (fromDate == buyAction.Paper.MatDate)
+                if (fromDate == paper.MatDate)
                 {
-                    bondIncomeInfo.SellPrice = buyAction.Paper.FaceValue;
+                    bondIncomeInfo.SellPrice = paper.FaceValue;
                     bondIncomeInfo.CloseByMaturityDate = true;
 
-                    balance += buyAction.Paper.FaceValue;
+                    balance += paper.FaceValue;
                 }
                 else
                 {
-                    var sellPrice = buyAction.Paper.FaceValue * bondIncomeInfo.SellPrice / 100;
-                    if (bondIncomeInfo.SellPrice > buyAction.Price)
+                    var sellPrice = paper.FaceValue * bondIncomeInfo.SellPrice / 100;
+                    if (bondIncomeInfo.SellPrice > buyAction.Value)
                     {
-                        var sellTax = (bondIncomeInfo.SellPrice - buyAction.Price) *
-                                   buyAction.Paper.FaceValue *
-                                   (settings?.Tax / 100 ?? 1);
+                        var sellTax = (bondIncomeInfo.SellPrice - buyAction.Value) *
+                                   paper.FaceValue *
+                                   (portfolio?.Tax / 100 ?? 1);
                         sellPrice -= sellTax;
                         bondIncomeInfo.SellTax = sellTax;
                     }
@@ -111,14 +120,14 @@ namespace RfBondManagement.Engine.Calculations
                 return;
             }
 
-            var nextCoupon = NearFutureCoupon(buyAction.Paper, fromDate);
+            var nextCoupon = NearFutureCoupon(paper, fromDate);
 
-            var nkd = nextCoupon.Date <= toDate ? nextCoupon.Value : CalculateNkd(buyAction.Paper, toDate);
+            var aci = nextCoupon.CouponDate<= toDate ? nextCoupon.Value : CalculateAci(paper, toDate);
 
-            var nextDate = nextCoupon.Date;
+            var nextDate = nextCoupon.CouponDate;
 
-            var tax = nkd * (settings?.Tax / 100m ?? 0);
-            var couponSum = nkd - tax;
+            var tax = aci * (portfolio?.Tax / 100m ?? 0);
+            var couponSum = aci - tax;
             balance += couponSum;
 
             if (balance > 0 && bondIncomeInfo.BreakevenDate == default(DateTime))
@@ -128,19 +137,19 @@ namespace RfBondManagement.Engine.Calculations
 
             bondIncomeInfo.IncomeByCoupons += couponSum;
 
-            ContinueCalculateIncome(bondIncomeInfo, buyAction, settings, nextDate, toDate, ref balance);
+            ContinueCalculateIncome(bondIncomeInfo, buyAction, portfolio, nextDate, toDate, ref balance);
         }
 
-        protected BondCoupon NearFutureCoupon(BaseStockPaper bond, DateTime toDate)
+        protected BondCoupon NearFutureCoupon(BondPaper bond, DateTime toDate)
         {
-            var coupons = bond.Coupons.Where(c => c.Date > toDate).ToList();
+            var coupons = bond.Coupons.Where(c => c.CouponDate > toDate).ToList();
 
             return 0 == coupons.Count ? bond.Coupons.Last() : coupons.First();
         }
 
-        protected BondCoupon NearPastCoupon(BaseStockPaper bond, DateTime toDate)
+        protected BondCoupon NearPastCoupon(BondPaper bond, DateTime toDate)
         {
-            var coupons = bond.Coupons.Where(c => c.Date < toDate).ToList();
+            var coupons = bond.Coupons.Where(c => c.CouponDate < toDate).ToList();
 
             return 0 == coupons.Count ? bond.Coupons.Last() : coupons.Last();
         }

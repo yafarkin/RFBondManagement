@@ -1,15 +1,41 @@
 ﻿using System.Collections.Generic;
+using RfFondPortfolio.Common.Interfaces;
 
 namespace RfFondPortfolio.Common.Dtos
 {
-    public class PaperInPortfolio<T> where T : AbstractPaper
+    /// <summary>
+    /// Данные по бумаге в портфеле
+    /// </summary>
+    public abstract class PaperInPortfolio<T> : IPaperInPortfolio<T> where T : AbstractPaper
     {
-        public T Paper { get; internal set; }
+        /// <summary>
+        /// Бумага
+        /// </summary>
+        public T Paper { get; set; }
 
-        public IReadOnlyCollection<PortfolioPaperAction> Actions { get; internal set; }
+        /// <summary>
+        /// Список действий по бумаге
+        /// </summary>
+        public IReadOnlyCollection<PortfolioPaperAction> Actions { get; set; }
 
-        public long Count { get; internal set; }
+        /// <summary>
+        /// Количество бумаг
+        /// </summary>
+        public long Count { get; set; }
 
-        public decimal AveragePrice { get; internal set; }
+        /// <summary>
+        /// Средняя цена
+        /// </summary>
+        public decimal AveragePrice { get; set; }
+
+        /// <summary>
+        /// Рыночная цена (либо последняя цена, либо на определенную дату)
+        /// </summary>
+        public decimal MarketPrice { get; set; }
+
+        /// <summary>
+        /// Профит
+        /// </summary>
+        public decimal Profit => MarketPrice - AveragePrice;
     }
 }

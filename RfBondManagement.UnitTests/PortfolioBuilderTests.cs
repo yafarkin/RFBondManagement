@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
+using RfBondManagement.Engine.Calculations;
+using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
-using RfFondPortfolio.Common.Logic;
 using Shouldly;
 
 namespace RfBondManagement.UnitTests
@@ -11,33 +14,57 @@ namespace RfBondManagement.UnitTests
     [TestFixture]
     public class PortfolioBuilderTests
     {
+        public PortfolioEngine PortfolioEngine;
         public IPaperRepository PaperRepository;
+        public IExternalImport Import;
+        public IPortfolioPaperActionRepository PaperActionRepository;
+        public IPortfolioMoneyActionRepository MoneyActionRepository;
+        public Portfolio Portfolio;
+        public IBondCalculator BondCalculator;
+
+        public List<PortfolioAction> Actions;
 
         [SetUp]
         public void Setup()
         {
+            Portfolio = new Portfolio();
+            Actions = new List<PortfolioAction>();
+
             var paperRepositoryMock = new Mock<IPaperRepository>();
-            paperRepositoryMock.Setup(m => m.Get()).Returns(new List<AbstractPaper> {new BondPaper {SecId = "S1"}});
+            paperRepositoryMock.Setup(m => m.Get()).Returns(new List<AbstractPaper> {new BondPaper {SecId = "S1", PaperType = PaperType.Bond}});
+
+            var moneyActionRepositoryMock = new Mock<IPortfolioMoneyActionRepository>();
+            moneyActionRepositoryMock.Setup(m => m.Get()).Returns(Actions.OfType<PortfolioMoneyAction>());
+
+            var paperActionRepositoryMock = new Mock<IPortfolioPaperActionRepository>();
+            paperActionRepositoryMock.Setup(m => m.Get()).Returns(Actions.OfType<PortfolioPaperAction>());
+
+            BondCalculator = new BondCalculator();
+
+            Import = new Mock<IExternalImport>().Object;
             PaperRepository = paperRepositoryMock.Object;
+            PaperActionRepository = paperActionRepositoryMock.Object;
+            MoneyActionRepository = moneyActionRepositoryMock.Object;
+
+            PortfolioEngine = new PortfolioEngine(Portfolio, Import, PaperRepository, MoneyActionRepository, PaperActionRepository, BondCalculator);
         }
 
         [Test]
-        public void SmokeTest()
+        public async Task SmokeTest()
         {
-            var actions = new List<PortfolioAction>();
-            actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.IncomeExternal, Sum = 1000});
-            actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 1, SecId = "S1", Sum = 100, Value = 100});
-            actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeBuyOnMarket, Sum = 100});
-            actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeCommission, Sum = 0.61m});
-            actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 1, SecId = "S1", Sum = 200, Value = 200});
-            actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeBuyOnMarket, Sum = 200});
-            actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeCommission, Sum = 1.22m});
-            actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Sell, Count = 1, SecId = "S1", Sum = 250, Value = 250});
-            actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.IncomeSellOnMarket, Sum = 250});
-            actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeCommission, Sum = 1.525m});
-            actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeDelayTax, Sum = 19.5m});
+            Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.IncomeExternal, Sum = 1000});
+            Actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 1, SecId = "S1", Sum = 100, Value = 100});
+            Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeBuyOnMarket, Sum = 100});
+            Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeCommission, Sum = 0.61m});
+            Actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 1, SecId = "S1", Sum = 200, Value = 200});
+            Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeBuyOnMarket, Sum = 200});
+            Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeCommission, Sum = 1.22m});
+            Actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Sell, Count = 1, SecId = "S1", Sum = 250, Value = 250});
+            Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.IncomeSellOnMarket, Sum = 250});
+            Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeCommission, Sum = 1.525m});
+            Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeDelayTax, Sum = 19.5m});
 
-            var content = PortfolioBuilder.Build(actions, PaperRepository);
+            var content = await PortfolioEngine.Build();
 
             content.ShouldNotBeNull();
             content.Sums.Count.ShouldBe(5);
@@ -67,15 +94,14 @@ namespace RfBondManagement.UnitTests
         }
 
         [Test]
-        public void SmokeTest2()
+        public async Task SmokeTest2()
         {
             // основано на примере 1 из https://journal.open-broker.ru/taxes/chto-takoe-fifo/
-            var actions = new List<PortfolioAction>();
-            actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 15, SecId = "S1", Value = 50});
-            actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 30, SecId = "S1", Value = 80});
-            actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Sell, Count = 20, SecId = "S1", Value = 75});
+            Actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 15, SecId = "S1", Value = 50});
+            Actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 30, SecId = "S1", Value = 80});
+            Actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Sell, Count = 20, SecId = "S1", Value = 75});
 
-            var content = PortfolioBuilder.Build(actions, PaperRepository);
+            var content = await PortfolioEngine.Build();
 
             content.ShouldNotBeNull();
 

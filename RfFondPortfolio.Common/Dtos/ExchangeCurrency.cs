@@ -5,13 +5,8 @@ namespace RfFondPortfolio.Common.Dtos
     /// <summary>
     /// Курс обмена валюты
     /// </summary>
-    public class ExchangeCurrency
+    public class ExchangeCurrency : BaseEntity
     {
-        /// <summary>
-        /// Уникальный идентификатор
-        /// </summary>
-        public Guid Id { get; set; }
-
         /// <summary>
         /// Валюта
         /// </summary>

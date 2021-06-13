@@ -4,11 +4,11 @@ using RfFondPortfolio.Common.Interfaces;
 
 namespace RfBondManagement.Engine.Database
 {
-    public class PaperRepository : BaseSecRepository<AbstractPaper>, IPaperRepository
+    public class PortfolioRepository : BaseRepository<Portfolio>, IPortfolioRepository
     {
-        protected override string _collectionName => "papers";
+        protected override string _collectionName => "portfolios";
 
-        public PaperRepository(IDatabaseLayer db)
+        public PortfolioRepository(IDatabaseLayer db)
             : base(db)
         {
         }

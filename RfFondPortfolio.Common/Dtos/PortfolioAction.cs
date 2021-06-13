@@ -5,22 +5,12 @@ namespace RfFondPortfolio.Common.Dtos
     /// <summary>
     /// Действие внутри портфеля
     /// </summary>
-    public abstract class PortfolioAction
+    public abstract class PortfolioAction : BaseSecurityEntity
     {
-        /// <summary>
-        /// Уникальный номер действия
-        /// </summary>
-        public Guid Id { get; set; }
-
         /// <summary>
         /// Идентификатор портфеля
         /// </summary>
         public Guid PortfolioId { get; set; }
-
-        /// <summary>
-        /// Тикер бумаги (если применимо)
-        /// </summary>
-        public string SecId { get; set; }
 
         /// <summary>
         /// Дата и время действия
@@ -30,6 +20,6 @@ namespace RfFondPortfolio.Common.Dtos
         /// <summary>
         /// Сумма общая
         /// </summary>
-        public decimal Sum { get; set; }
+        public abstract decimal Sum { get; set; }
     }
 }

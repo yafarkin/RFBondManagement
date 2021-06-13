@@ -1,12 +1,13 @@
 ﻿using System;
 using RfBondManagement.Engine.Common;
+using RfFondPortfolio.Common.Dtos;
 
 namespace RfBondManagement.Engine.Interfaces
 {
     public interface IBondCalculator
     {
-        void CalculateIncome(BondIncomeInfo bondIncomeInfo, Settings settings, DateTime toDate);
+        void CalculateIncome(BondIncomeInfo bondIncomeInfo, Portfolio portfolio, DateTime toDate);
 
-        decimal CalculateNkd(BaseStockPaper paper, DateTime toDate);
+        decimal CalculateAci(BondPaper paper, DateTime toDate);
     }
 }

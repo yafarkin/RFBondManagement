@@ -7,18 +7,8 @@ namespace RfFondPortfolio.Common.Dtos
     /// <summary>
     /// Абстрактная бумага
     /// </summary>
-    public abstract class AbstractPaper
+    public abstract class AbstractPaper : BaseSecurityEntity
     {
-        /// <summary>
-        /// Внутренний идентификатор
-        /// </summary>
-        public Guid Id { get; set; }
-
-        /// <summary>
-        /// Код ценной бумаги. Основной ключ
-        /// </summary>
-        public string SecId { get; set; }
-
         /// <summary>
         /// Полное наименование
         /// </summary>

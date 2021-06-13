@@ -1,6 +1,7 @@
 ﻿using System;
 using RfBondManagement.Engine;
 using RfBondManagement.Engine.Common;
+using RfFondPortfolio.Common.Dtos;
 using Terminal.Gui;
 
 namespace RfBondManagement.Main.Windows
@@ -11,9 +12,9 @@ namespace RfBondManagement.Main.Windows
         protected TextField _comissionText;
         protected TextField _taxText;
 
-        public Settings Settings;
+        public Portfolio Portfolio;
 
-        public Action<Settings> OnSave { get; set; }
+        public Action<Portfolio> OnSave { get; set; }
 
         public GeneralSettingsWindow(View parent)
             : base("Общие настройки", 5)
@@ -30,11 +31,11 @@ namespace RfBondManagement.Main.Windows
             Height = 20;
         }
 
-        public void DataBind(Settings settings)
+        public void DataBind(Portfolio portfolio)
         {
-            Settings = settings;
-            _comissionText.Text = Settings.Commissions.ToString("F");
-            _taxText.Text = Settings.Tax.ToString("F");
+            Portfolio = portfolio;
+            _comissionText.Text = Portfolio.Commissions.ToString("F");
+            _taxText.Text = Portfolio.Tax.ToString("F");
         }
 
         public void Close()
@@ -102,10 +103,10 @@ namespace RfBondManagement.Main.Windows
                     return;
                 }
 
-                Settings.Commissions = comissions;
-                Settings.Tax = tax;
+                Portfolio.Commissions = comissions;
+                Portfolio.Tax = tax;
 
-                OnSave?.Invoke(Settings);
+                OnSave?.Invoke(Portfolio);
                 Close();
             };
 

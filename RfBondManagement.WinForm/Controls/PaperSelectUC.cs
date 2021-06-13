@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
-using RfBondManagement.Engine.Common;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 
@@ -21,7 +20,7 @@ namespace RfBondManagement.WinForm.Controls
         [Browsable(true)]
         [Category("Action")]
         [Description("Invoked when user select stock paper")]
-        public event Action<BaseStockPaper> OnSelectStockPaper;
+        public event Action<BondPaper> OnSelectPaper;
 
         public PaperSelectUC()
         {
@@ -72,7 +71,7 @@ namespace RfBondManagement.WinForm.Controls
         {
             if (cbbPaper.SelectedItem != null)
             {
-                OnSelectStockPaper?.Invoke(cbbPaper.SelectedItem as BaseStockPaper);
+                OnSelectPaper?.Invoke(cbbPaper.SelectedItem as BondPaper);
             }
         }
     }

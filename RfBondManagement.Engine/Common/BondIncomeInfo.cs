@@ -1,11 +1,11 @@
 ﻿using System;
+using RfFondPortfolio.Common.Dtos;
 
 namespace RfBondManagement.Engine.Common
 {
     public class BondIncomeInfo
     {
-        public BaseBondPaperInPortfolio PaperInPortfolio;
-
+        public BondInPortfolio BondInPortfolio;
 
         public bool CloseByMaturityDate;
         public decimal SellPrice;

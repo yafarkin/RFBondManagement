@@ -1,10 +1,10 @@
 ﻿using System.Collections;
-using RfBondManagement.Engine.Common;
+using RfFondPortfolio.Common.Dtos;
 using Terminal.Gui;
 
 namespace RfBondManagement.Main.UI
 {
-    public class BaseBondPaperItemView : BaseStockPaper, IListDataSource
+    public class BaseBondPaperItemView : AbstractPaper, IListDataSource
     {
         public void Render(ListView container, ConsoleDriver driver, bool selected, int item, int col, int line, int width)
         {

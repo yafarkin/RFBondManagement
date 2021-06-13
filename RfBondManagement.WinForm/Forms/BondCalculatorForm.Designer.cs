@@ -1,4 +1,6 @@
 ﻿
+using RfFondPortfolio.Common.Dtos;
+
 namespace RfBondManagement.WinForm.Forms
 {
     partial class BondCalculatorForm
@@ -38,7 +40,7 @@ namespace RfBondManagement.WinForm.Forms
             this.cbUntilMaturityDate = new System.Windows.Forms.CheckBox();
             this.dtpBuyDate = new System.Windows.Forms.DateTimePicker();
             this.label7 = new System.Windows.Forms.Label();
-            this.tbNKD = new System.Windows.Forms.TextBox();
+            this.tbAci = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.tbBuyPrice = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
@@ -80,7 +82,7 @@ namespace RfBondManagement.WinForm.Forms
             this.psBond.Name = "psBond";
             this.psBond.Size = new System.Drawing.Size(693, 45);
             this.psBond.TabIndex = 0;
-            this.psBond.OnSelectStockPaper += new System.Action<RfBondManagement.Engine.Common.BaseStockPaper>(this.psBond_OnSelectStockPaper);
+            this.psBond.OnSelectPaper += new System.Action<BondPaper>(this.psBond_OnSelectStockPaper);
             // 
             // pnlSettings
             // 
@@ -91,7 +93,7 @@ namespace RfBondManagement.WinForm.Forms
             this.pnlSettings.Controls.Add(this.cbUntilMaturityDate);
             this.pnlSettings.Controls.Add(this.dtpBuyDate);
             this.pnlSettings.Controls.Add(this.label7);
-            this.pnlSettings.Controls.Add(this.tbNKD);
+            this.pnlSettings.Controls.Add(this.tbAci);
             this.pnlSettings.Controls.Add(this.label6);
             this.pnlSettings.Controls.Add(this.tbBuyPrice);
             this.pnlSettings.Controls.Add(this.label5);
@@ -168,12 +170,12 @@ namespace RfBondManagement.WinForm.Forms
             this.label7.TabIndex = 12;
             this.label7.Text = "Когда";
             // 
-            // tbNKD
+            // tbAci
             // 
-            this.tbNKD.Location = new System.Drawing.Point(241, 81);
-            this.tbNKD.Name = "tbNKD";
-            this.tbNKD.Size = new System.Drawing.Size(100, 23);
-            this.tbNKD.TabIndex = 11;
+            this.tbAci.Location = new System.Drawing.Point(241, 81);
+            this.tbAci.Name = "tbAci";
+            this.tbAci.Size = new System.Drawing.Size(100, 23);
+            this.tbAci.TabIndex = 11;
             // 
             // label6
             // 
@@ -477,7 +479,7 @@ namespace RfBondManagement.WinForm.Forms
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox tbBuyPrice;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.TextBox tbNKD;
+        private System.Windows.Forms.TextBox tbAci;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.DateTimePicker dtpBuyDate;
         private System.Windows.Forms.CheckBox cbUntilMaturityDate;

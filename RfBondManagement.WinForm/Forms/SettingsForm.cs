@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Windows.Forms;
-using RfBondManagement.Engine.Common;
+using RfFondPortfolio.Common.Dtos;
 
 namespace RfBondManagement.WinForm.Forms
 {
     public partial class SettingsForm : Form
     {
-        public Settings Settings { get; set; }
+        public Portfolio Portfolio { get; set; }
 
         public SettingsForm()
         {
@@ -31,16 +31,16 @@ namespace RfBondManagement.WinForm.Forms
                 return;
             }
 
-            Settings.Commissions = comissions;
-            Settings.Tax = tax;
+            Portfolio.Commissions = comissions;
+            Portfolio.Tax = tax;
 
             DialogResult = DialogResult.OK;
         }
 
         private void SettingsForm_Load(object sender, EventArgs e)
         {
-            tbComission.Text = Settings.Commissions.ToString("F3");
-            tbTax.Text = Settings.Tax.ToString("F");
+            tbComission.Text = Portfolio.Commissions.ToString("F3");
+            tbTax.Text = Portfolio.Tax.ToString("F");
         }
     }
 }

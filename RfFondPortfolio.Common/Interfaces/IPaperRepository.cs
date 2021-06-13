@@ -2,7 +2,7 @@
 
 namespace RfFondPortfolio.Common.Interfaces
 {
-    public interface IPaperRepository : IGenericRepository<AbstractPaper>
+    public interface IPaperRepository : IGenericSecRepository<AbstractPaper>
     {
         
     }

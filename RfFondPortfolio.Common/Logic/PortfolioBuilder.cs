@@ -82,7 +82,7 @@ namespace RfFondPortfolio.Common.Logic
             {
                 var secId = paperCount.Key;
                 var count = paperCount.Value.Sum(x => x.Key);
-                var sum = paperCount.Value.Sum(x => x.Value);
+                var sum = paperCount.Value.Sum(x => x.Value) * count;
                 var averagePrice = sum / count;
 
                 var paperDefinition = paperRepository.Get().Single(p => p.SecId == secId);

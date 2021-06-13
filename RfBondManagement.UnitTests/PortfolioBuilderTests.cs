@@ -65,5 +65,25 @@ namespace RfBondManagement.UnitTests
             paperActions[2].Count.ShouldBe(1);
             paperActions[2].Value.ShouldBe(250);
         }
+
+        [Test]
+        public void SmokeTest2()
+        {
+            // основано на примере 1 из https://journal.open-broker.ru/taxes/chto-takoe-fifo/
+            var actions = new List<PortfolioAction>();
+            actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 15, SecId = "S1", Value = 50});
+            actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 30, SecId = "S1", Value = 80});
+            actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Sell, Count = 20, SecId = "S1", Value = 75});
+
+            var content = PortfolioBuilder.Build(actions, PaperRepository);
+
+            content.ShouldNotBeNull();
+
+            content.Papers.Count.ShouldBe(1);
+            var paper = content.Papers[0];
+            paper.Paper.SecId.ShouldBe("S1");
+            paper.Count.ShouldBe(25);
+            paper.AveragePrice.ShouldBe(80);
+        }
     }
 }

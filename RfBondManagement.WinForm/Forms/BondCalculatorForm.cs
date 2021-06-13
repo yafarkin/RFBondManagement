@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
+using RfFondPortfolio.Common.Dtos;
+using RfFondPortfolio.Common.Interfaces;
 
 namespace RfBondManagement.WinForm.Forms
 {
@@ -11,17 +13,19 @@ namespace RfBondManagement.WinForm.Forms
         public BaseBondPaperInPortfolio SelectedPaper;
 
         protected readonly IDatabaseLayer _db;
+        protected readonly IPaperRepository _paperRepository;
         protected readonly IBondCalculator _calculator;
 
-        public BondCalculatorForm(IDatabaseLayer db, IBondCalculator calculator)
+        public BondCalculatorForm(IDatabaseLayer db, IPaperRepository paperRepository, IBondCalculator calculator)
         {
             _db = db;
+            _paperRepository = paperRepository;
             _calculator = calculator;
 
             InitializeComponent();
 
-            psBond.InitDI(_db);
-            psBond.WhereFilter = p => p.IsBond;
+            psBond.InitDI(_paperRepository);
+            psBond.WhereFilter = p => p.PaperType == PaperType.Bond;
         }
 
         private void cbUntilMaturityDate_CheckedChanged(object sender, EventArgs e)

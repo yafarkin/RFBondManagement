@@ -12,10 +12,13 @@ namespace RfBondManagement.Engine
         public static IUnityContainer Configure(IUnityContainer container = null)
         {
             container ??= new UnityContainer();
-            container.RegisterType<IDatabaseLayer, DatabaseLayer>(TypeLifetime.Singleton);
-            container.RegisterType<IHistoryDatabaseLayer, HistoryDatabaseLayer>(TypeLifetime.Singleton);
-            container.RegisterType<IBondCalculator, BondCalculator>();
-            container.RegisterType<IExternalImport, MoexImport>();
+
+            container
+                .RegisterType<IDatabaseLayer, DatabaseLayer>(TypeLifetime.Singleton)
+                .RegisterType<IHistoryDatabaseLayer, HistoryDatabaseLayer>(TypeLifetime.Singleton)
+                .RegisterType<IBondCalculator, BondCalculator>()
+                .RegisterType<IExternalImport, MoexImport>()
+                .RegisterType<IPaperRepository, PaperRepository>();
 
             container.AddNewExtension<NLogExtension>();
 

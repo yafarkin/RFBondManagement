@@ -4,19 +4,19 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using RfBondManagement.Engine.Common;
-using RfBondManagement.Engine.Interfaces;
+using RfFondPortfolio.Common.Dtos;
+using RfFondPortfolio.Common.Interfaces;
 
 namespace RfBondManagement.WinForm.Controls
 {
     public partial class PaperSelectUC : UserControl
     {
-        protected IDatabaseLayer _db;
-        protected IEnumerable<BaseStockPaper> _papers;
+        protected IPaperRepository _paperRepository;
+        protected IEnumerable<AbstractPaper> _papers;
 
         protected const int TAKE_COUNT = 25;
 
-        public Func<BaseStockPaper, bool> WhereFilter;
-
+        public Func<AbstractPaper, bool> WhereFilter;
 
         [Browsable(true)]
         [Category("Action")]
@@ -28,14 +28,14 @@ namespace RfBondManagement.WinForm.Controls
             InitializeComponent();
         }
 
-        public void InitDI(IDatabaseLayer db)
+        public void InitDI(IPaperRepository paperRepository)
         {
-            _db = db;
+            _paperRepository = paperRepository;
         }
 
         private void PaperSelectUC_Load(object sender, EventArgs e)
         {
-            if (null == _db)
+            if (null == _paperRepository)
             {
                 return;
             }
@@ -45,7 +45,7 @@ namespace RfBondManagement.WinForm.Controls
             cbbPaper.DisplayMember = "Name";
             cbbPaper.ValueMember = "Code";
 
-            _papers = _db.SelectPapers();
+            _papers = _paperRepository.Get();
             if (WhereFilter != null)
             {
                 _papers = _papers.Where(WhereFilter);
@@ -56,7 +56,7 @@ namespace RfBondManagement.WinForm.Controls
 
         private void cbPaper_TextChanged(object sender, EventArgs e)
         {
-            if (null == _db)
+            if (null == _paperRepository)
             {
                 return;
             }

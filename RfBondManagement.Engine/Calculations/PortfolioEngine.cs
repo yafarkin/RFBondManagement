@@ -129,7 +129,9 @@ namespace RfBondManagement.Engine.Calculations
                 IPaperInPortfolio<AbstractPaper> paperInPortfolio;
                 if (paperDefinition.PaperType == PaperType.Bond)
                 {
-                    paperInPortfolio = new BondInPortfolio(paperDefinition as BondPaper);
+                    var bondInPortfolio = new BondInPortfolio(paperDefinition as BondPaper);
+                    bondInPortfolio.Aci = _bondCalculator.CalculateAci(bondInPortfolio.Paper, onDate ?? DateTime.Today);
+                    paperInPortfolio = bondInPortfolio;
                 }
                 else
                 {

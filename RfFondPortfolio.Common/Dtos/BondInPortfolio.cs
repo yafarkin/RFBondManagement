@@ -12,7 +12,6 @@
         /// </summary>
         public decimal Value => Paper.FaceValue * AveragePrice;
 
-
         /// <summary>
         /// Стоимость бумаги с НКД
         /// </summary>

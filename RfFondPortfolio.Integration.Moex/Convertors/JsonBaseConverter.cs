@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using RfBondManagement.Engine.Integration.Moex.Dto;
+using RfFondPortfolio.Integration.Moex.JsonDto;
 
-namespace RfBondManagement.Engine.Integration.Moex
+namespace RfFondPortfolio.Integration.Moex.Convertors
 {
-    public class JsonBaseConverter : JsonConverter
+    internal class JsonBaseConverter : JsonConverter
     {
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {

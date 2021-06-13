@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using NLog;
-using RfBondManagement.Engine.Common;
-using RfBondManagement.Engine.Interfaces;
+using RfFondPortfolio.Common.Dtos;
+using RfFondPortfolio.Common.Interfaces;
 using Unity;
 
 namespace RfBondManagement.WinForm.Forms
@@ -17,17 +12,17 @@ namespace RfBondManagement.WinForm.Forms
     public partial class PaperListForm : Form
     {
         protected ILogger _logger;
-        protected readonly IDatabaseLayer _db;
-        protected readonly IList<BaseStockPaper> _papers;
+        protected readonly IList<AbstractPaper> _papers;
         protected IUnityContainer _container;
+        protected IPaperRepository _paperRepository;
 
-        public PaperListForm(ILogger logger, IDatabaseLayer db, IUnityContainer container)
+        public PaperListForm(ILogger logger, IPaperRepository paperRepository, IUnityContainer container)
         {
             _logger = logger;
-            _db = db;
+            _paperRepository = paperRepository;
             _container = container;
 
-            _papers = _db.SelectPapers().ToList();
+            _papers = _paperRepository.Get().ToList();
 
             InitializeComponent();
         }
@@ -46,7 +41,7 @@ namespace RfBondManagement.WinForm.Forms
 
         private void DataBind()
         {
-            var selectedPaper = 0 == lvPapers.SelectedItems.Count ? null : lvPapers.SelectedItems[0].Tag as BaseStockPaper;
+            var selectedPaper = 0 == lvPapers.SelectedItems.Count ? null : lvPapers.SelectedItems[0].Tag as AbstractPaper;
 
             lvPapers.Items.Clear();
 
@@ -85,7 +80,7 @@ namespace RfBondManagement.WinForm.Forms
 
                     }
 
-                    paper = _db.InsertPaper(paper);
+                    paper = _paperRepository.Insert(paper);
                     _papers.Add(paper);
 
                     DataBind();
@@ -104,7 +99,7 @@ namespace RfBondManagement.WinForm.Forms
 
             using (var f = _container.Resolve<PaperForm>())
             {
-                var originalPaper = lvPapers.SelectedItems[0].Tag as BaseStockPaper;
+                var originalPaper = lvPapers.SelectedItems[0].Tag as AbstractPaper;
                 f.Paper = originalPaper;
 
                 while (true)
@@ -123,7 +118,7 @@ namespace RfBondManagement.WinForm.Forms
 
                     }
 
-                    _db.UpdatePaper(paper);
+                    _paperRepository.Update(paper);
 
                     _papers.Remove(originalPaper);
                     _papers.Add(paper);
@@ -147,8 +142,8 @@ namespace RfBondManagement.WinForm.Forms
                 return;
             }
 
-            var paper = lvPapers.SelectedItems[0].Tag as BaseStockPaper;
-            _db.DeletePaper(paper.Id);
+            var paper = lvPapers.SelectedItems[0].Tag as AbstractPaper;
+            _paperRepository.Delete(paper);
             _papers.Remove(paper);
             DataBind();
         }

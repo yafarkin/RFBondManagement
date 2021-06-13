@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RestSharp;
 
-namespace RfBondManagement.Engine.Integration.Moex
+namespace RfFondPortfolio.Integration.Moex.Requests
 {
-    public abstract class MoexBaseRequest<TMoex>
+    internal abstract class MoexBaseRequest<TMoex>
     {
         protected const string BASE_MOEX_URL = "https://iss.moex.com/iss";
 

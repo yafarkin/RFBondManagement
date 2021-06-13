@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using RfFondPortfolio.Common.Dtos;
 
 namespace RfFondPortfolio.Common.Interfaces
 {
     public interface IExternalImport
     {
-        AbstractPaper ImportPaper(string secId);
+        Task<AbstractPaper> ImportPaper(string secId);
 
-        PaperPrice LastPrice(string secId);
+        Task<PaperPrice> LastPrice(AbstractPaper paper);
 
-        IEnumerable<PaperPrice> HistoryPrice(string secId, DateTime? startDate, DateTime? endDate);
+        Task<IEnumerable<HistoryPrice>> HistoryPrice(AbstractPaper paper, DateTime? startDate = null, DateTime? endDate = null);
 
-        IEnumerable<string> ListPapers();
+        Task<IEnumerable<string>> ListPapers();
     }
 }

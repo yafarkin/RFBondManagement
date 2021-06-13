@@ -3,12 +3,12 @@
 namespace RfFondPortfolio.Common.Dtos
 {
     /// <summary>
-    /// Стоимость бумаги на определенный момент времени
+    /// Стоимость бумаги на текущий момент времени
     /// </summary>
     public class PaperPrice
     {
         /// <summary>
-        /// Уникальный норме
+        /// Уникальный идентификатор
         /// </summary>
         public Guid Id { get; set; }
         
@@ -23,8 +23,13 @@ namespace RfFondPortfolio.Common.Dtos
         public string SecId { get; set; }
 
         /// <summary>
-        /// Цена бумаги
+        /// Размер лота
         /// </summary>
-        public decimal Value { get; set; }
+        public long LotSize { get; set; }
+
+        /// <summary>
+        /// Цена бумаги, за 1 единицу
+        /// </summary>
+        public decimal Price { get; set; }
     }
 }

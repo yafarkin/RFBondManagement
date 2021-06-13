@@ -1,8 +1,8 @@
-﻿using RfBondManagement.Engine.Integration.Moex.Dto;
+﻿using RfFondPortfolio.Integration.Moex.JsonDto;
 
-namespace RfBondManagement.Engine.Integration.Moex
+namespace RfFondPortfolio.Integration.Moex.Requests
 {
-    public class MoexPaperDefinitionRequest : MoexBaseRequest<JsonPaperDefinition>
+    internal class MoexPaperDefinitionRequest : MoexBaseRequest<JsonPaperDefinition>
     {
         protected string _ticker;
 

@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace RfBondManagement.Engine.Integration.Moex.Dto
+namespace RfFondPortfolio.Integration.Moex.JsonDto
 {
-    public class JsonBondization
+    internal class JsonBondization
     {
         [JsonProperty("amortizations")]
         public JsonBase Amortizations { get; set; }

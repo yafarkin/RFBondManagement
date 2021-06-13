@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using RfFondPortfolio.Common.Dtos;
 
 namespace RfBondManagement.Engine.Common
 {
@@ -108,7 +109,7 @@ namespace RfBondManagement.Engine.Common
         /// <summary>
         /// Список офферов (по выкупу), для облигаций
         /// </summary>
-        public IList<PaperOffer> Offers { get; set; }
+        public IList<BondOffer> Offers { get; set; }
 
         public DateTime? OfferDate => Offers != null && Offers.Count > 0 ? Offers[0].OfferDate : (DateTime?)null;
 

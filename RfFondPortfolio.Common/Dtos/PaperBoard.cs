@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RfBondManagement.Engine.Common
+namespace RfFondPortfolio.Common.Dtos
 {
     public class PaperBoard
     {

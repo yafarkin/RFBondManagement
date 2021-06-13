@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace RfFondPortfolio.Common.Dtos
 {
@@ -16,5 +17,10 @@ namespace RfFondPortfolio.Common.Dtos
         /// Список дивидендов
         /// </summary>
         public IList<ShareDividend> Dividends;
+
+        /// <summary>
+        /// Является ли бумага привелигированной акцией
+        /// </summary>
+        public bool IsPreferedShare => string.Equals("preferred_share", Type, StringComparison.InvariantCultureIgnoreCase);
     }
 }

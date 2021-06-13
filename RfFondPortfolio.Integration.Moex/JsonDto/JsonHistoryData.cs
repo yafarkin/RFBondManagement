@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace RfBondManagement.Engine.Integration.Moex.Dto
+namespace RfFondPortfolio.Integration.Moex.JsonDto
 {
-    public class JsonHistoryData
+    internal class JsonHistoryData
     {
         [JsonProperty("history")]
         public JsonBase History { get; set; }

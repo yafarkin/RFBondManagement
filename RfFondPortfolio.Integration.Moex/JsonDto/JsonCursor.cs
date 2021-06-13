@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace RfBondManagement.Engine.Integration.Moex.Dto
+namespace RfFondPortfolio.Integration.Moex.JsonDto
 {
-    public class JsonCursor : JsonBase
+    internal class JsonCursor : JsonBase
     {
         public long Index => Convert.ToInt64(GetDataFor("INDEX"));
         public long Total => Convert.ToInt64(GetDataFor("TOTAL"));

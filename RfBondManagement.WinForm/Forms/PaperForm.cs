@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using RfBondManagement.Engine.Common;
-using RfBondManagement.Engine.Integration.Moex;
+using RfFondPortfolio.Common.Dtos;
+using RfFondPortfolio.Common.Interfaces;
 
 namespace RfBondManagement.WinForm.Forms
 {
     public partial class PaperForm : Form
     {
-        public BaseStockPaper Paper;
+        public AbstractPaper Paper;
 
-        public PaperForm()
+        protected IExternalImport _import;
+
+        public PaperForm(IExternalImport import)
         {
             InitializeComponent();
+
+            _import = import;
         }
 
         private void DataBind()
@@ -40,35 +44,17 @@ namespace RfBondManagement.WinForm.Forms
 
             Cursor.Current = Cursors.WaitCursor;
 
-            var request = new MoexPaperDefinitionRequest(tbSearch.Text.Trim());
-            var response = await request.Read();
-            Paper = StockPaperConverter.Map(response);
-
-            if (Paper.IsBond)
-            {
-                var couponsRequest = new MoexBondCouponsRequest(Paper.SecId);
-                var couponsResponse = await couponsRequest.Read();
-                StockPaperConverter.MapBond(Paper, couponsResponse);
-            }
-            else if (Paper.IsShare)
-            {
-                //TODO: Add dividends
-            }
-
+            Paper = await _import.ImportPaper(tbSearch.Text.Trim());
 
             DataBind();
 
             lblLastPrice.Text = "---";
             if (Paper?.PrimaryBoard != null)
             {
-                var priceRequest = new MoexLastPriceRequest(Paper.PrimaryBoard.Market, Paper.PrimaryBoard.BoardId, Paper.SecId);
-                var priceResponse = await priceRequest.Read();
-
-                var lastPrice = priceResponse.Securities.GetDataForDecimal("SECID", Paper.SecId, "PREVADMITTEDQUOTE");
-
-                if (lastPrice.HasValue)
+                var lastPrice = await _import.LastPrice(Paper);
+                if (lastPrice != null)
                 {
-                    lblLastPrice.Text = lastPrice.ToString();
+                    lblLastPrice.Text = lastPrice.Price.ToString();
                 }
             }
 
@@ -87,7 +73,7 @@ namespace RfBondManagement.WinForm.Forms
         {
             if (null == Paper)
             {
-                Paper = new BaseStockPaper {Boards = new List<PaperBoard> {new PaperBoard {IsPrimary = true}}};
+                Paper = new SharePaper {Boards = new List<PaperBoard> {new PaperBoard {IsPrimary = true}}};
             }
 
             Paper.SecId = tbSecId.Text;

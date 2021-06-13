@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace RfBondManagement.Engine.Integration.Moex.Dto
+namespace RfFondPortfolio.Integration.Moex.JsonDto
 {
-    public class JsonPaperDefinition
+    internal class JsonPaperDefinition
     {
         [JsonProperty("description")]
         public JsonBase Description { get; set; }

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,6 +10,11 @@
     <PackageReference Include="NLog" Version="4.7.7" />
     <PackageReference Include="RestSharp" Version="106.11.7" />
     <PackageReference Include="Unity" Version="5.11.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RfFondPortfolio.Common\RfFondPortfolio.Common.csproj" />
+    <ProjectReference Include="..\RfFondPortfolio.Integration.Moex\RfFondPortfolio.Integration.Moex.csproj" />
   </ItemGroup>
 
 </Project>

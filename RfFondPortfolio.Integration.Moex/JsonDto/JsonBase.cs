@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Globalization;
 using Newtonsoft.Json;
+using RfFondPortfolio.Integration.Moex.Convertors;
 
-namespace RfBondManagement.Engine.Integration.Moex.Dto
+namespace RfFondPortfolio.Integration.Moex.JsonDto
 {
     [JsonConverter(typeof(JsonBaseConverter))]
-    public class JsonBase
+    internal class JsonBase
     {
         [JsonProperty("metadata")]
         public List<JsonBaseMetadata> Metadata { get; set; }

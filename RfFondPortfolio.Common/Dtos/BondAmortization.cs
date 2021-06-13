@@ -15,5 +15,6 @@ namespace RfFondPortfolio.Common.Dtos
         public decimal ValuePercent { get; set; }
         public decimal Value { get; set; }
         public decimal ValueRub { get; set; }
+        public string DataSource { get; set; }
     }
 }

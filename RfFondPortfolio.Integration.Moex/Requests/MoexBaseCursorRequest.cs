@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using RfBondManagement.Engine.Integration.Moex.Dto;
+using RfFondPortfolio.Integration.Moex.JsonDto;
 
-namespace RfBondManagement.Engine.Integration.Moex
+namespace RfFondPortfolio.Integration.Moex.Requests
 {
-    public abstract class MoexBaseCursorRequest : MoexBaseRequest<JsonHistoryData>
+    internal abstract class MoexBaseCursorRequest : MoexBaseRequest<JsonHistoryData>
     {
         protected IList<Tuple<string, string>> _addGetParams;
 
@@ -16,13 +16,13 @@ namespace RfBondManagement.Engine.Integration.Moex
             var result = firstPage.History;
             var lastItemsCount = firstPage.History.Data.Count;
 
-            var total = firstPage.Cursor.Total;
+            var total = firstPage.Cursor?.Total ?? 0;
             if (count > 0)
             {
                 total = count;
             }
 
-            while (start + lastItemsCount < total)
+            while (0 == total || start + lastItemsCount < total)
             {
                 start += lastItemsCount;
                 var nextPage = await CursorReadHistory(start);

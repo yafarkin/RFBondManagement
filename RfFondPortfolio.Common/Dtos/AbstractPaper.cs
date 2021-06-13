@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RfFondPortfolio.Common.Dtos
 {
@@ -68,38 +70,18 @@ namespace RfFondPortfolio.Common.Dtos
         public string GroupName { get; set; }
 
         /// <summary>
-        /// Является ли бумага акцией
+        /// Тип бумаги
         /// </summary>
-        public bool IsShare => string.Equals("stock_shares", Group, StringComparison.InvariantCultureIgnoreCase);
+        public PaperType PaperType { get; set; }
 
         /// <summary>
-        /// Является ли бумага привелигированной акцией
+        /// Список досок
         /// </summary>
-        public bool IsPreferedShare => IsShare && string.Equals("preferred_share", Type, StringComparison.InvariantCultureIgnoreCase);
+        public IList<PaperBoard> Boards { get; set; }
 
         /// <summary>
-        /// Является ли бумага ETF
+        /// Основная доска
         /// </summary>
-        public bool IsEtf => string.Equals("stock_etf", Group, StringComparison.InvariantCultureIgnoreCase);
-
-        /// <summary>
-        /// Является ли бумага паями ПИФов
-        /// </summary>
-        public bool IsPpif => string.Equals("stock_etf", Group, StringComparison.InvariantCultureIgnoreCase);
-
-        /// <summary>
-        /// Является ли бумага облигацией
-        /// </summary>
-        public bool IsBond => string.Equals("stock_bonds", Group, StringComparison.InvariantCultureIgnoreCase);
-
-        /// <summary>
-        /// Является ли бумага ОФЗ
-        /// </summary>
-        public bool IsOfzBond => IsBond && string.Equals("ofz_bond", Type, StringComparison.InvariantCultureIgnoreCase);
-
-        /// <summary>
-        /// Является ли бумага депозитарной распиской
-        /// </summary>
-        public bool IsDR => string.Equals("stock_dr", Group, StringComparison.InvariantCultureIgnoreCase);
+        public PaperBoard PrimaryBoard => Boards?.Single(b => b.IsPrimary);
     }
 }

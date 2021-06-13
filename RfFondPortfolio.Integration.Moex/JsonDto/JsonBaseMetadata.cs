@@ -1,15 +1,15 @@
 ﻿using Newtonsoft.Json;
 
-namespace RfBondManagement.Engine.Integration.Moex.Dto
+namespace RfFondPortfolio.Integration.Moex.JsonDto
 {
-    public class JsonBaseMetadata
+    internal class JsonBaseMetadata
     {
         public string Name { get; set; }
 
         public JsonBaseMetadataProperty Properties { get; set; }
     }
 
-    public class JsonBaseMetadataProperty
+    internal class JsonBaseMetadataProperty
     {
         [JsonProperty("type")]
         public string Type { get; set; }

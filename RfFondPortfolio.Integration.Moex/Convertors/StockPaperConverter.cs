@@ -1,38 +1,62 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using RfBondManagement.Engine.Common;
-using RfBondManagement.Engine.Integration.Moex.Dto;
+using RfFondPortfolio.Common.Dtos;
+using RfFondPortfolio.Integration.Moex.JsonDto;
 
-namespace RfBondManagement.Engine.Integration.Moex
+namespace RfFondPortfolio.Integration.Moex.Requests
 {
-    public static class StockPaperConverter
+    internal static class StockPaperConverter
     {
-        public static BaseStockPaper Map(JsonPaperDefinition paper)
+        public static PaperType GetPaperType(JsonPaperDefinition definition)
         {
-            var result = new BaseStockPaper
+            var group = definition.Description.GetDataForString("name", "GROUP", "value");
+
+            var paperType = PaperType.Unknown;
+            switch (group)
+            {
+                case "stock_shares":
+                    paperType = PaperType.Share;
+                    break;
+                case "stock_etf":
+                    paperType = PaperType.Etf;
+                    break;
+                case "stock_ppif":
+                    paperType = PaperType.Ppif;
+                    break;
+                case "stock_bonds":
+                    paperType = PaperType.Bond;
+                    break;
+                case "stock_dr":
+                    paperType = PaperType.DR;
+                    break;
+            }
+
+            return paperType;
+        }
+
+        private static T Map<T>(JsonPaperDefinition definition) where T : AbstractPaper, new()
+        {
+            var paper = new T
             {
                 Id = Guid.NewGuid()
             };
 
-            result.SecId = paper.Description.GetDataForString("name", "SECID", "value");
-            result.Name = paper.Description.GetDataForString("name", "NAME", "value");
-            result.ShortName = paper.Description.GetDataForString("name", "SHORTNAME", "value");
-            result.Isin = paper.Description.GetDataForString("name", "ISIN", "value");
-            result.FaceValue = paper.Description.GetDataForDecimal("name", "FACEVALUE", "value").GetValueOrDefault();
-            result.IssueDate = paper.Description.GetDataForDateTime("name", "ISSUEDATE", "value");
-            result.IssueSize = paper.Description.GetDataForLong("name", "ISSUESIZE", "value").GetValueOrDefault();
-            result.Type = paper.Description.GetDataForString("name", "TYPE", "value");
-            result.TypeName = paper.Description.GetDataForString("name", "TYPENAME", "value");
-            result.Group = paper.Description.GetDataForString("name", "GROUP", "value");
-            result.GroupName = paper.Description.GetDataForString("name", "GROUPNAME", "value");
-            result.MatDate = paper.Description.GetDataForDateTime("name", "MATDATE", "value");
-            result.InitialFaceValue = paper.Description.GetDataForDecimal("name", "INITIALFACEVALUE", "value");
-            result.CouponFrequency = paper.Description.GetDataForLong("name", "COUPONFREQUENCY", "value");
-            result.EarlyRepayment = paper.Description.GetDataForString("name", "EARLYREPAYMENT", "value") == "1";
+            paper.SecId = definition.Description.GetDataForString("name", "SECID", "value");
+            paper.Name = definition.Description.GetDataForString("name", "NAME", "value");
+            paper.ShortName = definition.Description.GetDataForString("name", "SHORTNAME", "value");
+            paper.Isin = definition.Description.GetDataForString("name", "ISIN", "value");
+            paper.FaceValue = definition.Description.GetDataForDecimal("name", "FACEVALUE", "value").GetValueOrDefault();
+            paper.IssueDate = definition.Description.GetDataForDateTime("name", "ISSUEDATE", "value");
+            paper.IssueSize = definition.Description.GetDataForLong("name", "ISSUESIZE", "value").GetValueOrDefault();
+            paper.Type = definition.Description.GetDataForString("name", "TYPE", "value");
+            paper.TypeName = definition.Description.GetDataForString("name", "TYPENAME", "value");
+            paper.Group = definition.Description.GetDataForString("name", "GROUP", "value");
+            paper.GroupName = definition.Description.GetDataForString("name", "GROUPNAME", "value");
+            paper.PaperType = GetPaperType(definition);
 
-            result.Boards = new List<PaperBoard>(paper.Boards.Data.Count);
-            foreach (var board in paper.Boards.Data)
+            paper.Boards = new List<PaperBoard>(definition.Boards.Data.Count);
+            foreach (var board in definition.Boards.Data)
             {
                 var paperBoard = new PaperBoard();
                 paperBoard.BoardId = board["boardid"];
@@ -45,47 +69,93 @@ namespace RfBondManagement.Engine.Integration.Moex
                 paperBoard.IsPrimary = board["is_primary"] == "1";
                 paperBoard.Currency = board["currencyid"];
 
-                result.Boards.Add(paperBoard);
+                paper.Boards.Add(paperBoard);
             }
 
-            return result;
-        }
-
-        // TODO: Add dividends info
-        public static BaseStockPaper MapShare(BaseStockPaper paper, JsonBase dividends)
-        {
             return paper;
         }
 
-        public static void MapBond(BaseStockPaper paper, JsonBondization coupons)
+        public static SharePaper MapShare(JsonPaperDefinition definition, JsonDividends dividends)
         {
-            paper.Coupons = new List<BondCoupon>(coupons.Coupons.Data.Count);
+            var paper = Map<SharePaper>(definition);
 
+            paper.RegNumber = definition.Description.GetDataForString("name", "REGNUMBER", "value");
+
+            paper.Dividends = new List<ShareDividend>(dividends.Dividends.Data.Count);
+            foreach (var jsonDividend in dividends.Dividends.Data)
+            {
+                var dividend = new ShareDividend();
+                dividend.RegistryCloseDate = Convert.ToDateTime(jsonDividend["registryclosedate"]);
+                dividend.Value = Convert.ToDecimal(jsonDividend["value"], CultureInfo.InvariantCulture);
+                dividend.Currency = jsonDividend["currencyid"];
+
+                paper.Dividends.Add(dividend);
+            }
+
+            return paper;
+        }
+
+        public static BondPaper MapBond(JsonPaperDefinition definition, JsonBondization coupons)
+        {
+            var paper = Map<BondPaper>(definition);
+
+            paper.MatDate = definition.Description.GetDataForDateTime("name", "MATDATE", "value").GetValueOrDefault();
+            paper.InitialFaceValue = definition.Description.GetDataForDecimal("name", "INITIALFACEVALUE", "value");
+            paper.CouponFrequency = definition.Description.GetDataForLong("name", "COUPONFREQUENCY", "value").GetValueOrDefault();
+            paper.EarlyRepayment = definition.Description.GetDataForString("name", "EARLYREPAYMENT", "value") == "1";
+
+            paper.Coupons = new List<BondCoupon>(coupons.Coupons.Data.Count);
             foreach (var jsonCoupon in coupons.Coupons.Data)
             {
                 var coupon = new BondCoupon();
-                coupon.Date = Convert.ToDateTime(jsonCoupon["coupondate"]);
+                coupon.IssueValue = Convert.ToDecimal(jsonCoupon["issuevalue"], CultureInfo.InvariantCulture);
+                coupon.CouponDate = Convert.ToDateTime(jsonCoupon["coupondate"]);
+                coupon.RecordDate = Convert.ToDateTime(jsonCoupon["recorddate"]);
+                coupon.StartDate = Convert.ToDateTime(jsonCoupon["startdate"]);
+                coupon.InitialFaceValue = Convert.ToDecimal(jsonCoupon["initialfacevalue"], CultureInfo.InvariantCulture);
+                coupon.FaceValue = Convert.ToDecimal(jsonCoupon["facevalue"], CultureInfo.InvariantCulture);
                 coupon.Value = Convert.ToDecimal(jsonCoupon["value"], CultureInfo.InvariantCulture);
+                coupon.ValuePercent = Convert.ToDecimal(jsonCoupon["valueprc"], CultureInfo.InvariantCulture);
+                coupon.ValueRub = Convert.ToDecimal(jsonCoupon["value_rub"], CultureInfo.InvariantCulture);
 
                 paper.Coupons.Add(coupon);
             }
 
-            paper.Offers = new List<PaperOffer>();
+            paper.Offers = new List<BondOffer>();
             foreach (var jsonOffer in coupons.Offers.Data)
             {
-                var offer = new PaperOffer();
+                var offer = new BondOffer();
                 offer.OfferDate = Convert.ToDateTime(jsonOffer["offerdate"]);
                 offer.OfferDateStart = string.IsNullOrWhiteSpace(jsonOffer["offerdatestart"])
-                    ? (DateTime?)null
+                    ? null
                     : Convert.ToDateTime(jsonOffer["offerdatestart"]);
                 offer.OfferDateEnd = string.IsNullOrWhiteSpace(jsonOffer["offerdateend"])
-                    ? (DateTime?)null
+                    ? null
                     : Convert.ToDateTime(jsonOffer["offerdateend"]);
                 offer.Price = Convert.ToDecimal(jsonOffer["price"], CultureInfo.InvariantCulture);
                 offer.OfferType = jsonOffer["offertype"];
 
                 paper.Offers.Add(offer);
             }
+
+            paper.Amortizations = new List<BondAmortization>();
+            foreach (var jsonAmmortization in coupons.Amortizations.Data)
+            {
+                var ammortization = new BondAmortization();
+                ammortization.IssueValue = Convert.ToDecimal(jsonAmmortization["issuevalue"], CultureInfo.InvariantCulture);
+                ammortization.AmortDate = Convert.ToDateTime(jsonAmmortization["amortdate"]);
+                ammortization.FaceValue = Convert.ToDecimal(jsonAmmortization["facevalue"], CultureInfo.InvariantCulture);
+                ammortization.InitialFaceValue = Convert.ToDecimal(jsonAmmortization["initialfacevalue"], CultureInfo.InvariantCulture);
+                ammortization.FaceUnit = jsonAmmortization["faceunit"];
+                ammortization.ValuePercent = Convert.ToDecimal(jsonAmmortization["valueprc"], CultureInfo.InvariantCulture);
+                ammortization.Value = Convert.ToDecimal(jsonAmmortization["value"], CultureInfo.InvariantCulture);
+                ammortization.ValueRub = Convert.ToDecimal(jsonAmmortization["value_rub"], CultureInfo.InvariantCulture);
+                ammortization.DataSource = jsonAmmortization["data_source"];
+
+                paper.Amortizations.Add(ammortization);
+            }
+
+            return paper;
         }
     }
 }

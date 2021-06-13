@@ -1,22 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using RfBondManagement.Engine.Integration.Moex.Dto;
 
-namespace RfBondManagement.Engine.Integration.Moex
+namespace RfFondPortfolio.Integration.Moex.Requests
 {
-    public class MoexSecurityHistoryRequest : MoexBaseCursorRequest
+    internal class MoexSecurityHistoryRequest : MoexBaseCursorRequest
     {
-        protected string _engine;
         protected string _market;
-        protected string _security;
+        protected string _board;
+        protected string _ticker;
 
-        protected override string _requestUrl => $"/history/engines/{_engine}/markets/{_market}/securities/{_security}";
+        protected override string _requestUrl => $"/history/engines/stock/markets/{_market}/boards/{_board}/securities/{_ticker}";
 
-        public MoexSecurityHistoryRequest(string engine, string market, string security, DateTime? from = null, DateTime? to = null)
+        protected override IEnumerable<Tuple<string, string>> _additionalParams => new List<Tuple<string, string>>
         {
-            _engine = engine;
+            new Tuple<string, string>("iss.meta", "off")
+        };
+
+        public MoexSecurityHistoryRequest(string market, string board, string ticker, DateTime? from = null, DateTime? to = null)
+        {
             _market = market;
-            _security = security;
+            _board = board;
+            _ticker = ticker;
 
             if (from != null || to != null)
             {

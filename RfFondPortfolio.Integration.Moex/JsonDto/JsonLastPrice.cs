@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace RfBondManagement.Engine.Integration.Moex.Dto
+namespace RfFondPortfolio.Integration.Moex.JsonDto
 {
-    public class JsonLastPrice
+    internal class JsonLastPrice
     {
         [JsonProperty("securities")]
         public JsonBase Securities { get; set; }

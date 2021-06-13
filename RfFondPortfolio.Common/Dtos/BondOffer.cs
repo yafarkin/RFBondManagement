@@ -9,8 +9,8 @@ namespace RfFondPortfolio.Common.Dtos
     {
         public decimal IssueValue { get; set; }
         public DateTime OfferDate { get; set; }
-        public DateTime OfferDateStart { get; set; }
-        public DateTime OfferDateEnd { get; set; }
+        public DateTime? OfferDateStart { get; set; }
+        public DateTime? OfferDateEnd { get; set; }
         public decimal FaceValue { get; set; }
         public string FaceUnit { get; set; }
         public decimal? Price { get; set; }

@@ -1,8 +1,8 @@
-﻿using RfBondManagement.Engine.Integration.Moex.Dto;
+﻿using RfFondPortfolio.Integration.Moex.JsonDto;
 
-namespace RfBondManagement.Engine.Integration.Moex
+namespace RfFondPortfolio.Integration.Moex.Requests
 {
-    public class MoexBondCouponsRequest : MoexBaseRequest<JsonBondization>
+    internal class MoexBondCouponsRequest : MoexBaseRequest<JsonBondization>
     {
         protected string _ticker;
 

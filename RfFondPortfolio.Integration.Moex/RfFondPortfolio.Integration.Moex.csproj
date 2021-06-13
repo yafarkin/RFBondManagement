@@ -8,4 +8,8 @@
     <ProjectReference Include="..\RfFondPortfolio.Common\RfFondPortfolio.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="JsonDto\" />
+  </ItemGroup>
+
 </Project>

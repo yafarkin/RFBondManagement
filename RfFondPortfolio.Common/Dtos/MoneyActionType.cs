@@ -46,13 +46,18 @@
         OutcomeCommission = 102,
 
         /// <summary>
-        /// Налог
+        /// Налог, рассчитываемый автоматически
         /// </summary>
         OutcomeTax = 103,
 
         /// <summary>
         /// Отложенный налог (списывается при выводе денег)
         /// </summary>
-        OutcomeDelayTax = 104
+        OutcomeDelayTax = 104,
+
+        /// <summary>
+        /// Списание отложенного налога
+        /// </summary>
+        OutcomeDelayTaxPay = 105,
     }
 }

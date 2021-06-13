@@ -1,9 +1,10 @@
 ﻿using System;
+using RfFondPortfolio.Common.Logic;
 
 namespace RfFondPortfolio.Common.Dtos
 {
     /// <summary>
-    /// Портфель
+    /// Параметры портфеля
     /// </summary>
     public class Portfolio
     {
@@ -36,5 +37,11 @@ namespace RfFondPortfolio.Common.Dtos
         /// Налог на доход
         /// </summary>
         public decimal Tax { get; set; }
+
+        /// <summary>
+        /// Содержание портфеля
+        /// </summary>
+        /// <remarks>Строится через вызов <see cref="PortfolioBuilder.Build"/></remarks>
+        public PortfolioAggregatedContent AggregatedContent { get; set; }
     }
 }

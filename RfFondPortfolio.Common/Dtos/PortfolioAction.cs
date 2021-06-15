@@ -21,5 +21,10 @@ namespace RfFondPortfolio.Common.Dtos
         /// Сумма общая
         /// </summary>
         public abstract decimal Sum { get; set; }
+
+        /// <summary>
+        /// Текстовое примечание
+        /// </summary>
+        public string Comment { get; set; }
     }
 }

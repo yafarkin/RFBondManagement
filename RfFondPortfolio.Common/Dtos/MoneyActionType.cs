@@ -21,14 +21,19 @@
         IncomeCoupon = 3,
 
         /// <summary>
+        /// НКД при продаже
+        /// </summary>
+        IncomeAci = 4,
+
+        /// <summary>
         /// Продажа бумаги
         /// </summary>
-        IncomeSellOnMarket = 4,
+        IncomeSellOnMarket = 5,
 
         /// <summary>
         /// Погашение облигации
         /// </summary>
-        IncomeCloseBond = 5,
+        IncomeCloseBond = 6,
 
         /// <summary>
         /// Вывод денег со счёта
@@ -41,24 +46,29 @@
         OutcomeBuyOnMarket = 101,
 
         /// <summary>
+        /// НКД при покупке
+        /// </summary>
+        OutcomeAci = 102,
+
+        /// <summary>
         /// Комиссия
         /// </summary>
-        OutcomeCommission = 102,
+        OutcomeCommission = 103,
 
         /// <summary>
         /// Налог, рассчитываемый автоматически
         /// </summary>
-        OutcomeTax = 103,
+        OutcomeTax = 104,
 
         /// <summary>
         /// Отложенный налог (списывается при выводе денег)
         /// </summary>
-        OutcomeDelayTax = 104,
+        OutcomeDelayTax = 105,
 
         /// <summary>
         /// Списание отложенного налога
         /// </summary>
-        OutcomeDelayTaxPay = 105,
+        OutcomeDelayTaxPay = 106
     }
 
     public static class MoneyActionTypeHelper
@@ -67,6 +77,7 @@
             MoneyActionType.IncomeExternal,
             MoneyActionType.IncomeDividend,
             MoneyActionType.IncomeCoupon,
+            MoneyActionType.IncomeAci,
             MoneyActionType.IncomeSellOnMarket,
             MoneyActionType.IncomeCloseBond
         };
@@ -74,6 +85,7 @@
         public static readonly MoneyActionType[] OutcomeTypes = new[] {
             MoneyActionType.OutcomeExternal,
             MoneyActionType.OutcomeBuyOnMarket,
+            MoneyActionType.OutcomeAci,
             MoneyActionType.OutcomeCommission,
             MoneyActionType.OutcomeTax,
             MoneyActionType.OutcomeDelayTaxPay

@@ -2,7 +2,7 @@
 
 namespace RfFondPortfolio.Common.Interfaces
 {
-    public interface IPortfolioMoneyActionRepository : IGenericSecRepository<PortfolioMoneyAction>
+    public interface IPortfolioMoneyActionRepository : IPortfolioActionRepository<PortfolioMoneyAction>
     {
         
     }

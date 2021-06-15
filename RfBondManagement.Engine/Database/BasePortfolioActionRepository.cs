@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
@@ -9,6 +10,8 @@ namespace RfBondManagement.Engine.Database
     {
         protected override string _collectionName => "actions";
 
+        protected Guid _portfolioId;
+
         protected BasePortfolioActionRepository(IDatabaseLayer db)
             : base(db)
         {
@@ -16,7 +19,17 @@ namespace RfBondManagement.Engine.Database
 
         public IEnumerable<T> Get()
         {
-            return _entities.FindAll().OfType<T>();
+            if (_portfolioId == Guid.Empty)
+            {
+                throw new InvalidOperationException("Не задан идентификатор портфеля");
+            }
+
+            return _entities.FindAll().Where(x => x.PortfolioId == _portfolioId).OfType<T>();
+        }
+
+        public virtual void Setup(Guid portfolioId)
+        {
+            _portfolioId = portfolioId;
         }
     }
 }

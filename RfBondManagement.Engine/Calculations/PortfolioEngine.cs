@@ -155,8 +155,13 @@ namespace RfBondManagement.Engine.Calculations
             return content;
         }
 
-        public void BuyPaper(AbstractPaper paper, long count, decimal price)
+        public void BuyPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime))
         {
+            if (when == default(DateTime))
+            {
+                when = DateTime.UtcNow;
+            }
+
             var sum = price * count;
             var commission = sum * _portfolio.Commissions / 100;
 
@@ -165,18 +170,38 @@ namespace RfBondManagement.Engine.Calculations
                 MoneyAction = MoneyActionType.OutcomeBuyOnMarket,
                 PortfolioId = _portfolio.Id,
                 SecId = paper.SecId,
-                When = DateTime.UtcNow,
-                Sum = sum
+                When = when,
+                Sum = sum,
+                Comment = $"Покупка бумаги {paper.SecId}, количество {count}, цена {price}"
             };
             _moneyActionRepository.Insert(moneyAction);
+
+            if (paper.PaperType == PaperType.Bond)
+            {
+                var aci = _bondCalculator.CalculateAci(paper as BondPaper, DateTime.Today);
+                var aciSum = aci * count;
+                commission = (sum + aciSum) * _portfolio.Commissions / 100;
+
+                moneyAction = new PortfolioMoneyAction
+                {
+                    MoneyAction = MoneyActionType.OutcomeAci,
+                    PortfolioId = _portfolio.Id,
+                    SecId = paper.SecId,
+                    When = when,
+                    Sum = aciSum,
+                    Comment = $"НКД {aci}, сумма НКД {aciSum}"
+                };
+                _moneyActionRepository.Insert(moneyAction);
+            }
 
             moneyAction = new PortfolioMoneyAction
             {
                 MoneyAction = MoneyActionType.OutcomeCommission,
                 PortfolioId = _portfolio.Id,
                 SecId = paper.SecId,
-                When = DateTime.UtcNow,
-                Sum = commission
+                When = when,
+                Sum = commission,
+                Comment = $"Списание комиссии, ставка {_portfolio.Commissions:P}"
             };
             _moneyActionRepository.Insert(moneyAction);
 
@@ -188,9 +213,19 @@ namespace RfBondManagement.Engine.Calculations
                 SecId = paper.SecId,
                 Sum = sum,
                 Value = price,
-                When = DateTime.UtcNow
+                When = when
             };
             _paperActionRepository.Insert(paperAction);
+        }
+
+        public void SellPaper(AbstractPaper paper, long count, DateTime when = default(DateTime))
+        {
+            if (when == default(DateTime))
+            {
+                when = DateTime.UtcNow;
+            }
+
+            throw new NotImplementedException();
         }
     }
 }

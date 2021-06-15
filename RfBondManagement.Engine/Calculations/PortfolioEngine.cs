@@ -29,6 +29,88 @@ namespace RfBondManagement.Engine.Calculations
             _bondCalculator = bondCalculator;
         }
 
+        public IPaperInPortfolio<AbstractPaper> BuildPaperInPortfolio(AbstractPaper paper, IEnumerable<PortfolioAction> allActions, DateTime? onDate = null)
+        {
+            long count;
+
+            IPaperInPortfolio<AbstractPaper> paperInPortfolio;
+            if (paper.PaperType == PaperType.Bond)
+            {
+                var bondInPortfolio = new BondInPortfolio(paper as BondPaper);
+                bondInPortfolio.Aci = _bondCalculator.CalculateAci(bondInPortfolio.Paper, onDate ?? DateTime.Today);
+                paperInPortfolio = bondInPortfolio;
+            }
+            else
+            {
+                paperInPortfolio = new ShareInPortfolio(paper as SharePaper);
+            }
+
+            paperInPortfolio.OnDate = onDate;
+
+            var fifo = new List<Tuple<PortfolioPaperAction, PortfolioPaperAction, long>>();
+
+            var paperActions = allActions.OfType<PortfolioPaperAction>().Where(a => a.SecId == paper.SecId);
+            if (onDate.HasValue)
+            {
+                paperActions = paperActions.Where(a => a.When <= onDate);
+            }
+
+            paperInPortfolio.Actions = paperActions.ToList();
+            foreach (var paperAction in paperInPortfolio.Actions)
+            {
+                var isBuy = paperAction.PaperAction == PaperActionType.Buy;
+                count = paperAction.Count;
+
+                if (isBuy)
+                {
+                    fifo.Add(new Tuple<PortfolioPaperAction, PortfolioPaperAction, long>(paperAction, null, paperAction.Count));
+                }
+                else
+                {
+                    for (var i = 0; i < fifo.Count; i++)
+                    {
+                        var t = fifo[i];
+                        if (0 == t.Item3)
+                        {
+                            // all already sold, skip
+                            continue;
+                        }
+
+                        if (t.Item3 >= count)
+                        {
+                            t = new Tuple<PortfolioPaperAction, PortfolioPaperAction, long>(t.Item1, paperAction, t.Item3 - count);
+                            fifo[i] = t;
+                            break;
+                        }
+
+                        count -= t.Item3;
+                        t = new Tuple<PortfolioPaperAction, PortfolioPaperAction, long>(t.Item1, paperAction, 0);
+                        fifo[i] = t;
+                    }
+                }
+            }
+
+            var sum = 0m;
+            count = 0;
+            foreach (var t in fifo)
+            {
+                if (0 == t.Item3)
+                {
+                    continue;
+                }
+
+                count += t.Item3;
+                sum += t.Item3 * t.Item1.Value;
+            }
+
+            paperInPortfolio.FifoActions = fifo;
+            paperInPortfolio.Count = count;
+            paperInPortfolio.AveragePrice = 0 == count ? 0 : sum / count;
+
+
+            return paperInPortfolio;
+        }
+
         public async Task<PortfolioAggregatedContent> Build(DateTime? onDate = null, bool importPrice = false)
         {
             var sums = new Dictionary<MoneyActionType, decimal>();
@@ -50,66 +132,18 @@ namespace RfBondManagement.Engine.Calculations
                 }
             }
 
-            var paperActions = new Dictionary<string, List<PortfolioPaperAction>>();
-            var paperCounts = new Dictionary<string, List<KeyValuePair<long, decimal>>>();
-            var paperPortfolioActions = _paperActionRepository.Get();
+            var paperPortfolioActions = _paperActionRepository.Get().ToList();
             if (onDate.HasValue)
             {
-                paperPortfolioActions = paperPortfolioActions.Where(a => a.When <= onDate);
-            }
-
-            foreach (var paperAction in paperPortfolioActions)
-            {
-                var isBuy = paperAction.PaperAction == PaperActionType.Buy;
-                var count = paperAction.Count;
-                var price = paperAction.Value;
-                var secId = paperAction.SecId;
-
-                if (!paperActions.ContainsKey(secId))
-                {
-                    paperActions.Add(secId, new List<PortfolioPaperAction>());
-                }
-                paperActions[secId].Add(paperAction);
-
-                if (!paperCounts.ContainsKey(secId))
-                {
-                    paperCounts.Add(secId, new List<KeyValuePair<long, decimal>>());
-                }
-                var countList = paperCounts[secId];
-
-                if (isBuy)
-                {
-                    countList.Add(new KeyValuePair<long, decimal>(count, price));
-                }
-                else
-                {
-                    while (count > 0 && countList.Count > 0)
-                    {
-                        var firstRecord = countList[0];
-                        var firstCount = firstRecord.Key;
-                        if (firstCount > count)
-                        {
-                            countList[0] = new KeyValuePair<long, decimal>(firstRecord.Key - count, firstRecord.Value);
-                            count = 0;
-                        }
-                        else
-                        {
-                            count -= firstCount;
-                            countList.RemoveAt(0);
-                        }
-                    }
-                }
+                paperPortfolioActions = paperPortfolioActions.Where(a => a.When <= onDate).ToList();
             }
 
             var papers = new Dictionary<string, IPaperInPortfolio<AbstractPaper>>();
-            foreach (var paperCount in paperCounts)
+            var uniqueSecIds = paperPortfolioActions.Select(a => a.SecId).Distinct();
+            foreach (var secId in uniqueSecIds)
             {
-                var secId = paperCount.Key;
-                var count = paperCount.Value.Sum(x => x.Key);
-                var sum = paperCount.Value.Sum(x => x.Value) * count;
-                var averagePrice = sum / count;
-
                 var paperDefinition = _paperRepository.Get().Single(p => p.SecId == secId);
+                var paperInPortfolio = BuildPaperInPortfolio(paperDefinition, paperPortfolioActions, onDate);
 
                 decimal marketPrice = 0;
                 if (importPrice)
@@ -126,21 +160,6 @@ namespace RfBondManagement.Engine.Calculations
                     }
                 }
 
-                IPaperInPortfolio<AbstractPaper> paperInPortfolio;
-                if (paperDefinition.PaperType == PaperType.Bond)
-                {
-                    var bondInPortfolio = new BondInPortfolio(paperDefinition as BondPaper);
-                    bondInPortfolio.Aci = _bondCalculator.CalculateAci(bondInPortfolio.Paper, onDate ?? DateTime.Today);
-                    paperInPortfolio = bondInPortfolio;
-                }
-                else
-                {
-                    paperInPortfolio = new ShareInPortfolio(paperDefinition as SharePaper);
-                }
-
-                paperInPortfolio.AveragePrice = averagePrice;
-                paperInPortfolio.Count = count;
-                paperInPortfolio.Actions = paperActions[secId];
                 paperInPortfolio.MarketPrice = marketPrice;
 
                 papers.Add(secId, paperInPortfolio);
@@ -224,6 +243,8 @@ namespace RfBondManagement.Engine.Calculations
             {
                 when = DateTime.UtcNow;
             }
+
+
 
             throw new NotImplementedException();
         }

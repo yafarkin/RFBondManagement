@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using RfFondPortfolio.Common.Interfaces;
 
 namespace RfFondPortfolio.Common.Dtos
@@ -9,6 +10,11 @@ namespace RfFondPortfolio.Common.Dtos
     public abstract class PaperInPortfolio<T> : IPaperInPortfolio<T> where T : AbstractPaper
     {
         /// <summary>
+        /// На какую дату сформирована информация
+        /// </summary>
+        public DateTime? OnDate { get; set; }
+
+        /// <summary>
         /// Бумага
         /// </summary>
         public T Paper { get; set; }
@@ -17,6 +23,11 @@ namespace RfFondPortfolio.Common.Dtos
         /// Список действий по бумаге
         /// </summary>
         public IReadOnlyCollection<PortfolioPaperAction> Actions { get; set; }
+
+        /// <summary>
+        /// Список действий купли/продажи в FIFO порядке
+        /// </summary>
+        public IReadOnlyCollection<Tuple<PortfolioPaperAction, PortfolioPaperAction, long>> FifoActions { get; set; }
 
         /// <summary>
         /// Количество бумаг

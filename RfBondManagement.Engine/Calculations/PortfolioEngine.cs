@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using RfBondManagement.Engine.Interfaces;
@@ -174,7 +175,27 @@ namespace RfBondManagement.Engine.Calculations
             return content;
         }
 
-        public void BuyPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime))
+        public PortfolioMoneyAction MoveMoney(decimal sum, MoneyActionType moneyActionType, string comment, string secId = null, DateTime when = default(DateTime))
+        {
+            if (when == default(DateTime))
+            {
+                when = DateTime.UtcNow;
+            }
+
+            var moneyAction = new PortfolioMoneyAction
+            {
+                MoneyAction = moneyActionType,
+                PortfolioId = _portfolio.Id,
+                When = when,
+                SecId = secId,
+                Sum = sum,
+                Comment = comment
+            };
+            _moneyActionRepository.Insert(moneyAction);
+            return moneyAction;
+        }
+
+        public PortfolioPaperAction BuyPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime))
         {
             if (when == default(DateTime))
             {
@@ -182,47 +203,20 @@ namespace RfBondManagement.Engine.Calculations
             }
 
             var sum = price * count;
-            var commission = sum * _portfolio.Commissions / 100;
 
-            var moneyAction = new PortfolioMoneyAction
-            {
-                MoneyAction = MoneyActionType.OutcomeBuyOnMarket,
-                PortfolioId = _portfolio.Id,
-                SecId = paper.SecId,
-                When = when,
-                Sum = sum,
-                Comment = $"Покупка бумаги {paper.SecId}, количество {count}, цена {price}"
-            };
-            _moneyActionRepository.Insert(moneyAction);
+            MoveMoney(sum, MoneyActionType.OutcomeBuyOnMarket, $"Покупка бумаги {paper.SecId}, количество {count}, цена {price}", paper.SecId, when);
 
             if (paper.PaperType == PaperType.Bond)
             {
                 var aci = _bondCalculator.CalculateAci(paper as BondPaper, DateTime.Today);
                 var aciSum = aci * count;
-                commission = (sum + aciSum) * _portfolio.Commissions / 100;
+                sum += aciSum;
 
-                moneyAction = new PortfolioMoneyAction
-                {
-                    MoneyAction = MoneyActionType.OutcomeAci,
-                    PortfolioId = _portfolio.Id,
-                    SecId = paper.SecId,
-                    When = when,
-                    Sum = aciSum,
-                    Comment = $"НКД {aci}, сумма НКД {aciSum}"
-                };
-                _moneyActionRepository.Insert(moneyAction);
+                MoveMoney(aciSum, MoneyActionType.OutcomeAci, $"НКД {aci}, сумма НКД {aciSum}", paper.SecId, when);
             }
 
-            moneyAction = new PortfolioMoneyAction
-            {
-                MoneyAction = MoneyActionType.OutcomeCommission,
-                PortfolioId = _portfolio.Id,
-                SecId = paper.SecId,
-                When = when,
-                Sum = commission,
-                Comment = $"Списание комиссии, ставка {_portfolio.Commissions:P}"
-            };
-            _moneyActionRepository.Insert(moneyAction);
+            var commission = sum * _portfolio.Commissions / 100;
+            MoveMoney(commission, MoneyActionType.OutcomeCommission, $"Списание комиссии, ставка {_portfolio.Commissions:P}", paper.SecId, when);
 
             var paperAction = new PortfolioPaperAction
             {
@@ -235,18 +229,76 @@ namespace RfBondManagement.Engine.Calculations
                 When = when
             };
             _paperActionRepository.Insert(paperAction);
+            return paperAction;
         }
 
-        public void SellPaper(AbstractPaper paper, long count, DateTime when = default(DateTime))
+        public PortfolioPaperAction SellPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime))
         {
             if (when == default(DateTime))
             {
                 when = DateTime.UtcNow;
             }
 
+            var paperInPortfolio = BuildPaperInPortfolio(paper, _paperActionRepository.Get(), when);
+            if (paperInPortfolio.Count < count)
+            {
+                // may be later, I will implement 'short' functionality
+                throw new InvalidOperationException("Нельзя продать большее количество, чем есть в портфеле");
+            }
 
+            var sum = price * count;
 
-            throw new NotImplementedException();
+            MoveMoney(sum, MoneyActionType.IncomeSellOnMarket, $"Продажа бумаги {paper.SecId}, количество {count}, цена {price}", paper.SecId, when);
+
+            if (paper.PaperType == PaperType.Bond)
+            {
+                var aci = _bondCalculator.CalculateAci(paper as BondPaper, when);
+                var aciSum = aci * count;
+
+                sum += aciSum;
+
+                MoveMoney(aciSum, MoneyActionType.IncomeAci, $"НКД {aci}, сумма НКД {aciSum}", paper.SecId, when);
+            }
+
+            var commission = sum * _portfolio.Commissions / 100;
+            MoveMoney(commission, MoneyActionType.OutcomeCommission, $"Списание комиссии, ставка {_portfolio.Commissions:P}", paper.SecId, when);
+
+            var profit = 0m;
+            var needCount = count;
+            foreach (var fifoAction in paperInPortfolio.FifoActions.Where(a => a.Item3 > 0))
+            {
+                if (fifoAction.Item3 > needCount)
+                {
+                    profit += needCount * (price - fifoAction.Item1.Value);
+                    needCount = 0;
+                }
+                else
+                {
+                    profit += fifoAction.Item3 * (price - fifoAction.Item1.Value);
+                    needCount -= fifoAction.Item3;
+                }
+
+                if (0 == needCount)
+                {
+                    break;
+                }
+            }
+
+            var delayTaxSum = profit * _portfolio.Tax / 100;
+            MoveMoney(delayTaxSum, MoneyActionType.OutcomeDelayTax, $"Отложенный налог, ставка {_portfolio.Tax:P}; разница покупка/продажа: {profit}", paper.SecId, when);
+
+            var paperAction = new PortfolioPaperAction
+            {
+                Count = count,
+                PaperAction = PaperActionType.Sell,
+                PortfolioId = _portfolio.Id,
+                SecId = paper.SecId,
+                Sum = sum,
+                Value = price,
+                When = when
+            };
+            _paperActionRepository.Insert(paperAction);
+            return paperAction;
         }
     }
 }

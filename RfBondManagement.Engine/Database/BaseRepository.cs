@@ -20,24 +20,24 @@ namespace RfBondManagement.Engine.Database
             _entities.EnsureIndex(p => p.Id);
         }
 
-        public IEnumerable<T> Get()
+        public virtual IEnumerable<T> Get()
         {
             return _entities.FindAll();
         }
 
-        public T Insert(T entity)
+        public virtual T Insert(T entity)
         {
             _entities.Insert(entity);
 
             return entity;
         }
 
-        public void Update(T entity)
+        public virtual void Update(T entity)
         {
             _entities.Update(entity);
         }
 
-        public void Delete(T entity)
+        public virtual void Delete(T entity)
         {
             _entities.DeleteMany(e => e.Id == entity.Id);
         }

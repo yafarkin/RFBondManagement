@@ -47,6 +47,6 @@ namespace RfFondPortfolio.Common.Dtos
         /// <summary>
         /// Профит
         /// </summary>
-        public decimal Profit => MarketPrice - AveragePrice;
+        public virtual decimal Profit => MarketPrice - AveragePrice;
     }
 }

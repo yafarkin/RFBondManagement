@@ -202,13 +202,13 @@ namespace RfBondManagement.Engine.Calculations
                 when = DateTime.UtcNow;
             }
 
-            var sum = price * count;
+            var sum = paper.PaperType == PaperType.Bond ? price / 100 * paper.FaceValue * count : price * count;
 
             MoveMoney(sum, MoneyActionType.OutcomeBuyOnMarket, $"Покупка бумаги {paper.SecId}, количество {count}, цена {price}", paper.SecId, when);
 
             if (paper.PaperType == PaperType.Bond)
             {
-                var aci = _bondCalculator.CalculateAci(paper as BondPaper, DateTime.Today);
+                var aci = _bondCalculator.CalculateAci(paper as BondPaper, when);
                 var aciSum = aci * count;
                 sum += aciSum;
 
@@ -246,7 +246,7 @@ namespace RfBondManagement.Engine.Calculations
                 throw new InvalidOperationException("Нельзя продать большее количество, чем есть в портфеле");
             }
 
-            var sum = price * count;
+            var sum = paper.PaperType == PaperType.Bond ? price / 100 * paper.FaceValue * count : price * count;
 
             MoveMoney(sum, MoneyActionType.IncomeSellOnMarket, $"Продажа бумаги {paper.SecId}, количество {count}, цена {price}", paper.SecId, when);
 
@@ -267,7 +267,7 @@ namespace RfBondManagement.Engine.Calculations
             var needCount = count;
             foreach (var fifoAction in paperInPortfolio.FifoActions.Where(a => a.Item3 > 0))
             {
-                if (fifoAction.Item3 > needCount)
+                if (fifoAction.Item3 >= needCount)
                 {
                     profit += needCount * (price - fifoAction.Item1.Value);
                     needCount = 0;
@@ -282,6 +282,11 @@ namespace RfBondManagement.Engine.Calculations
                 {
                     break;
                 }
+            }
+
+            if (paper.PaperType == PaperType.Bond)
+            {
+                profit = profit / 100 * paper.FaceValue;
             }
 
             var delayTaxSum = profit * _portfolio.Tax / 100;

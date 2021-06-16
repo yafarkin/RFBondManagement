@@ -27,14 +27,40 @@ namespace RfBondManagement.UnitTests
 
         public decimal LastPrice;
 
+        public AbstractPaper ShareSample;
+        public AbstractPaper BondSample;
+
         [SetUp]
         public void Setup()
         {
             Portfolio = new Portfolio();
             Actions = new List<PortfolioAction>();
 
+            ShareSample = new SharePaper {SecId = "S1", PaperType = PaperType.Share};
+            BondSample = new BondPaper
+            {
+                SecId = "B2", PaperType = PaperType.Bond,
+                MatDate = DateTime.Today.AddDays(1),
+                InitialFaceValue = 1000,
+                FaceValue = 1000,
+                IssueDate = DateTime.Today.AddYears(-1),
+                Coupons = new List<BondCoupon>
+                {
+                    new BondCoupon
+                    {
+                        CouponDate = DateTime.Today.AddYears(-1).AddDays(182),
+                        Value = 50
+                    },
+                    new BondCoupon
+                    {
+                        CouponDate = DateTime.Today.AddDays(1),
+                        Value = 50
+                    }
+                }
+            };
+
             var paperRepositoryMock = new Mock<IPaperRepository>();
-            paperRepositoryMock.Setup(m => m.Get()).Returns(new List<AbstractPaper> {new SharePaper {SecId = "S1", PaperType = PaperType.Share}});
+            paperRepositoryMock.Setup(m => m.Get()).Returns(new List<AbstractPaper> {ShareSample, BondSample});
 
             var moneyActionRepositoryMock = new Mock<IPortfolioMoneyActionRepository>();
             moneyActionRepositoryMock.Setup(m => m.Get()).Returns(Actions.OfType<PortfolioMoneyAction>());
@@ -69,7 +95,39 @@ namespace RfBondManagement.UnitTests
         }
 
         [Test]
-        public async Task PortfolioEngine_SmokeTest()
+        public async Task PortfolioEngine_Bond_SmokeTest()
+        {
+            LastPrice = 105;
+            Portfolio.Commissions = 0.61m;
+            Portfolio.Tax = 13m;
+
+            var when = DateTime.UtcNow.AddDays(-91);
+
+            var paper = BondSample;
+            PortfolioEngine.MoveMoney(2500, MoneyActionType.IncomeExternal, "пополнение счёта", null, when);
+            PortfolioEngine.BuyPaper(paper, 1, 95, when);
+            PortfolioEngine.BuyPaper(paper, 1, 98, when);
+
+            when = DateTime.UtcNow;
+            PortfolioEngine.SellPaper(paper, 1, 108, when);
+
+            var content = await PortfolioEngine.Build(null, true);
+
+            content.ShouldNotBeNull();
+            content.Sums.Count.ShouldBe(7);
+            content.Sums[MoneyActionType.IncomeExternal].ShouldBe(2500);
+            content.Sums[MoneyActionType.IncomeSellOnMarket].ShouldBe(1080);
+            content.Sums[MoneyActionType.IncomeAci].ShouldBe(49.73m);
+            content.Sums[MoneyActionType.OutcomeBuyOnMarket].ShouldBe(950 + 980);
+            content.Sums[MoneyActionType.OutcomeAci].ShouldBe(25 + 25);
+            content.Sums[MoneyActionType.OutcomeCommission].ShouldBe(18.969353m);
+            content.Sums[MoneyActionType.OutcomeDelayTax].ShouldBe(16.9m);
+            content.AvailSum.ShouldBe(1630.760647m);
+            content.Profit.ShouldBe(70);
+        }
+
+        [Test]
+        public async Task PortfolioEngine_Share_SmokeTest()
         {
             LastPrice = 300;
             Portfolio.Commissions = 0.61m;
@@ -84,7 +142,6 @@ namespace RfBondManagement.UnitTests
             var content = await PortfolioEngine.Build(null, true);
 
             content.ShouldNotBeNull();
-
             content.Sums.Count.ShouldBe(5);
             content.Sums[MoneyActionType.IncomeExternal].ShouldBe(1000);
             content.Sums[MoneyActionType.IncomeSellOnMarket].ShouldBe(250);

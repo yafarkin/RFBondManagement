@@ -17,6 +17,8 @@
         /// </summary>
         public decimal TotalValue => Value + Aci;
 
+        public override decimal Profit => base.Profit / 100 * Paper.FaceValue;
+
         public BondInPortfolio(BondPaper paper)
         {
             Paper = paper;

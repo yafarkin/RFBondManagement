@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using NLog;
 using RfFondPortfolio.Integration.Moex.JsonDto;
 
 namespace RfFondPortfolio.Integration.Moex.Requests
@@ -31,10 +32,12 @@ namespace RfFondPortfolio.Integration.Moex.Requests
                 lastItemsCount = nextPage.History.Data.Count;
                 if (0 == lastItemsCount)
                 {
+                    _logger.Trace("No cursor data more");
                     break;
                 }
             }
 
+            _logger.Trace($"Finish read cursor data, {result.Data.Count} item(s)");
             return result;
         }
 
@@ -54,6 +57,11 @@ namespace RfFondPortfolio.Integration.Moex.Requests
             var result = await Read(getParams);
 
             return result;
+        }
+
+        protected MoexBaseCursorRequest(ILogger logger)
+            : base(logger)
+        {
         }
     }
 }

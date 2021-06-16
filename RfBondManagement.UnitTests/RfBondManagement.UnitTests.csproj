@@ -16,4 +16,10 @@
     <ProjectReference Include="..\RfFondPortfolio.Common\RfFondPortfolio.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="NLog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

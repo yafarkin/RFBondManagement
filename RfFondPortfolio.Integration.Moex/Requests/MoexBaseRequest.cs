@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using NLog;
 using RestSharp;
 
 namespace RfFondPortfolio.Integration.Moex.Requests
@@ -18,8 +19,11 @@ namespace RfFondPortfolio.Integration.Moex.Requests
 
         protected virtual IEnumerable<Tuple<string, string>> _additionalParams { get; }
 
-        protected MoexBaseRequest()
+        protected ILogger _logger;
+
+        protected MoexBaseRequest(ILogger logger)
         {
+            _logger = logger;
             _client = new RestClient(BASE_MOEX_URL);
         }
 
@@ -44,11 +48,24 @@ namespace RfFondPortfolio.Integration.Moex.Requests
                 }
             }
 
-            var response = await _client.ExecuteAsync(request);
+            try
+            {
+                var uri = _client.BuildUri(request);
+                _logger.Trace($"Request to {uri}");
 
-            var result = JsonConvert.DeserializeObject<TMoex>(response.Content);
+                var response = await _client.ExecuteAsync(request);
 
-            return result;
+                _logger.Trace($"Success, R = {(string.IsNullOrWhiteSpace(response.Content) ? "NULL" : response.Content.Substring(0, 50) + "..., len = " + response.Content.Length)}");
+
+                var result = JsonConvert.DeserializeObject<TMoex>(response.Content);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, "Fail");
+                throw;
+            }
         }
     }
 }

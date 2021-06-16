@@ -13,7 +13,7 @@ namespace RfFondPortfolio.Integration.Moex
     {
         public async Task<AbstractPaper> ImportPaper(ILogger logger, string secId)
         {
-            var request = new MoexPaperDefinitionRequest(secId);
+            var request = new MoexPaperDefinitionRequest(logger, secId);
             var response = await request.Read();
 
             var paperType = StockPaperConverter.GetPaperType(response);
@@ -26,12 +26,12 @@ namespace RfFondPortfolio.Integration.Moex
             switch (paperType)
             {
                 case PaperType.Share:
-                    var divRequest = new MoexDividendsRequest(secId);
+                    var divRequest = new MoexDividendsRequest(logger, secId);
                     var divResponse = await divRequest.Read();
                     result = StockPaperConverter.MapShare(response, divResponse);
                     break;
                 case PaperType.Bond:
-                    var couponRequest = new MoexBondCouponsRequest(secId);
+                    var couponRequest = new MoexBondCouponsRequest(logger, secId);
                     var couponResponse = await couponRequest.Read();
                     result = StockPaperConverter.MapBond(response, couponResponse);
                     break;
@@ -45,7 +45,7 @@ namespace RfFondPortfolio.Integration.Moex
 
         public async Task<PaperPrice> LastPrice(ILogger logger, AbstractPaper paper)
         {
-            var request = new MoexLastPriceRequest(paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId);
+            var request = new MoexLastPriceRequest(logger, paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId);
             var response = await request.Read();
 
             if (null == response.Securities || 0 == response.Securities.Data.Count)
@@ -66,7 +66,7 @@ namespace RfFondPortfolio.Integration.Moex
 
         public async Task<IEnumerable<HistoryPrice>> HistoryPrice(ILogger logger, AbstractPaper paper, DateTime? startDate, DateTime? endDate)
         {
-            var request = new MoexSecurityHistoryRequest(paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId, startDate, endDate);
+            var request = new MoexSecurityHistoryRequest(logger, paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId, startDate, endDate);
             var response = await request.CursorRead();
             if (null == response || 0 == response.Data.Count)
             {

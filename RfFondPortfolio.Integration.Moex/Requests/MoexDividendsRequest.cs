@@ -1,4 +1,5 @@
-﻿using RfFondPortfolio.Integration.Moex.JsonDto;
+﻿using NLog;
+using RfFondPortfolio.Integration.Moex.JsonDto;
 
 namespace RfFondPortfolio.Integration.Moex.Requests
 {
@@ -8,7 +9,8 @@ namespace RfFondPortfolio.Integration.Moex.Requests
 
         protected override string _requestUrl => $"/securities/{_ticker}/dividends";
 
-        public MoexDividendsRequest(string ticker)
+        public MoexDividendsRequest(ILogger logger, string ticker)
+            : base(logger)
         {
             _ticker = ticker;
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NLog;
 
 namespace RfFondPortfolio.Integration.Moex.Requests
 {
@@ -16,7 +17,8 @@ namespace RfFondPortfolio.Integration.Moex.Requests
             new Tuple<string, string>("iss.meta", "off")
         };
 
-        public MoexSecurityHistoryRequest(string market, string board, string ticker, DateTime? from = null, DateTime? to = null)
+        public MoexSecurityHistoryRequest(ILogger logger, string market, string board, string ticker, DateTime? from = null, DateTime? to = null)
+            : base(logger)
         {
             _market = market;
             _board = board;

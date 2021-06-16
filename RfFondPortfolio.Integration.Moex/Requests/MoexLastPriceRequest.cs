@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NLog;
 using RfFondPortfolio.Integration.Moex.JsonDto;
 
 namespace RfFondPortfolio.Integration.Moex.Requests
@@ -18,7 +19,8 @@ namespace RfFondPortfolio.Integration.Moex.Requests
             new Tuple<string, string>("securities.columns", "SECID,LOTSIZE,PREVADMITTEDQUOTE")
         };
 
-        public MoexLastPriceRequest(string market, string board, string ticker)
+        public MoexLastPriceRequest(ILogger logger, string market, string board, string ticker)
+            : base(logger)
         {
             _market = market;
             _board = board;

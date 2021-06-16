@@ -1,4 +1,5 @@
-﻿using RfFondPortfolio.Integration.Moex.JsonDto;
+﻿using NLog;
+using RfFondPortfolio.Integration.Moex.JsonDto;
 
 namespace RfFondPortfolio.Integration.Moex.Requests
 {
@@ -6,7 +7,8 @@ namespace RfFondPortfolio.Integration.Moex.Requests
     {
         protected string _ticker;
 
-        public MoexPaperDefinitionRequest(string ticker)
+        public MoexPaperDefinitionRequest(ILogger logger, string ticker)
+            : base(logger)
         {
             _ticker = ticker;
         }

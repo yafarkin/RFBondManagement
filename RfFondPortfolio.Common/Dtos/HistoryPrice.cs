@@ -33,5 +33,7 @@ namespace RfFondPortfolio.Common.Dtos
         public decimal ClosePrice { get; set; }
 
         public decimal LegalClosePrice { get; set; }
+
+        public string Index => $"{SecId},{When}";
     }
 }

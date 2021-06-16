@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
+using NLog;
 using RfFondPortfolio.Integration.Moex.Requests;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
@@ -10,7 +11,7 @@ namespace RfFondPortfolio.Integration.Moex
 {
     public class MoexImport : IExternalImport
     {
-        public async Task<AbstractPaper> ImportPaper(string secId)
+        public async Task<AbstractPaper> ImportPaper(ILogger logger, string secId)
         {
             var request = new MoexPaperDefinitionRequest(secId);
             var response = await request.Read();
@@ -42,7 +43,7 @@ namespace RfFondPortfolio.Integration.Moex
 
         }
 
-        public async Task<PaperPrice> LastPrice(AbstractPaper paper)
+        public async Task<PaperPrice> LastPrice(ILogger logger, AbstractPaper paper)
         {
             var request = new MoexLastPriceRequest(paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId);
             var response = await request.Read();
@@ -63,9 +64,9 @@ namespace RfFondPortfolio.Integration.Moex
             return result;
         }
 
-        public async Task<IEnumerable<HistoryPrice>> HistoryPrice(AbstractPaper paper, DateTime? startDate, DateTime? endDate)
+        public async Task<IEnumerable<HistoryPrice>> HistoryPrice(ILogger logger, AbstractPaper paper, DateTime? startDate, DateTime? endDate)
         {
-            var request = new MoexSecurityHistoryRequest(paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId);
+            var request = new MoexSecurityHistoryRequest(paper.PrimaryBoard.Market, paper.PrimaryBoard.BoardId, paper.SecId, startDate, endDate);
             var response = await request.CursorRead();
             if (null == response || 0 == response.Data.Count)
             {
@@ -95,7 +96,7 @@ namespace RfFondPortfolio.Integration.Moex
             return result;
         }
 
-        public async Task<IEnumerable<string>> ListPapers()
+        public async Task<IEnumerable<string>> ListPapers(ILogger logger)
         {
             throw new NotImplementedException();
         }

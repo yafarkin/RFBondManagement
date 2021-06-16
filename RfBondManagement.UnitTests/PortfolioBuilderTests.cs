@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Moq;
+using NLog;
 using NUnit.Framework;
 using RfBondManagement.Engine.Calculations;
 using RfBondManagement.Engine.Interfaces;
@@ -84,14 +85,16 @@ namespace RfBondManagement.UnitTests
 
             var importMock = new Mock<IExternalImport>();
             importMock
-                .Setup(m => m.LastPrice(It.IsAny<AbstractPaper>()))
+                .Setup(m => m.LastPrice(It.IsAny<ILogger>(), It.IsAny<AbstractPaper>()))
                 .Returns(() => Task.FromResult(new PaperPrice {Price = LastPrice}));
             Import = importMock.Object;
             PaperRepository = paperRepositoryMock.Object;
             PaperActionRepository = paperActionRepositoryMock.Object;
             MoneyActionRepository = moneyActionRepositoryMock.Object;
 
-            PortfolioEngine = new PortfolioEngine(Portfolio, Import, PaperRepository, MoneyActionRepository, PaperActionRepository, BondCalculator);
+            var logger = new Mock<ILogger>().Object;
+
+            PortfolioEngine = new PortfolioEngine(Portfolio, Import, PaperRepository, MoneyActionRepository, PaperActionRepository, BondCalculator, logger);
         }
 
         [Test]

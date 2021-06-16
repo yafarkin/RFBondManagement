@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using NLog;
 using NUnit.Framework;
+using RfBondManagement.Engine;
+using RfBondManagement.Engine.Database;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 using RfFondPortfolio.Integration.Moex;
@@ -13,17 +16,19 @@ namespace RfBondManagement.UnitTests
     public class IntegrationMoexTests
     {
         public IExternalImport Import;
+        public ILogger Logger;
 
         [SetUp]
         public void Setup()
         {
             Import = new MoexImport();
+            Logger = LogManager.GetCurrentClassLogger();
         }
 
         [Test]
         public async Task ShareImportTest()
         {
-            var paper = (await Import.ImportPaper("SBERP")) as SharePaper;
+            var paper = (await Import.ImportPaper(Logger, "SBERP")) as SharePaper;
             paper.ShouldNotBeNull();
 
             paper.PaperType.ShouldBe(PaperType.Share);
@@ -44,7 +49,7 @@ namespace RfBondManagement.UnitTests
         public async Task BondImportTest()
         {
             // https://smart-lab.ru/q/bonds/SU26227RMFS7/, ОФЗ 26227
-            var paper = (await Import.ImportPaper("SU26227RMFS7")) as BondPaper;
+            var paper = (await Import.ImportPaper(Logger, "SU26227RMFS7")) as BondPaper;
             paper.ShouldNotBeNull();
             paper.PaperType.ShouldBe(PaperType.Bond);
             paper.Isin.ShouldBe("RU000A1007F4");
@@ -61,29 +66,32 @@ namespace RfBondManagement.UnitTests
             firstCoupon.CouponDate.ShouldBe(new DateTime(2019, 7, 24));
         }
 
-        //[Test]
-        //public async Task HistoryTest()
-        //{
-        //    var request = new MoexSecurityHistoryRequest("stock", "bonds", "SU26208RMFS7");
+        [Test]
+        public async Task HistoryTest()
+        {
+            using (var db = new DatabaseLayer())
+            {
+                var historyRepository = new HistoryRepository(db);
+                var historyEngine = new HistoryEngine(historyRepository, Import, Logger);
+                //var lastDate = historyEngine.GetLastHistoryDate("SBERP");
 
-        //    var response = await request.CursorRead();
-
-        //    response.ShouldNotBeNull();
-        //}
+                await historyEngine.ImportHistory("SBERP");
+            }
+        }
 
         [Test]
         public async Task GetLastPriceTest()
         {
             // share
-            var sharePaper = await Import.ImportPaper("SBERP");
-            var lastPrice = await Import.LastPrice(sharePaper);
+            var sharePaper = await Import.ImportPaper(Logger, "SBERP");
+            var lastPrice = await Import.LastPrice(Logger, sharePaper);
             lastPrice.ShouldNotBeNull();
             lastPrice.LotSize.ShouldBe(10);
             lastPrice.Price.ShouldBeGreaterThan(0);
 
             // corporate bond
-            var bondPaper = await Import.ImportPaper("RU000A1018X4");
-            lastPrice = await Import.LastPrice(bondPaper);
+            var bondPaper = await Import.ImportPaper(Logger, "RU000A1018X4");
+            lastPrice = await Import.LastPrice(Logger, bondPaper);
             lastPrice.ShouldNotBeNull();
             lastPrice.LotSize.ShouldBe(1);
             lastPrice.Price.ShouldBeGreaterThan(0);
@@ -95,9 +103,9 @@ namespace RfBondManagement.UnitTests
         [Test]
         public async Task GetHistoryTest()
         {
-            var paper = await Import.ImportPaper("SU26208RMFS7");
-            var history = (await Import.HistoryPrice(paper)).ToList();
-            history.Count().ShouldBe(1494);
+            var paper = await Import.ImportPaper(Logger, "SU26208RMFS7");
+            var history = (await Import.HistoryPrice(Logger, paper)).ToList();
+            history.Count.ShouldBe(1494);
         }
     }
 }

@@ -27,12 +27,12 @@ namespace RfFondPortfolio.Integration.Moex.Requests
                 _addGetParams = new List<Tuple<string, string>>();
                 if (from != null)
                 {
-                    _addGetParams.Add(new Tuple<string, string>("from", from.ToString()));
+                    _addGetParams.Add(new Tuple<string, string>("from", from.Value.ToString("yyyy-MM-dd")));
                 }
 
                 if (to != null)
                 {
-                    _addGetParams.Add(new Tuple<string, string>("to", to.ToString()));
+                    _addGetParams.Add(new Tuple<string, string>("to", to.Value.ToString("yyyy-MM-dd")));
                 }
             }
         }

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using NLog;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
@@ -19,9 +20,12 @@ namespace RfBondManagement.Engine.Calculations
 
         protected readonly IExternalImport _import;
         protected readonly IBondCalculator _bondCalculator;
-        
-        public PortfolioEngine(Portfolio portfolio, IExternalImport import, IPaperRepository paperRepository, IPortfolioMoneyActionRepository moneyActionRepository, IPortfolioPaperActionRepository paperActionRepository, IBondCalculator bondCalculator)
+
+        protected readonly ILogger _logger;
+
+        public PortfolioEngine(Portfolio portfolio, IExternalImport import, IPaperRepository paperRepository, IPortfolioMoneyActionRepository moneyActionRepository, IPortfolioPaperActionRepository paperActionRepository, IBondCalculator bondCalculator, ILogger logger)
         {
+            _logger = logger;
             _portfolio = portfolio;
             _import = import;
             _paperRepository = paperRepository;
@@ -151,12 +155,12 @@ namespace RfBondManagement.Engine.Calculations
                 {
                     if (onDate.HasValue)
                     {
-                        var historyPrice = await _import.HistoryPrice(paperDefinition, onDate, onDate);
+                        var historyPrice = await _import.HistoryPrice(_logger, paperDefinition, onDate, onDate);
                         marketPrice = historyPrice.FirstOrDefault()?.LegalClosePrice ?? 0;
                     }
                     else
                     {
-                        var lastPrice = await _import.LastPrice(paperDefinition);
+                        var lastPrice = await _import.LastPrice(_logger, paperDefinition);
                         marketPrice = lastPrice.Price;
                     }
                 }

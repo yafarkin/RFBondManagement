@@ -21,6 +21,7 @@ namespace RfBondManagement.Engine
                 .RegisterType<IPaperRepository, PaperRepository>()
                 .RegisterType<IPortfolioMoneyActionRepository, PortfolioMoneyActionRepository>()
                 .RegisterType<IPortfolioPaperActionRepository, PortfolioPaperActionRepository>()
+                .RegisterType<IHistoryRepository, HistoryRepository>()
                 ;
 
             container.AddNewExtension<NLogExtension>();

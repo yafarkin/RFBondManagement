@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using NLog;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 
@@ -11,12 +12,14 @@ namespace RfBondManagement.WinForm.Forms
         public AbstractPaper Paper;
 
         protected IExternalImport _import;
+        protected ILogger _logger;
 
-        public PaperForm(IExternalImport import)
+        public PaperForm(IExternalImport import, ILogger logger)
         {
             InitializeComponent();
 
             _import = import;
+            _logger = logger;
         }
 
         private void DataBind()
@@ -44,14 +47,14 @@ namespace RfBondManagement.WinForm.Forms
 
             Cursor.Current = Cursors.WaitCursor;
 
-            Paper = await _import.ImportPaper(tbSearch.Text.Trim());
+            Paper = await _import.ImportPaper(_logger,tbSearch.Text.Trim());
 
             DataBind();
 
             lblLastPrice.Text = "---";
             if (Paper?.PrimaryBoard != null)
             {
-                var lastPrice = await _import.LastPrice(Paper);
+                var lastPrice = await _import.LastPrice(_logger, Paper);
                 if (lastPrice != null)
                 {
                     lblLastPrice.Text = lastPrice.Price.ToString();

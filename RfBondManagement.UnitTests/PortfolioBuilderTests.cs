@@ -25,6 +25,8 @@ namespace RfBondManagement.UnitTests
 
         public List<PortfolioAction> Actions;
 
+        public decimal LastPrice;
+
         [SetUp]
         public void Setup()
         {
@@ -54,7 +56,11 @@ namespace RfBondManagement.UnitTests
 
             BondCalculator = new BondCalculator();
 
-            Import = new Mock<IExternalImport>().Object;
+            var importMock = new Mock<IExternalImport>();
+            importMock
+                .Setup(m => m.LastPrice(It.IsAny<AbstractPaper>()))
+                .Returns(() => Task.FromResult(new PaperPrice {Price = LastPrice}));
+            Import = importMock.Object;
             PaperRepository = paperRepositoryMock.Object;
             PaperActionRepository = paperActionRepositoryMock.Object;
             MoneyActionRepository = moneyActionRepositoryMock.Object;
@@ -65,8 +71,9 @@ namespace RfBondManagement.UnitTests
         [Test]
         public async Task PortfolioEngine_SmokeTest()
         {
-            Portfolio.Commissions = 0.0061m;
-            Portfolio.Tax = 0.13m;
+            LastPrice = 300;
+            Portfolio.Commissions = 0.61m;
+            Portfolio.Tax = 13m;
 
             var paper = PaperRepository.Get().First();
             PortfolioEngine.MoveMoney(1000, MoneyActionType.IncomeExternal, "пополнение счёта");
@@ -74,7 +81,7 @@ namespace RfBondManagement.UnitTests
             PortfolioEngine.BuyPaper(paper, 1, 200);
             PortfolioEngine.SellPaper(paper, 1, 250);
 
-            var content = await PortfolioEngine.Build();
+            var content = await PortfolioEngine.Build(null, true);
 
             content.ShouldNotBeNull();
 
@@ -85,39 +92,43 @@ namespace RfBondManagement.UnitTests
             content.Sums[MoneyActionType.OutcomeCommission].ShouldBe(3.355m);
             content.Sums[MoneyActionType.OutcomeDelayTax].ShouldBe(19.5m);
 
-            //fifo.Papers.Count.ShouldBe(1);
-            //var paper = fifo.Papers[0];
-            //paper.Paper.SecId.ShouldBe("S1");
-            //paper.Count.ShouldBe(1);
-            //paper.AveragePrice.ShouldBe(200);
+            content.AvailSum.ShouldBe(946.645m);
+            content.Profit.ShouldBe(100);
 
-            //var paperActions = new List<PortfolioPaperAction>(paper.Actions);
-            //paperActions.Count.ShouldBe(3);
-            //paperActions[0].PaperAction.ShouldBe(PaperActionType.Buy);
-            //paperActions[0].Count.ShouldBe(1);
-            //paperActions[0].Value.ShouldBe(100);
-            //paperActions[1].PaperAction.ShouldBe(PaperActionType.Buy);
-            //paperActions[1].Count.ShouldBe(1);
-            //paperActions[1].Value.ShouldBe(200);
-            //paperActions[2].PaperAction.ShouldBe(PaperActionType.Sell);
-            //paperActions[2].Count.ShouldBe(1);
-            //paperActions[2].Value.ShouldBe(250);
+            var papers = content.Papers.ToList();
+            papers.Count.ShouldBe(1);
+
+            var paperActions = papers[0].Actions.ToList();
+            paperActions.Count.ShouldBe(3);
+            paperActions[0].PaperAction.ShouldBe(PaperActionType.Buy);
+            paperActions[0].Count.ShouldBe(1);
+            paperActions[0].Value.ShouldBe(100);
+            paperActions[1].PaperAction.ShouldBe(PaperActionType.Buy);
+            paperActions[1].Count.ShouldBe(1);
+            paperActions[1].Value.ShouldBe(200);
+            paperActions[2].PaperAction.ShouldBe(PaperActionType.Sell);
+            paperActions[2].Count.ShouldBe(1);
+            paperActions[2].Value.ShouldBe(250);
+
+            var fifo = papers[0].FifoActions.ToList();
+            fifo.Count.ShouldBe(2);
+            fifo[0].Item1.PaperAction.ShouldBe(PaperActionType.Buy);
+            fifo[0].Item1.Sum.ShouldBe(100);
+            fifo[0].Item2.PaperAction.ShouldBe(PaperActionType.Sell);
+            fifo[0].Item2.Sum.ShouldBe(250);
+            fifo[0].Item3.ShouldBe(0);
+            fifo[1].Item1.PaperAction.ShouldBe(PaperActionType.Buy);
+            fifo[1].Item1.Sum.ShouldBe(200);
+            fifo[1].Item2.ShouldBe(null);
+            fifo[1].Item3.ShouldBe(1);
         }
 
         [Test]
         public void BuildPaperFifo_SmokeTest()
         {
-            //Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.IncomeExternal, Sum = 1000});
             Actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 1, SecId = "S1", Sum = 100, Value = 100});
-            //Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeBuyOnMarket, Sum = 100});
-            //Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeCommission, Sum = 0.61m});
             Actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 1, SecId = "S1", Sum = 200, Value = 200});
-            //Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeBuyOnMarket, Sum = 200});
-            //Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeCommission, Sum = 1.22m});
             Actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Sell, Count = 1, SecId = "S1", Sum = 250, Value = 250});
-            //Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.IncomeSellOnMarket, Sum = 250});
-            //Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeCommission, Sum = 1.525m});
-            //Actions.Add(new PortfolioMoneyAction {MoneyAction = MoneyActionType.OutcomeDelayTax, Sum = 19.5m});
 
             var paper = PaperRepository.Get().First();
             var paperInPortfolio = PortfolioEngine.BuildPaperInPortfolio(paper, Actions);

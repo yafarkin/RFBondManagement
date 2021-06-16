@@ -19,7 +19,16 @@ namespace RfFondPortfolio.Common.Dtos
         /// <summary>
         /// Доступный кэш
         /// </summary>
-        public decimal AvailSum => Sums.Where(s => MoneyActionTypeHelper.IncomeTypes.Contains(s.Key) || MoneyActionTypeHelper.OutcomeTypes.Contains(s.Key)).Sum(s => s.Value);
+        public decimal AvailSum
+        {
+            get
+            {
+                var incomeSum = Sums.Where(s => MoneyActionTypeHelper.IncomeTypes.Contains(s.Key)).Sum(s => s.Value);
+                var outcomeSum = Sums.Where(s => MoneyActionTypeHelper.OutcomeTypes.Contains(s.Key)).Sum(s => s.Value);
+                var diff = incomeSum - outcomeSum;
+                return diff;
+            }
+        }
 
         /// <summary>
         /// Разница между покупкой и текущей ценой портфеля

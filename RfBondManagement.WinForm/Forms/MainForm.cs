@@ -51,7 +51,8 @@ namespace RfBondManagement.WinForm.Forms
             _portfolio = _portfolioRepository.Get().FirstOrDefault() ?? new Portfolio();
 
             var engine = _container.Resolve<PortfolioEngine>();
-            var content = await engine.Build(null, true);
+            var content = engine.Build();
+            await engine.FillPrice(content);
 
             var papers = content.Papers;
 

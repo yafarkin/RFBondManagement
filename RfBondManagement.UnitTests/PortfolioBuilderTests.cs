@@ -114,7 +114,8 @@ namespace RfBondManagement.UnitTests
             when = DateTime.UtcNow;
             PortfolioEngine.SellPaper(paper, 1, 108, when);
 
-            var content = await PortfolioEngine.Build(null, true);
+            var content = PortfolioEngine.Build();
+            await PortfolioEngine.FillPrice(content);
 
             content.ShouldNotBeNull();
             content.Sums.Count.ShouldBe(7);
@@ -142,7 +143,8 @@ namespace RfBondManagement.UnitTests
             PortfolioEngine.BuyPaper(paper, 1, 200);
             PortfolioEngine.SellPaper(paper, 1, 250);
 
-            var content = await PortfolioEngine.Build(null, true);
+            var content = PortfolioEngine.Build();
+            await PortfolioEngine.FillPrice(content);
 
             content.ShouldNotBeNull();
             content.Sums.Count.ShouldBe(5);

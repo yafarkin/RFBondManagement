@@ -29,5 +29,10 @@
         /// Налог на доход
         /// </summary>
         public decimal Tax { get; set; }
+
+        /// <summary>
+        /// Ссылка на структуру портфеля
+        /// </summary>
+        public PortfolioStructureLeaf RootLeaf { get; set; }
     }
 }

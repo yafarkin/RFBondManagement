@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using NLog;
@@ -116,7 +115,27 @@ namespace RfBondManagement.Engine.Calculations
             return paperInPortfolio;
         }
 
-        public async Task<PortfolioAggregatedContent> Build(DateTime? onDate = null, bool importPrice = false)
+        public async Task FillPrice(PortfolioAggregatedContent portfolioAggregatedContent, DateTime? onDate = null)
+        {
+            foreach (var paper in portfolioAggregatedContent.Papers)
+            {
+                decimal marketPrice;
+                if (onDate.HasValue)
+                {
+                    var historyPrice = await _import.HistoryPrice(_logger, paper.Paper, onDate, onDate);
+                    marketPrice = historyPrice.FirstOrDefault()?.LegalClosePrice ?? 0;
+                }
+                else
+                {
+                    var lastPrice = await _import.LastPrice(_logger, paper.Paper);
+                    marketPrice = lastPrice.Price;
+                }
+
+                paper.MarketPrice = marketPrice;
+            }
+        }
+
+        public PortfolioAggregatedContent Build(DateTime? onDate = null)
         {
             var sums = new Dictionary<MoneyActionType, decimal>();
             var moneyPortfolioActions = _moneyActionRepository.Get();
@@ -149,23 +168,6 @@ namespace RfBondManagement.Engine.Calculations
             {
                 var paperDefinition = _paperRepository.Get().Single(p => p.SecId == secId);
                 var paperInPortfolio = BuildPaperInPortfolio(paperDefinition, paperPortfolioActions, onDate);
-
-                decimal marketPrice = 0;
-                if (importPrice)
-                {
-                    if (onDate.HasValue)
-                    {
-                        var historyPrice = await _import.HistoryPrice(_logger, paperDefinition, onDate, onDate);
-                        marketPrice = historyPrice.FirstOrDefault()?.LegalClosePrice ?? 0;
-                    }
-                    else
-                    {
-                        var lastPrice = await _import.LastPrice(_logger, paperDefinition);
-                        marketPrice = lastPrice.Price;
-                    }
-                }
-
-                paperInPortfolio.MarketPrice = marketPrice;
 
                 papers.Add(secId, paperInPortfolio);
             }

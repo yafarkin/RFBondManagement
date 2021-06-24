@@ -27,7 +27,7 @@ namespace RfFondPortfolio.Common.Dtos
         /// <summary>
         /// Список действий купли/продажи в FIFO порядке
         /// </summary>
-        public IReadOnlyCollection<Tuple<PortfolioPaperAction, PortfolioPaperAction, long>> FifoActions { get; set; }
+        public IReadOnlyCollection<FifoAction> FifoActions { get; set; }
 
         /// <summary>
         /// Количество бумаг

@@ -13,9 +13,9 @@ namespace RfFondPortfolio.Common.Interfaces
         IReadOnlyCollection<PortfolioPaperAction> Actions { get; set; }
 
         /// <summary>
-        /// Link to buy action, Link to sell action, Сount of available to sell
+        /// Ссылка на действие покупки, ссылка на действие продажи, количество доступных бумаг для продажи
         /// </summary>
-        IReadOnlyCollection<Tuple<PortfolioPaperAction, PortfolioPaperAction, long>> FifoActions { get; set; }
+        IReadOnlyCollection<FifoAction> FifoActions { get; set; }
 
         public long Count { get; set; }
 

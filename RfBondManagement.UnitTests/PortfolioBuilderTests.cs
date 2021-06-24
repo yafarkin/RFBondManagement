@@ -21,10 +21,12 @@ namespace RfBondManagement.UnitTests
         public IExternalImport Import;
         public IPortfolioPaperActionRepository PaperActionRepository;
         public IPortfolioMoneyActionRepository MoneyActionRepository;
+        public ISplitRepository SplitRepository;
         public Portfolio Portfolio;
         public IBondCalculator BondCalculator;
 
         public List<PortfolioAction> Actions;
+        public List<PaperSplit> Splits;
 
         public decimal LastPrice;
 
@@ -36,6 +38,7 @@ namespace RfBondManagement.UnitTests
         {
             Portfolio = new Portfolio();
             Actions = new List<PortfolioAction>();
+            Splits = new List<PaperSplit>();
 
             ShareSample = new SharePaper {SecId = "S1", PaperType = PaperType.Share};
             BondSample = new BondPaper
@@ -64,7 +67,7 @@ namespace RfBondManagement.UnitTests
             paperRepositoryMock.Setup(m => m.Get()).Returns(new List<AbstractPaper> {ShareSample, BondSample});
 
             var moneyActionRepositoryMock = new Mock<IPortfolioMoneyActionRepository>();
-            moneyActionRepositoryMock.Setup(m => m.Get()).Returns(Actions.OfType<PortfolioMoneyAction>());
+            moneyActionRepositoryMock.Setup(m => m.Get()).Returns(Actions.OfType<PortfolioMoneyAction>().OrderBy(a => a.When));
             moneyActionRepositoryMock.Setup(m => m.Insert(It.IsAny<PortfolioMoneyAction>()))
                 .Callback<PortfolioMoneyAction>((i) =>
                 {
@@ -73,13 +76,16 @@ namespace RfBondManagement.UnitTests
                 }).Returns(() => Actions.LastOrDefault() as PortfolioMoneyAction);
 
             var paperActionRepositoryMock = new Mock<IPortfolioPaperActionRepository>();
-            paperActionRepositoryMock.Setup(m => m.Get()).Returns(Actions.OfType<PortfolioPaperAction>());
+            paperActionRepositoryMock.Setup(m => m.Get()).Returns(Actions.OfType<PortfolioPaperAction>().OrderBy(a => a.When));
             paperActionRepositoryMock.Setup(m => m.Insert(It.IsAny<PortfolioPaperAction>()))
                 .Callback<PortfolioPaperAction>((i) =>
                 {
                     i.Id = Guid.NewGuid();
                     Actions.Add(i);
                 }).Returns(() => Actions.LastOrDefault() as PortfolioPaperAction);
+
+            var splitRepositoryMock = new Mock<ISplitRepository>();
+            splitRepositoryMock.Setup(m => m.Get()).Returns(() => Splits);
 
             BondCalculator = new BondCalculator();
 
@@ -91,10 +97,11 @@ namespace RfBondManagement.UnitTests
             PaperRepository = paperRepositoryMock.Object;
             PaperActionRepository = paperActionRepositoryMock.Object;
             MoneyActionRepository = moneyActionRepositoryMock.Object;
+            SplitRepository = splitRepositoryMock.Object;
 
             var logger = new Mock<ILogger>().Object;
 
-            PortfolioEngine = new PortfolioEngine(Portfolio, Import, PaperRepository, MoneyActionRepository, PaperActionRepository, BondCalculator, logger);
+            PortfolioEngine = new PortfolioEngine(Portfolio, Import, PaperRepository, MoneyActionRepository, PaperActionRepository, SplitRepository, BondCalculator, logger);
         }
 
         [Test]
@@ -128,6 +135,45 @@ namespace RfBondManagement.UnitTests
             content.Sums[MoneyActionType.OutcomeDelayTax].ShouldBe(16.9m);
             content.AvailSum.ShouldBe(1630.760647m);
             content.Profit.ShouldBe(70);
+        }
+
+        [Test]
+        public void PortfolioEngine_Split_SmokeTest()
+        {
+            var onDate = DateTime.Today;
+
+            Splits.Add(new PaperSplit
+            {
+                Date = onDate.AddDays(-1),
+                Multiplier = 10,
+                SecId = ShareSample.SecId
+            });
+
+            PortfolioEngine.BuyPaper(ShareSample, 5, 25, onDate.AddDays(-3));
+            PortfolioEngine.SellPaper(ShareSample, 1, 30, onDate.AddDays(-2));
+            PortfolioEngine.BuyPaper(ShareSample, 50, 2.6m, onDate.AddDays(-1));
+            PortfolioEngine.SellPaper(ShareSample, 25, 3.3m, onDate);
+
+            var actions = Actions.OfType<PortfolioPaperAction>().ToList();
+
+            var p = PortfolioEngine.BuildPaperInPortfolio(ShareSample, actions, onDate.AddDays(-4));
+            p.Count.ShouldBe(0);
+
+            p = PortfolioEngine.BuildPaperInPortfolio(ShareSample, actions, onDate.AddDays(-3));
+            p.Count.ShouldBe(5);
+            p.Actions.Count.ShouldBe(1);
+            p.AveragePrice.ShouldBe(25);
+            
+            p = PortfolioEngine.BuildPaperInPortfolio(ShareSample, actions, onDate.AddDays(-2));
+            p.Count.ShouldBe(4);
+            p.Actions.Count.ShouldBe(2);
+            p.AveragePrice.ShouldBe(25);
+
+            p = PortfolioEngine.BuildPaperInPortfolio(ShareSample, actions, onDate.AddDays(-1));
+            p.Count.ShouldBe(90);
+            p.Actions.Count.ShouldBe(3);
+            p.AveragePrice.ShouldBe(2.55m);
+
         }
 
         [Test]
@@ -193,7 +239,7 @@ namespace RfBondManagement.UnitTests
             Actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Sell, Count = 1, SecId = "S1", Sum = 250, Value = 250});
 
             var paper = PaperRepository.Get().First();
-            var paperInPortfolio = PortfolioEngine.BuildPaperInPortfolio(paper, Actions);
+            var paperInPortfolio = PortfolioEngine.BuildPaperInPortfolio(paper, Actions.OfType<PortfolioPaperAction>());
 
             paperInPortfolio.ShouldNotBeNull();
             paperInPortfolio.AveragePrice.ShouldBe(200);
@@ -213,7 +259,7 @@ namespace RfBondManagement.UnitTests
         }
 
         [Test]
-        public async Task BuildFifio_SmokeTest2()
+        public void BuildFifio_SmokeTest2()
         {
             // основано на примере 1 из https://journal.open-broker.ru/taxes/chto-takoe-fifo/
             Actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 15, SecId = "S1", Value = 50});
@@ -221,7 +267,7 @@ namespace RfBondManagement.UnitTests
             Actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Sell, Count = 20, SecId = "S1", Value = 75});
 
             var paper = PaperRepository.Get().First();
-            var paperInPortfolio = PortfolioEngine.BuildPaperInPortfolio(paper, Actions);
+            var paperInPortfolio = PortfolioEngine.BuildPaperInPortfolio(paper, Actions.OfType<PortfolioPaperAction>());
 
             paperInPortfolio.ShouldNotBeNull();
             paperInPortfolio.AveragePrice.ShouldBe(80);

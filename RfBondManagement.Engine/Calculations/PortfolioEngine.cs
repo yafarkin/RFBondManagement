@@ -16,13 +16,21 @@ namespace RfBondManagement.Engine.Calculations
         protected readonly IPaperRepository _paperRepository;
         protected readonly IPortfolioPaperActionRepository _paperActionRepository;
         protected readonly IPortfolioMoneyActionRepository _moneyActionRepository;
+        protected readonly ISplitRepository _splitRepository;
 
         protected readonly IExternalImport _import;
         protected readonly IBondCalculator _bondCalculator;
 
         protected readonly ILogger _logger;
 
-        public PortfolioEngine(Portfolio portfolio, IExternalImport import, IPaperRepository paperRepository, IPortfolioMoneyActionRepository moneyActionRepository, IPortfolioPaperActionRepository paperActionRepository, IBondCalculator bondCalculator, ILogger logger)
+        public PortfolioEngine(
+            Portfolio portfolio,
+            IExternalImport import,
+            IPaperRepository paperRepository,
+            IPortfolioMoneyActionRepository moneyActionRepository,
+            IPortfolioPaperActionRepository paperActionRepository,
+            ISplitRepository splitRepository,
+            IBondCalculator bondCalculator, ILogger logger)
         {
             _logger = logger;
             _portfolio = portfolio;
@@ -30,10 +38,65 @@ namespace RfBondManagement.Engine.Calculations
             _paperRepository = paperRepository;
             _moneyActionRepository = moneyActionRepository;
             _paperActionRepository = paperActionRepository;
+            _splitRepository = splitRepository;
             _bondCalculator = bondCalculator;
         }
 
-        public IPaperInPortfolio<AbstractPaper> BuildPaperInPortfolio(AbstractPaper paper, IEnumerable<PortfolioAction> allActions, DateTime? onDate = null)
+        public decimal CalcSplitMultiplier(DateTime fromDate, DateTime toDate, IEnumerable<PaperSplit> paperSplits)
+        {
+            var multiplier = 1m;
+            var mSplits = paperSplits
+                .Where(s => s.Date >= fromDate && s.Date <= toDate)
+                .OrderBy(s => s.Date)
+                .Select(s => s.Multiplier);
+
+            foreach (var m in mSplits)
+            {
+                multiplier *= m;
+            }
+
+            return multiplier;
+        }
+
+        protected void PerformFifoSplit(DateTime fromDate, DateTime toDate, IEnumerable<PaperSplit> paperSplits, IList<FifoAction> fifo)
+        {
+            var multiplier = CalcSplitMultiplier(fromDate, toDate, paperSplits);
+            if (1 == multiplier)
+            {
+                return;
+            }
+
+            var lastFifo = fifo.Last();
+
+            var buyPaperAction = new PortfolioPaperAction
+            {
+                Comment = lastFifo.BuyAction.Comment,
+                Id = Guid.Empty,
+                PaperAction = lastFifo.BuyAction.PaperAction,
+                PortfolioId = lastFifo.BuyAction.PortfolioId,
+                SecId = lastFifo.BuyAction.SecId,
+
+                Count = Convert.ToInt64(Math.Floor(lastFifo.BuyAction.Count * multiplier)),
+                Value = lastFifo.BuyAction.Value / multiplier,
+
+                When = lastFifo.BuyAction.When
+            };
+
+            var newCount = Convert.ToInt64(Math.Floor(lastFifo.Count * multiplier));
+
+            var updatedFifo = new FifoAction(buyPaperAction, lastFifo.SellAction, newCount);
+            fifo.Remove(lastFifo);
+            fifo.Add(updatedFifo);
+        }
+
+        /// <summary>
+        /// Возвращает информацию о бумаге в портфеле
+        /// </summary>
+        /// <param name="paper">Бумага</param>
+        /// <param name="allPaperActions">Все действия с бумагами в портфеле</param>
+        /// <param name="onDate">Дата, на которую надо построить информацию, null - на текущий момент</param>
+        /// <returns>Информация по бумаге</returns>
+        public IPaperInPortfolio<AbstractPaper> BuildPaperInPortfolio(AbstractPaper paper, IEnumerable<PortfolioPaperAction> allPaperActions, DateTime? onDate = null)
         {
             long count;
 
@@ -51,66 +114,82 @@ namespace RfBondManagement.Engine.Calculations
 
             paperInPortfolio.OnDate = onDate;
 
-            var fifo = new List<Tuple<PortfolioPaperAction, PortfolioPaperAction, long>>();
+            var fifo = new List<FifoAction>();
 
-            var paperActions = allActions.OfType<PortfolioPaperAction>().Where(a => a.SecId == paper.SecId);
+            var paperActions = allPaperActions.Where(a => a.SecId == paper.SecId);
             if (onDate.HasValue)
             {
                 paperActions = paperActions.Where(a => a.When <= onDate);
             }
 
+            var splits = _splitRepository.Get().Where(s => s.SecId == paper.SecId).ToList();
+            var isAnySplit = splits.Any();
+
+            PortfolioPaperAction prevAction = null;
+
             paperInPortfolio.Actions = paperActions.ToList();
             foreach (var paperAction in paperInPortfolio.Actions)
             {
+                if (isAnySplit && prevAction != null && fifo.Count > 0)
+                {
+                    PerformFifoSplit(prevAction.When, paperAction.When, splits, fifo);
+                }
+
                 var isBuy = paperAction.PaperAction == PaperActionType.Buy;
                 count = paperAction.Count;
 
                 if (isBuy)
                 {
-                    fifo.Add(new Tuple<PortfolioPaperAction, PortfolioPaperAction, long>(paperAction, null, paperAction.Count));
+                    fifo.Add(new FifoAction(paperAction, null, paperAction.Count));
                 }
                 else
                 {
                     for (var i = 0; i < fifo.Count; i++)
                     {
                         var t = fifo[i];
-                        if (0 == t.Item3)
+                        if (0 == t.Count)
                         {
                             // all already sold, skip
                             continue;
                         }
 
-                        if (t.Item3 >= count)
+                        if (t.Count >= count)
                         {
-                            t = new Tuple<PortfolioPaperAction, PortfolioPaperAction, long>(t.Item1, paperAction, t.Item3 - count);
+                            t = new FifoAction(t.BuyAction, paperAction, t.Count - count);
                             fifo[i] = t;
                             break;
                         }
 
-                        count -= t.Item3;
-                        t = new Tuple<PortfolioPaperAction, PortfolioPaperAction, long>(t.Item1, paperAction, 0);
+                        count -= t.Count;
+                        t = new FifoAction(t.BuyAction, paperAction, 0);
                         fifo[i] = t;
                     }
                 }
+
+                prevAction = paperAction;
+            }
+
+            if (isAnySplit && prevAction != null && fifo.Count > 0)
+            {
+                PerformFifoSplit(prevAction.When, onDate ?? DateTime.Today, splits, fifo);
             }
 
             var sum = 0m;
             count = 0;
             foreach (var t in fifo)
             {
-                if (0 == t.Item3)
+                if (0 == t.Count)
                 {
                     continue;
                 }
 
-                count += t.Item3;
-                sum += t.Item3 * t.Item1.Value;
+                count += t.Count;
+                sum += t.Count * t.BuyAction.Value;
             }
 
             paperInPortfolio.FifoActions = fifo;
             paperInPortfolio.Count = count;
             paperInPortfolio.AveragePrice = 0 == count ? 0 : sum / count;
-
 
             return paperInPortfolio;
         }
@@ -291,39 +370,41 @@ namespace RfBondManagement.Engine.Calculations
 
             var profit = 0m;
             var needCount = count;
-            foreach (var fifoAction in paperInPortfolio.FifoActions.Where(a => a.Item3 > 0))
+            foreach (var fifoAction in paperInPortfolio.FifoActions.Where(a => a.Count > 0))
             {
                 var fifoActionProfit = 0m;
 
-                if (fifoAction.Item3 >= needCount)
+                if (fifoAction.Count >= needCount)
                 {
-                    fifoActionProfit = needCount * (price - fifoAction.Item1.Value);
+                    fifoActionProfit = needCount * (price - fifoAction.BuyAction.Value);
                     needCount = 0;
                 }
                 else
                 {
-                    fifoActionProfit = fifoAction.Item3 * (price - fifoAction.Item1.Value);
-                    needCount -= fifoAction.Item3;
+                    fifoActionProfit = fifoAction.Count * (price - fifoAction.BuyAction.Value);
+                    needCount -= fifoAction.Count;
                 }
 
                 // реализация логики на долгосрочное владение
                 // https://bcs.ru/blog/lgoty-dlya-investorov
                 if (_portfolio.LongTermBenefit && fifoActionProfit > 0)
                 {
-                    if (fifoAction.Item1.When >= fiveYears && fifoAction.Item1.When < threeYears)
+                    var buyWhen = fifoAction.BuyAction.When;
+
+                    if (buyWhen >= fiveYears && buyWhen < threeYears)
                     {
                         var minusFive = today.AddYears(-5);
-                        if (fifoAction.Item1.When <= minusFive)
+                        if (buyWhen <= minusFive)
                         {
                             fifoActionProfit = 0;
                         }
                     }
-                    else if (fifoAction.Item1.When >= threeYears)
+                    else if (buyWhen >= threeYears)
                     {
                         var minusThree = today.AddYears(-3);
-                        if (fifoAction.Item1.When <= minusThree)
+                        if (buyWhen <= minusThree)
                         {
-                            var totalFullYears = CalcFullYears(today, fifoAction.Item1.When);
+                            var totalFullYears = CalcFullYears(today, buyWhen);
                             var maxProfit = totalFullYears * 3_000_000m;
                             if (fifoActionProfit > maxProfit)
                             {
@@ -371,6 +452,15 @@ namespace RfBondManagement.Engine.Calculations
                 _paperActionRepository.Insert(paperAction);
 
             return paperAction;
+        }
+
+        public IEnumerable<PortfolioAction> Automate(DateTime onDate)
+        {
+            //var result = new List<PortfolioAction>();
+
+            //return result;
+
+            throw new NotImplementedException();
         }
     }
 }

@@ -24,7 +24,7 @@ namespace RfBondManagement.Engine.Database
                 throw new InvalidOperationException("Не задан идентификатор портфеля");
             }
 
-            return _entities.FindAll().Where(x => x.PortfolioId == _portfolioId).OfType<T>();
+            return _entities.FindAll().Where(x => x.PortfolioId == _portfolioId).OfType<T>().OrderBy(x => x.When);
         }
 
         public override T Insert(T entity)

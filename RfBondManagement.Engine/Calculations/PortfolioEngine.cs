@@ -46,7 +46,7 @@ namespace RfBondManagement.Engine.Calculations
         {
             var multiplier = 1m;
             var mSplits = paperSplits
-                .Where(s => s.Date >= fromDate && s.Date <= toDate)
+                .Where(s => s.Date > fromDate && s.Date <= toDate)
                 .OrderBy(s => s.Date)
                 .Select(s => s.Multiplier);
 
@@ -189,7 +189,7 @@ namespace RfBondManagement.Engine.Calculations
 
             paperInPortfolio.FifoActions = fifo;
             paperInPortfolio.Count = count;
-            paperInPortfolio.AveragePrice = 0 == count ? 0 : sum / count;
+            paperInPortfolio.AveragePrice = 0 == count ? 0 : Math.Round(sum / count, 2);
 
             return paperInPortfolio;
         }

@@ -172,8 +172,22 @@ namespace RfBondManagement.UnitTests
             p = PortfolioEngine.BuildPaperInPortfolio(ShareSample, actions, onDate.AddDays(-1));
             p.Count.ShouldBe(90);
             p.Actions.Count.ShouldBe(3);
-            p.AveragePrice.ShouldBe(2.55m);
+            p.AveragePrice.ShouldBe(2.56m);
 
+            p = PortfolioEngine.BuildPaperInPortfolio(ShareSample, actions, onDate);
+            p.Count.ShouldBe(65);
+            p.Actions.Count.ShouldBe(4);
+            p.AveragePrice.ShouldBe(2.58m);
+
+            p = PortfolioEngine.BuildPaperInPortfolio(ShareSample, actions);
+            p.Count.ShouldBe(65);
+            p.Actions.Count.ShouldBe(4);
+            p.AveragePrice.ShouldBe(2.58m);
+
+            p = PortfolioEngine.BuildPaperInPortfolio(ShareSample, actions, onDate.AddDays(1));
+            p.Count.ShouldBe(65);
+            p.Actions.Count.ShouldBe(4);
+            p.AveragePrice.ShouldBe(2.58m);
         }
 
         [Test]

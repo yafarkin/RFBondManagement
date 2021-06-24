@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace RfFondPortfolio.Common.Dtos
 {
@@ -28,8 +29,8 @@ namespace RfFondPortfolio.Common.Dtos
         public string Name { get; set; }
 
         /// <summary>
-        /// Список включенных бумаг, опционально
+        /// Список включенных бумаг, опционально (% бумаги и сама бумага)
         /// </summary>
-        public IEnumerable<AbstractPaper> Papers { get; set; }
+        public IEnumerable<Tuple<decimal, AbstractPaper>> Papers { get; set; }
     }
 }

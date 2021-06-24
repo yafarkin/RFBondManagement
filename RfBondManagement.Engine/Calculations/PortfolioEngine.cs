@@ -238,6 +238,22 @@ namespace RfBondManagement.Engine.Calculations
             return paperAction;
         }
 
+        protected static int CalcFullYears(DateTime dt1, DateTime dt2)
+        {
+            if (dt2.Year <= dt1.Year)
+            {
+                return 0;
+            }
+
+            var n = dt2.Year - dt1.Year;
+            if (dt1.DayOfYear > dt2.DayOfYear)
+            {
+                --n;
+            }
+
+            return n;
+        }
+
         public PortfolioPaperAction SellPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime))
         {
             if (when == default(DateTime))
@@ -269,20 +285,59 @@ namespace RfBondManagement.Engine.Calculations
             var commission = sum * _portfolio.Commissions / 100;
             MoveMoney(commission, MoneyActionType.OutcomeCommission, $"Списание комиссии, ставка {_portfolio.Commissions:P}", paper.SecId, when);
 
+            var today = DateTime.Today;
+            var threeYears = new DateTime(2014, 1, 1);
+            var fiveYears = new DateTime(2011, 1, 1);
+
             var profit = 0m;
             var needCount = count;
             foreach (var fifoAction in paperInPortfolio.FifoActions.Where(a => a.Item3 > 0))
             {
+                var fifoActionProfit = 0m;
+
                 if (fifoAction.Item3 >= needCount)
                 {
-                    profit += needCount * (price - fifoAction.Item1.Value);
+                    fifoActionProfit = needCount * (price - fifoAction.Item1.Value);
                     needCount = 0;
                 }
                 else
                 {
-                    profit += fifoAction.Item3 * (price - fifoAction.Item1.Value);
+                    fifoActionProfit = fifoAction.Item3 * (price - fifoAction.Item1.Value);
                     needCount -= fifoAction.Item3;
                 }
+
+                // реализация логики на долгосрочное владение
+                // https://bcs.ru/blog/lgoty-dlya-investorov
+                if (_portfolio.LongTermBenefit && fifoActionProfit > 0)
+                {
+                    if (fifoAction.Item1.When >= fiveYears && fifoAction.Item1.When < threeYears)
+                    {
+                        var minusFive = today.AddYears(-5);
+                        if (fifoAction.Item1.When <= minusFive)
+                        {
+                            fifoActionProfit = 0;
+                        }
+                    }
+                    else if (fifoAction.Item1.When >= threeYears)
+                    {
+                        var minusThree = today.AddYears(-3);
+                        if (fifoAction.Item1.When <= minusThree)
+                        {
+                            var totalFullYears = CalcFullYears(today, fifoAction.Item1.When);
+                            var maxProfit = totalFullYears * 3_000_000m;
+                            if (fifoActionProfit > maxProfit)
+                            {
+                                fifoActionProfit -= maxProfit;
+                            }
+                            else
+                            {
+                                fifoActionProfit = 0;
+                            }
+                        }
+                    }
+                }
+
+                profit += fifoActionProfit;
 
                 if (0 == needCount)
                 {
@@ -295,20 +350,26 @@ namespace RfBondManagement.Engine.Calculations
                 profit = profit / 100 * paper.FaceValue;
             }
 
-            var delayTaxSum = profit * _portfolio.Tax / 100;
-            MoveMoney(delayTaxSum, MoneyActionType.OutcomeDelayTax, $"Отложенный налог, ставка {_portfolio.Tax:P}; разница покупка/продажа: {profit}", paper.SecId, when);
+            if (profit > 0)
+            {
+                var delayTaxSum = profit * _portfolio.Tax / 100;
+                MoveMoney(delayTaxSum, MoneyActionType.OutcomeDelayTax,
+                    $"Отложенный налог, ставка {_portfolio.Tax:P}; разница покупка/продажа: {profit}", paper.SecId,
+                    when);
+            }
 
             var paperAction = new PortfolioPaperAction
-            {
-                Count = count,
-                PaperAction = PaperActionType.Sell,
-                PortfolioId = _portfolio.Id,
-                SecId = paper.SecId,
-                Sum = sum,
-                Value = price,
-                When = when
-            };
-            _paperActionRepository.Insert(paperAction);
+                {
+                    Count = count,
+                    PaperAction = PaperActionType.Sell,
+                    PortfolioId = _portfolio.Id,
+                    SecId = paper.SecId,
+                    Sum = sum,
+                    Value = price,
+                    When = when
+                };
+                _paperActionRepository.Insert(paperAction);
+
             return paperAction;
         }
     }

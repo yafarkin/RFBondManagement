@@ -1,4 +1,6 @@
-﻿namespace RfFondPortfolio.Common.Dtos
+﻿using System;
+
+namespace RfFondPortfolio.Common.Dtos
 {
     /// <summary>
     /// Параметры портфеля
@@ -34,5 +36,10 @@
         /// Ссылка на структуру портфеля
         /// </summary>
         public PortfolioStructureLeaf RootLeaf { get; set; }
+
+        /// <summary>
+        /// Учитывать льготу на долгосрочное владение
+        /// </summary>
+        public bool LongTermBenefit { get; set; }
     }
 }

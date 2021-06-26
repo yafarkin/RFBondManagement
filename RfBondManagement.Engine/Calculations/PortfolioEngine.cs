@@ -40,28 +40,14 @@ namespace RfBondManagement.Engine.Calculations
             _paperActionRepository = paperActionRepository;
             _splitRepository = splitRepository;
             _bondCalculator = bondCalculator;
+
+            _paperActionRepository.Setup(_portfolio.Id);
+            _moneyActionRepository.Setup(_portfolio.Id);
         }
 
-        public decimal CalcSplitMultiplier(DateTime fromDate, DateTime toDate, IEnumerable<PaperSplit> paperSplits)
+        protected void PerformFifoSplit(decimal multiplier, IList<FifoAction> fifo)
         {
-            var multiplier = 1m;
-            var mSplits = paperSplits
-                .Where(s => s.Date > fromDate && s.Date <= toDate)
-                .OrderBy(s => s.Date)
-                .Select(s => s.Multiplier);
-
-            foreach (var m in mSplits)
-            {
-                multiplier *= m;
-            }
-
-            return multiplier;
-        }
-
-        protected void PerformFifoSplit(DateTime fromDate, DateTime toDate, IEnumerable<PaperSplit> paperSplits, IList<FifoAction> fifo)
-        {
-            var multiplier = CalcSplitMultiplier(fromDate, toDate, paperSplits);
-            if (1 == multiplier)
+            if (1 == multiplier || 0 == fifo.Count)
             {
                 return;
             }
@@ -122,17 +108,19 @@ namespace RfBondManagement.Engine.Calculations
                 paperActions = paperActions.Where(a => a.When <= onDate);
             }
 
-            var splits = _splitRepository.Get().Where(s => s.SecId == paper.SecId).ToList();
-            var isAnySplit = splits.Any();
-
-            PortfolioPaperAction prevAction = null;
-
             paperInPortfolio.Actions = paperActions.ToList();
             foreach (var paperAction in paperInPortfolio.Actions)
             {
-                if (isAnySplit && prevAction != null && fifo.Count > 0)
+                if (paperAction.PaperAction == PaperActionType.Split)
                 {
-                    PerformFifoSplit(prevAction.When, paperAction.When, splits, fifo);
+                    PerformFifoSplit(paperAction.Value, fifo);
+                    continue;
+                }
+
+                if (paperAction.PaperAction == PaperActionType.Coupon ||
+                    paperAction.PaperAction == PaperActionType.Dividend)
+                {
+                    continue;
                 }
 
                 var isBuy = paperAction.PaperAction == PaperActionType.Buy;
@@ -165,13 +153,6 @@ namespace RfBondManagement.Engine.Calculations
                         fifo[i] = t;
                     }
                 }
-
-                prevAction = paperAction;
-            }
-
-            if (isAnySplit && prevAction != null && fifo.Count > 0)
-            {
-                PerformFifoSplit(prevAction.When, onDate ?? DateTime.Today, splits, fifo);
             }
 
             var sum = 0m;
@@ -456,11 +437,43 @@ namespace RfBondManagement.Engine.Calculations
 
         public IEnumerable<PortfolioAction> Automate(DateTime onDate)
         {
-            //var result = new List<PortfolioAction>();
+            var result = new List<PortfolioAction>();
 
-            //return result;
+            var paperActions = _paperActionRepository.Get().ToList();
+            result.AddRange(AutomateSplit(onDate, paperActions));
 
-            throw new NotImplementedException();
+            return result;
+        }
+
+        public IEnumerable<PortfolioPaperAction> AutomateSplit(DateTime onDate, IEnumerable<PortfolioPaperAction> paperActions)
+        {
+            var splits = _splitRepository.Get().Where(s => s.Date == onDate).ToList();
+            if (!splits.Any())
+            {
+                yield break;
+            }
+
+            var secIds = paperActions.Select(p => p.SecId).Distinct().Intersect(splits.Select(s => s.SecId));
+            if (!secIds.Any())
+            {
+                yield break;
+            }
+
+            foreach (var secId in secIds)
+            {
+                var multiplier = splits.Single(s => s.Date == onDate && s.SecId == secId).Multiplier;
+
+                var paperAction = new PortfolioPaperAction
+                {
+                    PaperAction = PaperActionType.Split,
+                    PortfolioId = _portfolio.Id,
+                    SecId = secId,
+                    When = onDate.Date,
+                    Value = multiplier,
+                };
+
+                yield return paperAction;
+            }
         }
     }
 }

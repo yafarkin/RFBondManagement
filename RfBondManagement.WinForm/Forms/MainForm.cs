@@ -8,6 +8,7 @@ using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 using Unity;
+using Unity.Resolution;
 
 namespace RfBondManagement.WinForm.Forms
 {
@@ -48,9 +49,9 @@ namespace RfBondManagement.WinForm.Forms
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
-            _portfolio = _portfolioRepository.Get().FirstOrDefault() ?? new Portfolio();
+            _portfolio = _portfolioRepository.Get().FirstOrDefault() ?? new Portfolio {Id = Guid.NewGuid()};
 
-            var engine = _container.Resolve<PortfolioEngine>();
+            var engine = _container.Resolve<PortfolioEngine>(new ParameterOverride("portfolio", _portfolio));
             var content = engine.Build();
             await engine.FillPrice(content);
 

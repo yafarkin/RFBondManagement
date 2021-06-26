@@ -20,5 +20,25 @@
         /// </summary>
         /// <remarks>Например, погашение облигации</remarks>
         Close,
+
+        /// <summary>
+        /// Обратный выкуп
+        /// </summary>
+        BuyBack,
+
+        /// <summary>
+        /// Сплит акции
+        /// </summary>
+        Split,
+
+        /// <summary>
+        /// Дивиденд
+        /// </summary>
+        Dividend,
+
+        /// <summary>
+        /// Купон
+        /// </summary>
+        Coupon
     }
 }

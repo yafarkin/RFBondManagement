@@ -19,9 +19,11 @@ namespace RfBondManagement.Engine
                 .RegisterType<IBondCalculator, BondCalculator>()
                 .RegisterType<IExternalImport, MoexImport>()
                 .RegisterType<IPaperRepository, PaperRepository>()
+                .RegisterType<IPortfolioRepository, PortfolioRepository>()
                 .RegisterType<IPortfolioMoneyActionRepository, PortfolioMoneyActionRepository>()
                 .RegisterType<IPortfolioPaperActionRepository, PortfolioPaperActionRepository>()
                 .RegisterType<IHistoryRepository, HistoryRepository>()
+                .RegisterType<ISplitRepository, SplitRepository>()
                 ;
 
             container.AddNewExtension<NLogExtension>();

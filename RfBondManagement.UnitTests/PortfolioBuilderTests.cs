@@ -138,6 +138,29 @@ namespace RfBondManagement.UnitTests
         }
 
         [Test]
+        public void PortfolioEngine_AutomateSplit_Test()
+        {
+            var onDate = DateTime.Today;
+
+            Splits.Add(new PaperSplit
+            {
+                Date = onDate.AddDays(-1),
+                Multiplier = 10,
+                SecId = ShareSample.SecId
+            });
+
+            PortfolioEngine.BuyPaper(ShareSample, 1, 1, onDate);
+
+            var actions = Actions.OfType<PortfolioPaperAction>().ToList();
+
+            var p = PortfolioEngine.AutomateSplit(onDate.AddDays(-2), actions);
+            p.ShouldBeEmpty();
+
+            p = PortfolioEngine.AutomateSplit(onDate.AddDays(-1), actions);
+            p.Count().ShouldBe(1);
+        }
+
+        [Test]
         public void PortfolioEngine_Split_SmokeTest()
         {
             var onDate = DateTime.Today;
@@ -151,6 +174,14 @@ namespace RfBondManagement.UnitTests
 
             PortfolioEngine.BuyPaper(ShareSample, 5, 25, onDate.AddDays(-3));
             PortfolioEngine.SellPaper(ShareSample, 1, 30, onDate.AddDays(-2));
+            
+            var automate = PortfolioEngine.AutomateSplit(onDate.AddDays(-1), PaperActionRepository.Get());
+            automate.ShouldNotBeEmpty();
+            foreach (var action in automate)
+            {
+                PaperActionRepository.Insert(action);
+            }
+
             PortfolioEngine.BuyPaper(ShareSample, 50, 2.6m, onDate.AddDays(-1));
             PortfolioEngine.SellPaper(ShareSample, 25, 3.3m, onDate);
 
@@ -171,22 +202,22 @@ namespace RfBondManagement.UnitTests
 
             p = PortfolioEngine.BuildPaperInPortfolio(ShareSample, actions, onDate.AddDays(-1));
             p.Count.ShouldBe(90);
-            p.Actions.Count.ShouldBe(3);
+            p.Actions.Count.ShouldBe(4);
             p.AveragePrice.ShouldBe(2.56m);
 
             p = PortfolioEngine.BuildPaperInPortfolio(ShareSample, actions, onDate);
             p.Count.ShouldBe(65);
-            p.Actions.Count.ShouldBe(4);
+            p.Actions.Count.ShouldBe(5);
             p.AveragePrice.ShouldBe(2.58m);
 
             p = PortfolioEngine.BuildPaperInPortfolio(ShareSample, actions);
             p.Count.ShouldBe(65);
-            p.Actions.Count.ShouldBe(4);
+            p.Actions.Count.ShouldBe(5);
             p.AveragePrice.ShouldBe(2.58m);
 
             p = PortfolioEngine.BuildPaperInPortfolio(ShareSample, actions, onDate.AddDays(1));
             p.Count.ShouldBe(65);
-            p.Actions.Count.ShouldBe(4);
+            p.Actions.Count.ShouldBe(5);
             p.AveragePrice.ShouldBe(2.58m);
         }
 

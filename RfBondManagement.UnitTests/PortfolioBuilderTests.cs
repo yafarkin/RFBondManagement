@@ -30,8 +30,8 @@ namespace RfBondManagement.UnitTests
 
         public decimal LastPrice;
 
-        public AbstractPaper ShareSample;
-        public AbstractPaper BondSample;
+        public SharePaper ShareSample;
+        public BondPaper BondSample;
 
         [SetUp]
         public void Setup()
@@ -138,6 +138,31 @@ namespace RfBondManagement.UnitTests
         }
 
         [Test]
+        public void PortfolioEngine_AutomateDividends_Test()
+        {
+            var onDate = DateTime.Today;
+
+            ShareSample.Dividends = new List<ShareDividend>
+            {
+                new ShareDividend
+                {
+                    RegistryCloseDate = onDate.AddDays(1),
+                    Value = 10
+                }
+            };
+
+            var p = PortfolioEngine.AutomateDividend(onDate, new[] {ShareSample.SecId}).ToList();
+            p.ShouldBeEmpty();
+
+            p = PortfolioEngine.AutomateDividend(onDate.AddDays(1), new[] {ShareSample.SecId}).ToList();
+            p.Count.ShouldBe(3);
+            p[0].ShouldBeOfType<PortfolioPaperAction>();
+            (p[0] as PortfolioPaperAction).Value.ShouldBe(10);
+            p[1].ShouldBeOfType<PortfolioMoneyAction>();
+            p[2].ShouldBeOfType<PortfolioMoneyAction>();
+        }
+
+        [Test]
         public void PortfolioEngine_AutomateSplit_Test()
         {
             var onDate = DateTime.Today;
@@ -149,14 +174,10 @@ namespace RfBondManagement.UnitTests
                 SecId = ShareSample.SecId
             });
 
-            PortfolioEngine.BuyPaper(ShareSample, 1, 1, onDate);
-
-            var actions = Actions.OfType<PortfolioPaperAction>().ToList();
-
-            var p = PortfolioEngine.AutomateSplit(onDate.AddDays(-2), actions);
+            var p = PortfolioEngine.AutomateSplit(onDate.AddDays(-2), new[] {ShareSample.SecId});
             p.ShouldBeEmpty();
 
-            p = PortfolioEngine.AutomateSplit(onDate.AddDays(-1), actions);
+            p = PortfolioEngine.AutomateSplit(onDate.AddDays(-1), new[] {ShareSample.SecId});
             p.Count().ShouldBe(1);
         }
 
@@ -174,8 +195,8 @@ namespace RfBondManagement.UnitTests
 
             PortfolioEngine.BuyPaper(ShareSample, 5, 25, onDate.AddDays(-3));
             PortfolioEngine.SellPaper(ShareSample, 1, 30, onDate.AddDays(-2));
-            
-            var automate = PortfolioEngine.AutomateSplit(onDate.AddDays(-1), PaperActionRepository.Get());
+
+            var automate = PortfolioEngine.AutomateSplit(onDate.AddDays(-1), new[] {ShareSample.SecId});
             automate.ShouldNotBeEmpty();
             foreach (var action in automate)
             {

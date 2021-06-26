@@ -439,13 +439,14 @@ namespace RfBondManagement.Engine.Calculations
         {
             var result = new List<PortfolioAction>();
 
-            var paperActions = _paperActionRepository.Get().ToList();
-            result.AddRange(AutomateSplit(onDate, paperActions));
+            var paperSecIds = _paperActionRepository.Get().Select(p => p.SecId).Distinct().ToList();
+            result.AddRange(AutomateSplit(onDate, paperSecIds));
+            result.AddRange(AutomateDividend(onDate, paperSecIds));
 
             return result;
         }
 
-        public IEnumerable<PortfolioPaperAction> AutomateSplit(DateTime onDate, IEnumerable<PortfolioPaperAction> paperActions)
+        public IEnumerable<PortfolioPaperAction> AutomateSplit(DateTime onDate, IList<string> paperSecIds)
         {
             var splits = _splitRepository.Get().Where(s => s.Date == onDate).ToList();
             if (!splits.Any())
@@ -453,7 +454,7 @@ namespace RfBondManagement.Engine.Calculations
                 yield break;
             }
 
-            var secIds = paperActions.Select(p => p.SecId).Distinct().Intersect(splits.Select(s => s.SecId));
+            var secIds = paperSecIds.Intersect(splits.Select(s => s.SecId)).ToList();
             if (!secIds.Any())
             {
                 yield break;
@@ -462,6 +463,8 @@ namespace RfBondManagement.Engine.Calculations
             foreach (var secId in secIds)
             {
                 var multiplier = splits.Single(s => s.Date == onDate && s.SecId == secId).Multiplier;
+
+                _logger.Info($"Perform split for {secId}, multiplier {multiplier:N4}");
 
                 var paperAction = new PortfolioPaperAction
                 {
@@ -473,6 +476,54 @@ namespace RfBondManagement.Engine.Calculations
                 };
 
                 yield return paperAction;
+            }
+        }
+
+        public IEnumerable<PortfolioAction> AutomateDividend(DateTime onDate, IList<string> paperSecIds)
+        {
+            var papers = _paperRepository.Get()
+                .Where(p => paperSecIds.Contains(p.SecId) && p.PaperType == PaperType.Share)
+                .OfType<SharePaper>()
+                .Where(p => p.Dividends?.Count > 0)
+                .ToList();
+
+            var paperActions = new Lazy<List<PortfolioPaperAction>>(() => _paperActionRepository.Get().ToList());
+
+            foreach (var sharePaper in papers)
+            {
+                foreach (var dividend in sharePaper.Dividends)
+                {
+                    if (dividend.RegistryCloseDate != onDate)
+                    {
+                        continue;
+                    }
+
+                    var paperInPortfolio = BuildPaperInPortfolio(sharePaper, paperActions.Value, onDate);
+
+                    var dividendSum = dividend.Value;
+                    var taxSum = dividendSum * _portfolio.Tax / 100;
+
+                    var totalTaxSum = taxSum * paperInPortfolio.Count;
+                    var totalSum = dividendSum * paperInPortfolio.Count;
+                    var incomeClearSum = totalSum - totalTaxSum;
+
+                    _logger.Info($"Income dividends from {sharePaper.SecId}, value {dividendSum:N4}, tax {taxSum:N2}, total clear sum: {incomeClearSum:N2}");
+
+                    var paperAction = new PortfolioPaperAction
+                    {
+                        Count = paperInPortfolio.Count,
+                        PaperAction = PaperActionType.Dividend,
+                        PortfolioId = _portfolio.Id,
+                        SecId = sharePaper.SecId,
+                        When = onDate.Date,
+                        Value = dividendSum,
+                    };
+
+                    yield return paperAction;
+
+                    yield return MoveMoney(totalSum, MoneyActionType.IncomeDividend, $"Входящие дивиденды по {sharePaper.SecId}, дивиденд: {dividendSum:N4}, налог: {taxSum:N2}, итого на бумагу: {(dividendSum-taxSum):N2}");
+                    yield return MoveMoney(totalTaxSum, MoneyActionType.OutcomeTax, $"Итого налог по дивидендам");
+                }
             }
         }
     }

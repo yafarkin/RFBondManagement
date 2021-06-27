@@ -36,6 +36,8 @@ namespace RfBondManagement.UnitTests
         [SetUp]
         public void Setup()
         {
+            var today = DateTime.UtcNow.Date;
+
             Portfolio = new Portfolio();
             Actions = new List<PortfolioAction>();
             Splits = new List<PaperSplit>();
@@ -44,27 +46,27 @@ namespace RfBondManagement.UnitTests
             BondSample = new BondPaper
             {
                 SecId = "B2", PaperType = PaperType.Bond,
-                MatDate = DateTime.Today.AddDays(1),
+                MatDate = today.AddDays(1),
                 InitialFaceValue = 1000,
                 FaceValue = 1000,
-                IssueDate = DateTime.Today.AddYears(-1),
+                IssueDate = today.AddYears(-1),
                 Coupons = new List<BondCoupon>
                 {
                     new BondCoupon
                     {
-                        CouponDate = DateTime.Today.AddYears(-1).AddDays(182),
+                        CouponDate = today.AddYears(-1).AddDays(182),
                         Value = 50
                     },
                     new BondCoupon
                     {
-                        CouponDate = DateTime.Today.AddDays(1),
+                        CouponDate = today.AddDays(1),
                         Value = 50
                     }
                 }
             };
 
             var paperRepositoryMock = new Mock<IPaperRepository>();
-            paperRepositoryMock.Setup(m => m.Get()).Returns(new List<AbstractPaper> {ShareSample, BondSample});
+            paperRepositoryMock.Setup(m => m.Get()).Returns(() => new List<AbstractPaper> {ShareSample, BondSample});
 
             var moneyActionRepositoryMock = new Mock<IPortfolioMoneyActionRepository>();
             moneyActionRepositoryMock.Setup(m => m.Get()).Returns(Actions.OfType<PortfolioMoneyAction>().OrderBy(a => a.When));
@@ -140,7 +142,7 @@ namespace RfBondManagement.UnitTests
         [Test]
         public void PortfolioEngine_AutomateDividends_Test()
         {
-            var onDate = DateTime.Today;
+            var onDate = DateTime.UtcNow.Date;
 
             ShareSample.Dividends = new List<ShareDividend>
             {
@@ -148,8 +150,17 @@ namespace RfBondManagement.UnitTests
                 {
                     RegistryCloseDate = onDate.AddDays(1),
                     Value = 10
+                },
+                new ShareDividend
+                {
+                    RegistryCloseDate = onDate.AddDays(180),
+                    Value = 20
                 }
             };
+
+            Portfolio.Tax = 10;
+
+            PortfolioEngine.BuyPaper(ShareSample, 1, 100, onDate);
 
             var p = PortfolioEngine.AutomateDividend(onDate, new[] {ShareSample.SecId}).ToList();
             p.ShouldBeEmpty();
@@ -159,13 +170,55 @@ namespace RfBondManagement.UnitTests
             p[0].ShouldBeOfType<PortfolioPaperAction>();
             (p[0] as PortfolioPaperAction).Value.ShouldBe(10);
             p[1].ShouldBeOfType<PortfolioMoneyAction>();
+            (p[1] as PortfolioMoneyAction).MoneyAction.ShouldBe(MoneyActionType.IncomeDividend);
+            (p[1] as PortfolioMoneyAction).Sum.ShouldBe(10);
             p[2].ShouldBeOfType<PortfolioMoneyAction>();
+            (p[2] as PortfolioMoneyAction).MoneyAction.ShouldBe(MoneyActionType.OutcomeTax);
+            (p[2] as PortfolioMoneyAction).Sum.ShouldBe(1);
+        }
+
+        [Test]
+        public void PortfolioEngine_AutomateCoupons_Test()
+        {
+            var onDate = DateTime.UtcNow.Date;
+
+            BondSample.Coupons = new List<BondCoupon>
+            {
+                new BondCoupon
+                {
+                    CouponDate = onDate.AddDays(1),
+                    Value = 10
+                },
+                new BondCoupon
+                {
+                    CouponDate = onDate.AddDays(180),
+                    Value = 20
+                }
+            };
+
+            Portfolio.Tax = 10;
+
+            PortfolioEngine.BuyPaper(BondSample, 1, 100, onDate);
+
+            var p = PortfolioEngine.AutomateCoupons(onDate, new[] {BondSample.SecId}).ToList();
+            p.ShouldBeEmpty();
+
+            p = PortfolioEngine.AutomateCoupons(onDate.AddDays(1), new[] {BondSample.SecId}).ToList();
+            p.Count.ShouldBe(3);
+            p[0].ShouldBeOfType<PortfolioPaperAction>();
+            (p[0] as PortfolioPaperAction).Value.ShouldBe(10);
+            p[1].ShouldBeOfType<PortfolioMoneyAction>();
+            (p[1] as PortfolioMoneyAction).MoneyAction.ShouldBe(MoneyActionType.IncomeDividend);
+            (p[1] as PortfolioMoneyAction).Sum.ShouldBe(10);
+            p[2].ShouldBeOfType<PortfolioMoneyAction>();
+            (p[2] as PortfolioMoneyAction).MoneyAction.ShouldBe(MoneyActionType.OutcomeTax);
+            (p[2] as PortfolioMoneyAction).Sum.ShouldBe(1);
         }
 
         [Test]
         public void PortfolioEngine_AutomateSplit_Test()
         {
-            var onDate = DateTime.Today;
+            var onDate = DateTime.UtcNow.Date;
 
             Splits.Add(new PaperSplit
             {
@@ -184,7 +237,7 @@ namespace RfBondManagement.UnitTests
         [Test]
         public void PortfolioEngine_Split_SmokeTest()
         {
-            var onDate = DateTime.Today;
+            var onDate = DateTime.UtcNow.Date;
 
             Splits.Add(new PaperSplit
             {

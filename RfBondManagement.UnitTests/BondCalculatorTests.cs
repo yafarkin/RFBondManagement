@@ -31,6 +31,7 @@ namespace RfBondManagement.UnitTests
                 FaceValue = 1000,
                 Name = "Test Bond",
                 MatDate = new DateTime(2023, 8, 30),
+                IssueDate = new DateTime(2020, 9, 2),
                 Coupons = new List<BondCoupon>
                 {
                     new BondCoupon {CouponDate = new DateTime(2021, 3, 3), Value = 50},
@@ -44,7 +45,29 @@ namespace RfBondManagement.UnitTests
         }
 
         [Test]
-        public void TenPercents_Clear()
+        public void CouponOnCurrentDate_Test()
+        {
+            var today = DateTime.UtcNow.Date;
+
+            BondPaper = new BondPaper
+            {
+                FaceValue = 1000,
+                Name = "Test Bond",
+                MatDate = today.AddDays(180),
+                IssueDate = today,
+                Coupons = new List<BondCoupon>
+                {
+                    new BondCoupon {CouponDate = today, Value = 50},
+                    new BondCoupon {CouponDate = today.AddDays(180), Value = 50},
+                }
+            };
+
+            var aci = Calculator.CalculateAci(BondPaper, today);
+            aci.ShouldBe(0);
+        }
+
+        [Test]
+        public void TenPercents_Clear_Test()
         {
             var buyAction = new PortfolioPaperAction
             {
@@ -65,11 +88,11 @@ namespace RfBondManagement.UnitTests
 
             Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, null, BondPaper.MatDate);
             Assert.IsTrue(bondIncomeInfo.CloseByMaturityDate);
-            Assert.AreEqual(1060m, bondIncomeInfo.BalanceOnBuy);
+            Assert.AreEqual(1000m, bondIncomeInfo.BalanceOnBuy);
             Assert.AreEqual(1300m, bondIncomeInfo.BalanceOnSell);
             Assert.AreEqual(300m, bondIncomeInfo.IncomeByCoupons);
-            Assert.AreEqual(240m, bondIncomeInfo.ExpectedIncome);
-            Assert.AreEqual(8.02m, Math.Round(bondIncomeInfo.RealIncomePercent, 2));
+            Assert.AreEqual(300m, bondIncomeInfo.ExpectedIncome);
+            Assert.AreEqual(10.03m, Math.Round(bondIncomeInfo.RealIncomePercent, 2));
         }
 
         [Test]
@@ -94,11 +117,11 @@ namespace RfBondManagement.UnitTests
 
             Calculator.StartCalculateIncome(bondIncomeInfo, buyAction, Portfolio, BondPaper.MatDate);
             Assert.IsTrue(bondIncomeInfo.CloseByMaturityDate);
-            Assert.AreEqual(1060.6466m, bondIncomeInfo.BalanceOnBuy);
+            Assert.AreEqual(1000.61m, bondIncomeInfo.BalanceOnBuy);
             Assert.AreEqual(1261m, bondIncomeInfo.BalanceOnSell);
             Assert.AreEqual(261m, bondIncomeInfo.IncomeByCoupons);
-            Assert.AreEqual(200.3534m, bondIncomeInfo.ExpectedIncome);
-            Assert.AreEqual(6.7m, Math.Round(bondIncomeInfo.RealIncomePercent, 2));
+            Assert.AreEqual(260.39m, bondIncomeInfo.ExpectedIncome);
+            Assert.AreEqual(8.7m, Math.Round(bondIncomeInfo.RealIncomePercent, 2));
         }
 
         [Test]
@@ -123,12 +146,12 @@ namespace RfBondManagement.UnitTests
             {
                 Name = "ОФЗ 26223",
                 FaceValue = 1000,
-                IssueDate = DateTime.Today,
+                IssueDate = DateTime.UtcNow.Date,
                 MatDate = new DateTime(2024, 2, 28),
                 Coupons = new List<BondCoupon>()
             };
 
-            var aci = Calculator.CalculateAci(paper, DateTime.Today.AddDays(-1));
+            var aci = Calculator.CalculateAci(paper, DateTime.UtcNow.Date.AddDays(-1));
             aci.ShouldBe(0);
         }
 

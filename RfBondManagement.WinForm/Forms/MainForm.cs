@@ -79,7 +79,7 @@ namespace RfBondManagement.WinForm.Forms
                     };
 
                     calc.CalculateIncome(biiToClose, _portfolio, bondPaper.MatDate);
-                    calc.CalculateIncome(biiToToday, _portfolio, DateTime.Today.AddDays(30));
+                    calc.CalculateIncome(biiToToday, _portfolio, DateTime.UtcNow.Date.AddDays(30));
 
                     var lvi = new ListViewItem(new[]
                     {
@@ -90,7 +90,7 @@ namespace RfBondManagement.WinForm.Forms
                         biiToClose.ExpectedIncome.ToString("C"),
                         (biiToClose.RealIncomePercent / 100).ToString("P"),
                         biiToClose.BreakevenDate.ToShortDateString(),
-                        (bondPaper.MatDate - DateTime.Today).Days.ToString(),
+                        (bondPaper.MatDate - DateTime.UtcNow.Date).Days.ToString(),
                     });
                     lvPapers.Items.Add(lvi);
                 }

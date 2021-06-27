@@ -90,7 +90,7 @@ namespace RfBondManagement.Engine.Calculations
             if (paper.PaperType == PaperType.Bond)
             {
                 var bondInPortfolio = new BondInPortfolio(paper as BondPaper);
-                bondInPortfolio.Aci = _bondCalculator.CalculateAci(bondInPortfolio.Paper, onDate ?? DateTime.Today);
+                bondInPortfolio.Aci = _bondCalculator.CalculateAci(bondInPortfolio.Paper, onDate ?? DateTime.UtcNow.Date);
                 paperInPortfolio = bondInPortfolio;
             }
             else
@@ -345,7 +345,7 @@ namespace RfBondManagement.Engine.Calculations
             var commission = sum * _portfolio.Commissions / 100;
             MoveMoney(commission, MoneyActionType.OutcomeCommission, $"Списание комиссии, ставка {_portfolio.Commissions:P}", paper.SecId, when);
 
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             var threeYears = new DateTime(2014, 1, 1);
             var fiveYears = new DateTime(2011, 1, 1);
 
@@ -442,6 +442,7 @@ namespace RfBondManagement.Engine.Calculations
             var paperSecIds = _paperActionRepository.Get().Select(p => p.SecId).Distinct().ToList();
             result.AddRange(AutomateSplit(onDate, paperSecIds));
             result.AddRange(AutomateDividend(onDate, paperSecIds));
+            result.AddRange(AutomateCoupons(onDate, paperSecIds));
 
             return result;
         }
@@ -484,46 +485,82 @@ namespace RfBondManagement.Engine.Calculations
             var papers = _paperRepository.Get()
                 .Where(p => paperSecIds.Contains(p.SecId) && p.PaperType == PaperType.Share)
                 .OfType<SharePaper>()
-                .Where(p => p.Dividends?.Count > 0)
+                .Where(p => p.Dividends?.Count > 0 && p.Dividends.Any(d => d.RegistryCloseDate == onDate))
                 .ToList();
 
             var paperActions = new Lazy<List<PortfolioPaperAction>>(() => _paperActionRepository.Get().ToList());
 
             foreach (var sharePaper in papers)
             {
-                foreach (var dividend in sharePaper.Dividends)
+                var dividendRecord = sharePaper.Dividends.Single(d => d.RegistryCloseDate == onDate);
+
+                var paperInPortfolio = BuildPaperInPortfolio(sharePaper, paperActions.Value, onDate);
+
+                var dividendSum = dividendRecord.Value;
+                var taxSum = dividendSum * _portfolio.Tax / 100;
+
+                var totalTaxSum = taxSum * paperInPortfolio.Count;
+                var totalSum = dividendSum * paperInPortfolio.Count;
+                var incomeClearSum = totalSum - totalTaxSum;
+
+                _logger.Info($"Income dividends from {sharePaper.SecId}, value {dividendSum:N4}, tax {taxSum:N2}, total clear sum: {incomeClearSum:N2}");
+
+                var paperAction = new PortfolioPaperAction
                 {
-                    if (dividend.RegistryCloseDate != onDate)
-                    {
-                        continue;
-                    }
+                    Count = paperInPortfolio.Count,
+                    PaperAction = PaperActionType.Dividend,
+                    PortfolioId = _portfolio.Id,
+                    SecId = sharePaper.SecId,
+                    When = onDate.Date,
+                    Value = dividendSum,
+                };
 
-                    var paperInPortfolio = BuildPaperInPortfolio(sharePaper, paperActions.Value, onDate);
+                yield return paperAction;
 
-                    var dividendSum = dividend.Value;
-                    var taxSum = dividendSum * _portfolio.Tax / 100;
+                yield return MoveMoney(totalSum, MoneyActionType.IncomeDividend, $"Дивиденды по {sharePaper.SecId}, дивиденд: {dividendSum:N4}, налог: {taxSum:N2}, итого на бумагу: {(dividendSum - taxSum):N2}");
+                yield return MoveMoney(totalTaxSum, MoneyActionType.OutcomeTax, $"Итого налог по дивидендам");
+            }
+        }
 
-                    var totalTaxSum = taxSum * paperInPortfolio.Count;
-                    var totalSum = dividendSum * paperInPortfolio.Count;
-                    var incomeClearSum = totalSum - totalTaxSum;
+        public IEnumerable<PortfolioAction> AutomateCoupons(DateTime onDate, IList<string> paperSecIds)
+        {
+            var papers = _paperRepository.Get()
+                .Where(p => paperSecIds.Contains(p.SecId) && p.PaperType == PaperType.Bond)
+                .OfType<BondPaper>()
+                .Where(p => p.Coupons?.Count > 0 && p.Coupons.Any(c => c.CouponDate == onDate))
+                .ToList();
 
-                    _logger.Info($"Income dividends from {sharePaper.SecId}, value {dividendSum:N4}, tax {taxSum:N2}, total clear sum: {incomeClearSum:N2}");
+            var paperActions = new Lazy<List<PortfolioPaperAction>>(() => _paperActionRepository.Get().ToList());
 
-                    var paperAction = new PortfolioPaperAction
-                    {
-                        Count = paperInPortfolio.Count,
-                        PaperAction = PaperActionType.Dividend,
-                        PortfolioId = _portfolio.Id,
-                        SecId = sharePaper.SecId,
-                        When = onDate.Date,
-                        Value = dividendSum,
-                    };
+            foreach (var bondPaper in papers)
+            {
+                var paperInPortfolio = BuildPaperInPortfolio(bondPaper, paperActions.Value, onDate);
+                var couponRecord = bondPaper.Coupons.Single(c => c.CouponDate == onDate);
 
-                    yield return paperAction;
+                var couponSum = couponRecord.Value;
 
-                    yield return MoveMoney(totalSum, MoneyActionType.IncomeDividend, $"Входящие дивиденды по {sharePaper.SecId}, дивиденд: {dividendSum:N4}, налог: {taxSum:N2}, итого на бумагу: {(dividendSum-taxSum):N2}");
-                    yield return MoveMoney(totalTaxSum, MoneyActionType.OutcomeTax, $"Итого налог по дивидендам");
-                }
+                var taxSum = couponSum * _portfolio.Tax / 100;
+
+                var totalTaxSum = taxSum * paperInPortfolio.Count;
+                var totalSum = couponSum * paperInPortfolio.Count;
+                var incomeClearSum = totalSum - totalTaxSum;
+
+                _logger.Info($"Income coupons from {bondPaper.SecId}, value {couponSum:N4}, tax {taxSum:N2}, total clear sum: {incomeClearSum:N2}");
+
+                var paperAction = new PortfolioPaperAction
+                {
+                    Count = paperInPortfolio.Count,
+                    PaperAction = PaperActionType.Coupon,
+                    PortfolioId = _portfolio.Id,
+                    SecId = bondPaper.SecId,
+                    When = onDate.Date,
+                    Value = couponSum,
+                };
+
+                yield return paperAction;
+
+                yield return MoveMoney(totalSum, MoneyActionType.IncomeDividend, $"Купоны по {bondPaper.SecId}, размер: {couponSum:N4}, налог: {taxSum:N2}, итого на бумагу: {(couponSum - taxSum):N2}");
+                yield return MoveMoney(totalTaxSum, MoneyActionType.OutcomeTax, $"Итого налог по купонам");
             }
         }
     }

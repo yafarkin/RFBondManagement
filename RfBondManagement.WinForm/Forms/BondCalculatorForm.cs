@@ -120,9 +120,9 @@ namespace RfBondManagement.WinForm.Forms
                 return;
             }
 
-            if (dtpBuyDate.Value < DateTime.Today)
+            if (dtpBuyDate.Value < DateTime.UtcNow.Date)
             {
-                dtpBuyDate.Value = DateTime.Today;
+                dtpBuyDate.Value = DateTime.UtcNow.Date;
             }
 
             if (!untilMaturity)

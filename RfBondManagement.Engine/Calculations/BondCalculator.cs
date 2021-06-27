@@ -27,7 +27,26 @@ namespace RfBondManagement.Engine.Calculations
                 return 0;
             }
 
-            var prevCoupon = NearPastCoupon(paper, toDate);
+            var prevCoupons = paper.Coupons.Where(c => c.CouponDate < toDate).ToList();
+            var prevCoupon = 0 == prevCoupons.Count ? null : prevCoupons.Last();
+            if (null == prevCoupon)
+            {
+                if (null == paper.IssueDate)
+                {
+                    throw new InvalidOperationException("Не возможно вычислить НКД, т.к. дата находится ранее самого первого купона");
+                }
+
+                if (paper.IssueDate == toDate)
+                {
+                    return 0;
+                }
+
+                prevCoupon = new BondCoupon
+                {
+                    CouponDate = paper.IssueDate.GetValueOrDefault()
+                };
+            }
+
             var daysBetweenCoupons = (nextCoupon.CouponDate - prevCoupon.CouponDate).Days;
             var diffDays = (toDate - prevCoupon.CouponDate).Days;
             var aci =Math.Round((decimal)diffDays / daysBetweenCoupons * nextCoupon.Value, 2);
@@ -145,13 +164,6 @@ namespace RfBondManagement.Engine.Calculations
             var coupons = bond.Coupons.Where(c => c.CouponDate > toDate).ToList();
 
             return 0 == coupons.Count ? bond.Coupons.Last() : coupons.First();
-        }
-
-        protected BondCoupon NearPastCoupon(BondPaper bond, DateTime toDate)
-        {
-            var coupons = bond.Coupons.Where(c => c.CouponDate < toDate).ToList();
-
-            return 0 == coupons.Count ? bond.Coupons.Last() : coupons.Last();
         }
     }
 }

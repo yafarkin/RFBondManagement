@@ -243,6 +243,11 @@ namespace RfBondManagement.Engine.Calculations
 
         public PortfolioMoneyAction MoveMoney(decimal sum, MoneyActionType moneyActionType, string comment, string secId = null, DateTime when = default(DateTime))
         {
+            if (0 == sum)
+            {
+                return null;
+            }
+
             if (when == default(DateTime))
             {
                 when = DateTime.UtcNow;
@@ -316,15 +321,26 @@ namespace RfBondManagement.Engine.Calculations
 
         public PortfolioPaperAction SellPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime))
         {
+            return SellPaper(paper, count, price, when, PaperActionType.Sell);
+        }
+
+        protected PortfolioPaperAction SellPaper(AbstractPaper paper, long count, decimal price, DateTime when, PaperActionType sellActionType)
+        {
             if (when == default(DateTime))
             {
                 when = DateTime.UtcNow;
             }
 
             var paperInPortfolio = BuildPaperInPortfolio(paper, _paperActionRepository.Get(), when);
-            if (paperInPortfolio.Count < count)
+
+            if (-1 == count)
             {
-                // may be later, I will implement 'short' functionality
+                // закрываем позицию
+                count = paperInPortfolio.Count;
+            }
+            else if (paperInPortfolio.Count < count)
+            {
+                // может быть позднее, когда будет делаться реализация функционала шорта
                 throw new InvalidOperationException("Нельзя продать большее количество, чем есть в портфеле");
             }
 
@@ -423,10 +439,9 @@ namespace RfBondManagement.Engine.Calculations
             var paperAction = new PortfolioPaperAction
                 {
                     Count = count,
-                    PaperAction = PaperActionType.Sell,
+                    PaperAction = sellActionType,
                     PortfolioId = _portfolio.Id,
                     SecId = paper.SecId,
-                    Sum = sum,
                     Value = price,
                     When = when
                 };
@@ -443,13 +458,14 @@ namespace RfBondManagement.Engine.Calculations
             result.AddRange(AutomateSplit(onDate, paperSecIds));
             result.AddRange(AutomateDividend(onDate, paperSecIds));
             result.AddRange(AutomateCoupons(onDate, paperSecIds));
+            result.AddRange(AutomateBondCloseDate(onDate, paperSecIds));
 
             return result;
         }
 
         public IEnumerable<PortfolioPaperAction> AutomateSplit(DateTime onDate, IList<string> paperSecIds)
         {
-            var splits = _splitRepository.Get().Where(s => s.Date == onDate).ToList();
+            var splits = _splitRepository.Get().Where(s => s.Date.Date == onDate.Date).ToList();
             if (!splits.Any())
             {
                 yield break;
@@ -463,7 +479,7 @@ namespace RfBondManagement.Engine.Calculations
 
             foreach (var secId in secIds)
             {
-                var multiplier = splits.Single(s => s.Date == onDate && s.SecId == secId).Multiplier;
+                var multiplier = splits.Single(s => s.Date.Date == onDate.Date && s.SecId == secId).Multiplier;
 
                 _logger.Info($"Perform split for {secId}, multiplier {multiplier:N4}");
 
@@ -492,7 +508,7 @@ namespace RfBondManagement.Engine.Calculations
 
             foreach (var sharePaper in papers)
             {
-                var dividendRecord = sharePaper.Dividends.Single(d => d.RegistryCloseDate == onDate);
+                var dividendRecord = sharePaper.Dividends.Single(d => d.RegistryCloseDate.Date == onDate.Date);
 
                 var paperInPortfolio = BuildPaperInPortfolio(sharePaper, paperActions.Value, onDate);
 
@@ -527,7 +543,7 @@ namespace RfBondManagement.Engine.Calculations
             var papers = _paperRepository.Get()
                 .Where(p => paperSecIds.Contains(p.SecId) && p.PaperType == PaperType.Bond)
                 .OfType<BondPaper>()
-                .Where(p => p.Coupons?.Count > 0 && p.Coupons.Any(c => c.CouponDate == onDate))
+                .Where(p => p.Coupons?.Count > 0 && p.Coupons.Any(c => c.CouponDate.Date == onDate.Date))
                 .ToList();
 
             var paperActions = new Lazy<List<PortfolioPaperAction>>(() => _paperActionRepository.Get().ToList());
@@ -561,6 +577,20 @@ namespace RfBondManagement.Engine.Calculations
 
                 yield return MoveMoney(totalSum, MoneyActionType.IncomeDividend, $"Купоны по {bondPaper.SecId}, размер: {couponSum:N4}, налог: {taxSum:N2}, итого на бумагу: {(couponSum - taxSum):N2}");
                 yield return MoveMoney(totalTaxSum, MoneyActionType.OutcomeTax, $"Итого налог по купонам");
+            }
+        }
+
+        public IEnumerable<PortfolioAction> AutomateBondCloseDate(DateTime onDate, IList<string> paperSecIds)
+        {
+            var papers = _paperRepository.Get()
+                .Where(p => paperSecIds.Contains(p.SecId) && p.PaperType == PaperType.Bond)
+                .OfType<BondPaper>()
+                .Where(p => p.MatDate.Date == onDate.Date)
+                .ToList();
+
+            foreach (var bondPaper in papers)
+            {
+                yield return SellPaper(bondPaper, -1, 100, onDate, PaperActionType.Close);
             }
         }
     }

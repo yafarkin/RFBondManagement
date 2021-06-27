@@ -216,6 +216,51 @@ namespace RfBondManagement.UnitTests
         }
 
         [Test]
+        public void PortfolioEngine_AutomateBondClose_Test()
+        {
+            var onDate = DateTime.UtcNow;
+
+            BondSample.Coupons = new List<BondCoupon>
+            {
+                new BondCoupon
+                {
+                    CouponDate = onDate.AddDays(1),
+                    Value = 10
+                },
+                new BondCoupon
+                {
+                    CouponDate = onDate.AddDays(180),
+                    Value = 20
+                }
+            };
+
+            Portfolio.Tax = 10;
+
+            PortfolioEngine.BuyPaper(BondSample, 1, 95, onDate);
+
+            var p = PortfolioEngine.AutomateBondCloseDate(onDate, new[] {BondSample.SecId}).ToList();
+            p.ShouldBeEmpty();
+
+            p = PortfolioEngine.AutomateBondCloseDate(onDate.AddDays(1), new[] {BondSample.SecId}).ToList();
+            p.Count.ShouldBe(1);
+            p[0].ShouldBeOfType<PortfolioPaperAction>();
+            (p[0] as PortfolioPaperAction).PaperAction.ShouldBe(PaperActionType.Close);
+            (p[0] as PortfolioPaperAction).Count.ShouldBe(1);
+            (p[0] as PortfolioPaperAction).Value.ShouldBe(100);
+
+            var m = Actions.OfType<PortfolioMoneyAction>().ToList();
+            m.Count.ShouldBe(4);
+            m[0].MoneyAction.ShouldBe(MoneyActionType.OutcomeBuyOnMarket);
+            m[0].Sum.ShouldBe(950);
+            m[1].MoneyAction.ShouldBe(MoneyActionType.OutcomeAci);
+            m[1].Sum.ShouldBe(9.97m);
+            m[2].MoneyAction.ShouldBe(MoneyActionType.IncomeSellOnMarket);
+            m[2].Sum.ShouldBe(1000);
+            m[3].MoneyAction.ShouldBe(MoneyActionType.OutcomeDelayTax);
+            m[3].Sum.ShouldBe(5);
+        }
+
+        [Test]
         public void PortfolioEngine_AutomateSplit_Test()
         {
             var onDate = DateTime.UtcNow.Date;

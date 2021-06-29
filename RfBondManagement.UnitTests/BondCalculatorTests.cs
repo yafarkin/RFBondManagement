@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
 using NUnit.Framework;
 using RfBondManagement.Engine.Calculations;
 using RfBondManagement.Engine.Common;
@@ -42,6 +43,43 @@ namespace RfBondManagement.UnitTests
                     new BondCoupon {CouponDate = new DateTime(2023, 8, 30), Value = 50}
                 }
             };
+        }
+
+        [Test]
+        public void Duration_NoCoupons_Test()
+        {
+            var today = new DateTime(2021, 1, 1);
+
+            var paper = new BondPaper
+            {
+                FaceValue = 1000,
+                IssueDate = today,
+                MatDate = today.AddYears(1)
+            };
+
+            var duration = Calculator.CalculateDuration(paper);
+            duration.ShouldBe(365);
+        }
+
+        [Test]
+        public void Duration_TwoCoupons_Test()
+        {
+            var today = new DateTime(2021, 1, 1);
+
+            var paper = new BondPaper
+            {
+                FaceValue = 1000,
+                IssueDate = today,
+                MatDate = today.AddYears(1),
+                Coupons = new List<BondCoupon>
+                {
+                    new BondCoupon {CouponDate = today.AddDays(182), Value = 50},
+                    new BondCoupon {CouponDate = today.AddYears(1), Value = 50}
+                }
+            };
+
+            var duration = Calculator.CalculateDuration(paper);
+            duration.ShouldBe(357);
         }
 
         [Test]
@@ -176,8 +214,10 @@ namespace RfBondManagement.UnitTests
             var realPaper = new BondPaper
             {
                 Name = "ОФЗ 26223",
+                SecId = "SU26223RMFS6",
                 FaceValue = 1000,
                 MatDate = new DateTime(2024, 2, 28),
+                IssueDate = new DateTime(2018, 2, 21),
                 Coupons = new List<BondCoupon>
                 {
                     new BondCoupon {CouponDate = new DateTime(2018, 9, 5), Value = 34.9m},
@@ -223,6 +263,9 @@ namespace RfBondManagement.UnitTests
             Assert.AreEqual(197.38m, Math.Round(bondIncomeInfo.IncomeByCoupons, 2));
             Assert.AreEqual(131.63m, Math.Round(bondIncomeInfo.ExpectedIncome, 2));
             Assert.AreEqual(4.29m, Math.Round(bondIncomeInfo.RealIncomePercent, 2));
+
+            var duration = Calculator.CalculateDuration(realPaper);
+            duration.ShouldBe(999);
         }
     }
 }

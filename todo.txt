@@ -1,5 +1,12 @@
+реализовать расчёт дюрации облигации:
+https://smart-lab.ru/blog/703874.php
+
 https://iss.moex.com/iss/reference/
 Иммпорт параметров бумаг из источника (биржи).
+
+покрутить от финанс маркера:
+https://help.financemarker.ru/api/
+https://help.financemarker.ru/primiery-zaprosov/
 
 Калькулятор по облигации:
 1. Нормальный ввод, с кнопками и пересчётом

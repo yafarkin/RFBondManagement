@@ -9,6 +9,48 @@ namespace RfBondManagement.Engine.Calculations
 {
     public class BondCalculator : IBondCalculator
     {
+        public int CalculateDuration(BondPaper paper, DateTime toDate = null)
+        {
+            if (null == toDate)
+            {
+                toDate = DateTime.UtcNow.Date;
+            }
+
+            // TODO: проверить кейсы без купонов и с аммортизацией
+            if (null == paper.IssueDate)
+            {
+                throw new InvalidOperationException("Отсутствует дата выпуска облигации, нельзя посчитать дюрацию");
+            }
+
+            TimeSpan diff;
+            decimal income;
+
+            var summ = 0m;
+            var D = 0m;
+            var startDate = paper.IssueDate.GetValueOrDefault();
+            if (paper.Coupons?.Count > 0)
+            {
+                foreach (var coupon in paper.Coupons)
+                {
+                    diff = coupon.CouponDate - startDate;
+
+                    income = coupon.Value;
+
+                    D += Convert.ToDecimal(diff.TotalDays) * income;
+                    summ += income;
+                }
+            }
+
+            diff = paper.MatDate - startDate;
+            income = paper.FaceValue;
+
+            D += Convert.ToDecimal(diff.TotalDays) * income;
+            summ += income;
+
+            var result = D / summ;
+            return Convert.ToInt32(result);
+        }
+
         public decimal CalculateAci(BondPaper paper, DateTime toDate)
         {
             if (null == paper.Coupons || 0 == paper.Coupons.Count)

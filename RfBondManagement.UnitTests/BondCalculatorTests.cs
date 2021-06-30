@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using RfBondManagement.Engine.Calculations;
 using RfBondManagement.Engine.Common;
 using RfFondPortfolio.Common.Dtos;
 using Shouldly;
+using System;
+using System.Collections.Generic;
 
 namespace RfBondManagement.UnitTests
 {
@@ -59,6 +58,9 @@ namespace RfBondManagement.UnitTests
 
             var duration = Calculator.CalculateDuration(paper);
             duration.ShouldBe(365);
+
+            duration = Calculator.CalculateDiscountedDuration(paper, 100);
+            duration.ShouldBe(365);
         }
 
         [Test]
@@ -71,6 +73,7 @@ namespace RfBondManagement.UnitTests
                 FaceValue = 1000,
                 IssueDate = today,
                 MatDate = today.AddYears(1),
+                CouponPercent = 10,
                 Coupons = new List<BondCoupon>
                 {
                     new BondCoupon {CouponDate = today.AddDays(182), Value = 50},
@@ -80,6 +83,34 @@ namespace RfBondManagement.UnitTests
 
             var duration = Calculator.CalculateDuration(paper);
             duration.ShouldBe(357);
+
+            duration = Calculator.CalculateDiscountedDuration(paper, 100);
+            duration.ShouldBe(357);
+        }
+
+        [Test]
+        public void Duration_AnotherSample_Test()
+        {
+            var today = new DateTime(2021, 1, 1);
+
+            var paper = new BondPaper
+            {
+                FaceValue = 1000,
+                IssueDate = today,
+                MatDate = today.AddYears(4),
+                CouponFrequency = 1,
+                CouponPercent = 10,
+                Coupons = new List<BondCoupon>
+                {
+                    new BondCoupon {CouponDate = today.AddYears(1), Value = 100},
+                    new BondCoupon {CouponDate = today.AddYears(2), Value = 100},
+                    new BondCoupon {CouponDate = today.AddYears(3), Value = 100},
+                    new BondCoupon {CouponDate = today.AddYears(4), Value = 100}
+                }
+            };
+
+            var duration = Calculator.CalculateDiscountedDuration(paper, 100);
+            duration.ShouldBe(1273);
         }
 
         [Test]
@@ -218,6 +249,8 @@ namespace RfBondManagement.UnitTests
                 FaceValue = 1000,
                 MatDate = new DateTime(2024, 2, 28),
                 IssueDate = new DateTime(2018, 2, 21),
+                CouponFrequency = 2,
+                CouponPercent = 6.5m,
                 Coupons = new List<BondCoupon>
                 {
                     new BondCoupon {CouponDate = new DateTime(2018, 9, 5), Value = 34.9m},
@@ -264,8 +297,10 @@ namespace RfBondManagement.UnitTests
             Assert.AreEqual(131.63m, Math.Round(bondIncomeInfo.ExpectedIncome, 2));
             Assert.AreEqual(4.29m, Math.Round(bondIncomeInfo.RealIncomePercent, 2));
 
-            var duration = Calculator.CalculateDuration(realPaper);
-            duration.ShouldBe(999);
+            var duration = Calculator.CalculateDuration(realPaper, new DateTime(2021, 6, 30));
+            //var duration2 = Calculator.CalculateDiscountedDuration(realPaper, 100, 0, new DateTime(2021, 6, 30));
+            var duration2 = Calculator.CalculateDiscountedDuration(realPaper, 99.41m, new DateTime(2021, 6, 30));
+            duration.ShouldBe(899); // duration2 = 890
         }
     }
 }

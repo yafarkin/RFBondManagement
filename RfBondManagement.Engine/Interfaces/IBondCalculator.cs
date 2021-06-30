@@ -6,7 +6,7 @@ namespace RfBondManagement.Engine.Interfaces
 {
     public interface IBondCalculator
     {
-        int CalculateDuration(BondPaper paper);
+        int CalculateDuration(BondPaper paper, DateTime? fromDate = null, DateTime? toDate = null);
 
         void CalculateIncome(BondIncomeInfo bondIncomeInfo, Portfolio portfolio, DateTime toDate);
 

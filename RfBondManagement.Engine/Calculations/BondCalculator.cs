@@ -9,30 +9,82 @@ namespace RfBondManagement.Engine.Calculations
 {
     public class BondCalculator : IBondCalculator
     {
-        public int CalculateDuration(BondPaper paper, DateTime toDate = null)
+        public int CalculateDiscountedDuration(BondPaper paper, decimal buyPrice, DateTime? fromDate = null, DateTime? toDate = null)
         {
-            if (null == toDate)
-            {
-                toDate = DateTime.UtcNow.Date;
-            }
-
             // TODO: проверить кейсы без купонов и с аммортизацией
             if (null == paper.IssueDate)
             {
                 throw new InvalidOperationException("Отсутствует дата выпуска облигации, нельзя посчитать дюрацию");
             }
 
+            toDate ??= paper.MatDate;
+            fromDate ??= paper.IssueDate;
+
+            decimal income;
+            decimal couponPercent;
+            double years;
+
+            var D = 0m;
+
+            var prevDate = fromDate.Value;
+            if (paper.Coupons?.Count > 0)
+            {
+                foreach (var coupon in paper.Coupons.Where(c => c.CouponDate >= fromDate && c.CouponDate <= toDate))
+                {
+                    var daysInCouponYear = DateTime.IsLeapYear(coupon.CouponDate.Year) ? 366 : 365;
+
+                    income = coupon.Value;
+                    var diff = coupon.CouponDate - prevDate;
+                    couponPercent = (decimal)daysInCouponYear / diff.Days * income / paper.FaceValue;
+                    //couponPercent = (decimal) diff.Days / daysInCouponYear * income / paper.FaceValue;
+                    //couponPercent = income / paper.FaceValue;
+
+                    years = (coupon.CouponDate - fromDate.Value).TotalDays / 365;
+                    D += Convert.ToDecimal(years) * income / Convert.ToDecimal(Math.Pow(1 + Convert.ToDouble(couponPercent), years));
+
+                    prevDate = coupon.CouponDate;
+                }
+            }
+
+            couponPercent = paper.CouponPercent;
+            income = paper.FaceValue;
+
+            years = (toDate.Value - fromDate.Value).TotalDays / 365;
+            D += Convert.ToDecimal(years) * income / Convert.ToDecimal(Math.Pow(1 + Convert.ToDouble(couponPercent) / 100, years));
+
+            var aci = CalculateAci(paper, fromDate.Value);
+
+            var fullBuyPrice = income * buyPrice / 100 + aci;
+
+            var result = D / fullBuyPrice;
+            return Convert.ToInt32(result * 365);
+        }
+
+        public int CalculateDuration(BondPaper paper, DateTime? fromDate = null, DateTime? toDate = null)
+        {
+            // TODO: проверить кейсы без купонов и с аммортизацией
+            if (null == paper.IssueDate)
+            {
+                throw new InvalidOperationException("Отсутствует дата выпуска облигации, нельзя посчитать дюрацию");
+            }
+
+            if (null == toDate)
+            {
+                toDate = paper.MatDate;
+            }
+
+            fromDate ??= paper.IssueDate.Value;
+
             TimeSpan diff;
             decimal income;
 
             var summ = 0m;
             var D = 0m;
-            var startDate = paper.IssueDate.GetValueOrDefault();
             if (paper.Coupons?.Count > 0)
             {
-                foreach (var coupon in paper.Coupons)
+                foreach (var coupon in paper.Coupons.Where(c => c.CouponDate >= fromDate && c.CouponDate <= toDate))
                 {
-                    diff = coupon.CouponDate - startDate;
+                    diff = coupon.CouponDate - fromDate.Value;
 
                     income = coupon.Value;
 
@@ -41,7 +93,7 @@ namespace RfBondManagement.Engine.Calculations
                 }
             }
 
-            diff = paper.MatDate - startDate;
+            diff = toDate.Value - fromDate.Value;
             income = paper.FaceValue;
 
             D += Convert.ToDecimal(diff.TotalDays) * income;

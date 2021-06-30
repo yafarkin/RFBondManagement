@@ -102,6 +102,7 @@ namespace RfFondPortfolio.Integration.Moex.Requests
             paper.MatDate = definition.Description.GetDataForDateTime("name", "MATDATE", "value").GetValueOrDefault();
             paper.InitialFaceValue = definition.Description.GetDataForDecimal("name", "INITIALFACEVALUE", "value");
             paper.CouponFrequency = definition.Description.GetDataForLong("name", "COUPONFREQUENCY", "value").GetValueOrDefault();
+            paper.CouponPercent = definition.Description.GetDataForDecimal("name", "COUPONPERCENT", "value").GetValueOrDefault();
             paper.EarlyRepayment = definition.Description.GetDataForString("name", "EARLYREPAYMENT", "value") == "1";
 
             paper.Coupons = new List<BondCoupon>(coupons.Coupons.Data.Count);

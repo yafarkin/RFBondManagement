@@ -24,6 +24,11 @@ namespace RfFondPortfolio.Common.Dtos
         public long CouponFrequency { get; set; }
 
         /// <summary>
+        /// Ставка купона, %
+        /// </summary>
+        public decimal CouponPercent { get; set; }
+
+        /// <summary>
         /// Возможен досрочный выкуп
         /// </summary>
         public bool? EarlyRepayment { get; set; }

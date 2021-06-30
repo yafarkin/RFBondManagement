@@ -23,26 +23,32 @@ namespace RfBondManagement.Engine.Calculations
             decimal income;
             decimal couponPercent;
             double years;
-
+            
             var D = 0m;
+            var idx = 0;
 
             var prevDate = fromDate.Value;
             if (paper.Coupons?.Count > 0)
             {
                 foreach (var coupon in paper.Coupons.Where(c => c.CouponDate >= fromDate && c.CouponDate <= toDate))
                 {
+                    idx++;
+
                     var daysInCouponYear = DateTime.IsLeapYear(coupon.CouponDate.Year) ? 366 : 365;
 
                     income = coupon.Value;
-                    var diff = coupon.CouponDate - prevDate;
-                    couponPercent = (decimal)daysInCouponYear / diff.Days * income / paper.FaceValue;
+                    //var diff = coupon.CouponDate - prevDate;
+                    //couponPercent = (decimal)daysInCouponYear / diff.Days * income / paper.FaceValue;
                     //couponPercent = (decimal) diff.Days / daysInCouponYear * income / paper.FaceValue;
-                    //couponPercent = income / paper.FaceValue;
+                    couponPercent = income / paper.FaceValue;
 
-                    years = (coupon.CouponDate - fromDate.Value).TotalDays / 365;
-                    D += Convert.ToDecimal(years) * income / Convert.ToDecimal(Math.Pow(1 + Convert.ToDouble(couponPercent), years));
+                    //years = (coupon.CouponDate - fromDate.Value).TotalDays / 365;
+                    var PV = 1 == idx ?
+                        income / (1 + couponPercent) :
+                        idx * income / Convert.ToDecimal(Math.Pow(1 + Convert.ToDouble(couponPercent), idx));
+                    D += PV;
 
-                    prevDate = coupon.CouponDate;
+                    //prevDate = coupon.CouponDate;
                 }
             }
 

@@ -15,7 +15,6 @@ namespace RfBondManagement.Engine
 
             container
                 .RegisterType<IDatabaseLayer, DatabaseLayer>(TypeLifetime.Singleton)
-                //.RegisterType<IHistoryDatabaseLayer, HistoryDatabaseLayer>(TypeLifetime.Singleton)
                 .RegisterType<IBondCalculator, BondCalculator>()
                 .RegisterType<IExternalImport, MoexImport>()
                 .RegisterType<IPaperRepository, PaperRepository>()

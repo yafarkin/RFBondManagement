@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using BackTesting.Interfaces;
 using NLog;
-using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
+using RfFondPortfolio.Common.Dtos;
+using RfFondPortfolio.Common.Interfaces;
 
 namespace BackTesting.Strategies
 {
@@ -18,14 +19,21 @@ namespace BackTesting.Strategies
 
         protected DateTime _nextMonthlyIncome;
 
-        protected Dictionary<string, BaseStockPaper> _papers;
+        protected Dictionary<string, AbstractPaper> _papers;
 
-        public BuyAndHoldStrategy(ILogger logger, IHistoryDatabaseLayer history, IBondCalculator bondCalculator, IBacktestEngine backtestEngine)
-            : base(logger, history, bondCalculator, backtestEngine)
+        protected IBacktestEngine _backtestEngine;
+        protected IPaperRepository _paperRepository;
+
+        public BuyAndHoldStrategy(ILogger logger,
+            IHistoryRepository historyRepository,
+            IBondCalculator bondCalculator,
+            IPaperRepository paperRepository)
+            : base(logger, historyRepository, bondCalculator)
         {
+            _paperRepository = paperRepository;
         }
-        
-        public Portfolio Configure(bool reinvestIncome, decimal initialSum, decimal monthlyIncome, IEnumerable<Tuple<string, decimal>> portfolioPercent, Settings settings)
+
+        public Portfolio Configure(bool reinvestIncome, decimal initialSum, decimal monthlyIncome, IEnumerable<Tuple<string, decimal>> portfolioPercent, decimal tax, decimal commission)
         {
             _reinvestIncome = reinvestIncome;
             _portfolioPercent = portfolioPercent;
@@ -34,11 +42,14 @@ namespace BackTesting.Strategies
 
             var portfolio = new Portfolio
             {
-                Settings = settings,
-                Sum = initialSum
+                Id = Guid.NewGuid(),
+                Tax = tax,
+                Commissions = commission,
+                LongTermBenefit = true,
             };
 
-            _papers = _history.GetHistoryPapers().ToDictionary(x => x.SecId);
+            var secIds = _historyRepository.Get().Select(x => x.SecId).Distinct().ToHashSet();
+            _papers = _paperRepository.Get().Where(p => secIds.Contains(p.SecId)).ToDictionary(p => p.SecId);
 
             return portfolio;
         }
@@ -47,74 +58,40 @@ namespace BackTesting.Strategies
 
         public override string Description => "Buy and hold" + (_reinvestIncome ? " (with reinvest)" : string.Empty);
 
-        public override void Init(Portfolio portfolio, DateTime date)
+        public override void Init(IBacktestEngine backtestEngine, Portfolio portfolio, DateTime date)
         {
+            _backtestEngine = backtestEngine;
             _portfolio = portfolio;
             _nextMonthlyIncome = date.AddMonths(1);
 
-            portfolio.MoneyMoves.Add(new BaseMoneyMove
-            {
-                Comment = "Initial sum",
-                Sum = _initialSum,
-                Date = date,
-                MoneyMoveType = MoneyMoveType.IncomeExternal
-            });
-
+            _backtestEngine.PortfolioEngine.MoveMoney(_initialSum, MoneyActionType.IncomeExternal, "Начальная сумма", null, date);
         }
 
         public override bool Process(DateTime date)
         {
             if (_monthlyIncome > 0 && date >= _nextMonthlyIncome)
             {
-                _portfolio.Sum += _monthlyIncome;
                 _nextMonthlyIncome = _nextMonthlyIncome.AddMonths(1);
 
-                _portfolio.MoneyMoves.Add(new BaseMoneyMove
-                {
-                    Comment = $"Monthly income {_monthlyIncome:C}",
-                    Date = date,
-                    MoneyMoveType = MoneyMoveType.IncomeExternal,
-                    Sum = _monthlyIncome
-                });
-
+                _backtestEngine.PortfolioEngine.MoveMoney(_monthlyIncome, MoneyActionType.IncomeExternal, "Ежемесячный взнос", null, date);
                 _logger.Info($"Monthly income, {_monthlyIncome:C}");
             }
 
-            if (_reinvestIncome || (0 == _portfolio.Bonds.Count && 0 == _portfolio.Shares.Count))
+            var content = _backtestEngine.PortfolioEngine.Build(date);
+
+            if (_reinvestIncome || 0 == content.Papers.Count)
             {
                 BalancePortfolio(date);
             }
 
-            var portfolioCost = CalcPortfolioCost(date);
-            _logger.Info($"Portfolio cost on {date} is {portfolioCost:C}; free sum: {_portfolio.Sum:C}");
+            var statistic = _backtestEngine.FillStatistic(date);
+            var portfolioCost = statistic.PortfolioCost;
+            _logger.Info($"Portfolio cost on {date} is {portfolioCost:C}; free sum: {content.AvailSum:C}");
 
             return true;
         }
 
-        protected virtual decimal CalcPortfolioCost(DateTime date)
-        {
-            var portfolioCost = 0m;
-
-            foreach (var bond in _portfolio.Bonds)
-            {
-                var count = bond.Count;
-
-                var historyPrice = _history.GetHistoryPriceOnDate(bond.Paper.SecId, date);
-                portfolioCost += count * historyPrice.Price;
-            }
-
-            foreach (var share in _portfolio.Shares)
-            {
-                var count = share.Count;
-
-                var historyPrice = _history.GetHistoryPriceOnDate(share.Paper.SecId, date);
-                portfolioCost += count * historyPrice.Price;
-            }
-
-            return portfolioCost;
-        }
-
-        protected virtual void FindMaxDisbalance(DateTime date, decimal portfolioCost, out string code, out decimal percentDisbalance)
+        protected virtual void FindMaxDisbalance(DateTime date, decimal portfolioCost, PortfolioAggregatedContent content, out string code, out decimal percentDisbalance)
         {
             if (_portfolioPercent.Count() == 1)
             {
@@ -130,23 +107,12 @@ namespace BackTesting.Strategies
             {
                 decimal paperSum = 0;
 
-                var bp = _portfolio.Bonds.SingleOrDefault(x => x.Paper.SecId == p.Item1);
-                if (bp != null)
+                var paperInPortfolio = content.Papers.SingleOrDefault(x => x.Paper.SecId == p.Item1);
+                if (paperInPortfolio != null)
                 {
-                    var historyPrice = _history.GetHistoryPriceOnDate(bp.Paper.SecId, date);
-                    var count = bp.Count;
-                    paperSum = count * historyPrice.Price;
-                }
-                else
-                {
-                    var sp = _portfolio.Shares.SingleOrDefault(x => x.Paper.SecId == p.Item1);
-
-                    if (sp != null)
-                    {
-                        var historyPrice = _history.GetHistoryPriceOnDate(sp.Paper.SecId, date);
-                        var count = sp.Count;
-                        paperSum = count * historyPrice.Price;
-                    }
+                    var historyPrice = _historyRepository.GetHistoryPriceOnDate(paperInPortfolio.Paper.SecId, date);
+                    var count = paperInPortfolio.Count;
+                    paperSum = count * historyPrice.ClosePrice;
                 }
 
                 var actualPercent = 0 == portfolioCost ? 0 : paperSum / portfolioCost * 100;
@@ -168,24 +134,26 @@ namespace BackTesting.Strategies
                 string code;
                 decimal needPercent;
 
-                var portfolioCost = CalcPortfolioCost(date);
+                var content = _backtestEngine.PortfolioEngine.Build(date);
+                var statistic = _backtestEngine.FillStatistic(date);
+                var portfolioCost = statistic.PortfolioCost;
 
-                FindMaxDisbalance(date, portfolioCost, out code, out needPercent);
+                FindMaxDisbalance(date, portfolioCost, content, out code, out needPercent);
 
-                var paperPrice = _history.GetHistoryPriceOnDate(code, date);
-                var price = paperPrice.Price;
+                var priceEntity = _historyRepository.GetHistoryPriceOnDate(code, date);
+                var price = priceEntity.ClosePrice;
 
                 var paper = _papers[code];
-                if (paper.IsBond)
+                if (paper.PaperType == PaperType.Bond)
                 {
-                    var nkd = _bondCalculator.CalculateAci(paper, date);
-                    price += nkd;
+                    var aci = _bondCalculator.CalculateAci(paper as BondPaper, date);
+                    price += aci;
                 }
 
-                var sumToPaper = needPercent == -1 ? _portfolio.Sum : (portfolioCost + _portfolio.Sum) * needPercent / 100;
+                var sumToPaper = needPercent == -1 ? content.AvailSum : (portfolioCost + content.AvailSum) * needPercent / 100;
                 var paperCount = Convert.ToInt64(Math.Floor(sumToPaper / price));
 
-                if (0 == paperCount && _portfolio.Sum > price)
+                if (0 == paperCount && content.AvailSum > price)
                 {
                     paperCount = 1;
                 }
@@ -193,14 +161,13 @@ namespace BackTesting.Strategies
                 if (paperCount > 0)
                 {
                     var totalSum = paperCount * price;
-
-                    if (totalSum > _portfolio.Sum)
+                    if (totalSum > content.AvailSum)
                     {
                         break;
                     }
 
-                    _backtestEngine.BuyPaper(_portfolio, date, paper, paperCount, _bondCalculator);
-                    _logger.Info($"Buy {code}, price {price:C}, count: {paperCount:N0}, total sum: {totalSum:C}; free sum: {_portfolio.Sum:C}");
+                    _logger.Info($"Buy {code}, price {price:C}, count: {paperCount:N0}, total sum: {totalSum:C}; free sum: {content.AvailSum:C}");
+                    _backtestEngine.BuyPaper(date, paper, paperCount);
                 }
                 else
                 {

@@ -75,6 +75,12 @@ namespace RfFondPortfolio.Integration.Moex.Requests
             return paper;
         }
 
+        public static EtfPaper MapEtf(JsonPaperDefinition definition)
+        {
+            var paper = Map<EtfPaper>(definition);
+            return paper;
+        }
+
         public static SharePaper MapShare(JsonPaperDefinition definition, JsonDividends dividends)
         {
             var paper = Map<SharePaper>(definition);

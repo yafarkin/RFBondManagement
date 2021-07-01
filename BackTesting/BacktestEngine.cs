@@ -3,61 +3,66 @@ using System.Collections.Generic;
 using System.Linq;
 using BackTesting.Interfaces;
 using NLog;
-using RfBondManagement.Engine.Common;
-using RfBondManagement.Engine.Interfaces;
+using RfBondManagement.Engine.Calculations;
+using RfFondPortfolio.Common.Dtos;
+using RfFondPortfolio.Common.Interfaces;
 
 namespace BackTesting
 {
     public class BacktestEngine : IBacktestEngine
     {
         protected ILogger _logger;
-        protected IHistoryDatabaseLayer _history;
-        protected IList<SplitInfo> _splits;
-        protected IList<DividendInfo> _dividends;
 
-        public BacktestEngine(ILogger logger, IHistoryDatabaseLayer history)
+        protected PortfolioEngine _portfolioEngine;
+
+        protected IHistoryRepository _historyRepository;
+        protected IPortfolioPaperActionRepository _paperActionRepository;
+        protected IPortfolioMoneyActionRepository _moneyActionRepository;
+
+        public BacktestEngine(
+            ILogger logger,
+            PortfolioEngine portfolioEngine,
+            IHistoryRepository historyRepository,
+            IPortfolioPaperActionRepository paperActionRepository,
+            IPortfolioMoneyActionRepository moneyActionRepository)
         {
             _logger = logger;
-            _history = history;
-            _splits = _history.GetSplitInfo();
-            _dividends = _history.GetDividendInfo();
+            _portfolioEngine = portfolioEngine;
+            _historyRepository = historyRepository;
+
+            _paperActionRepository = paperActionRepository;
+            _moneyActionRepository = moneyActionRepository;
         }
 
-        public Statistic FillStatistic(Portfolio portfolio, DateTime date)
+        public Statistic FillStatistic(DateTime date)
         {
-            var usdRubCourse = _history.GetNearUsdRubCourse(date);
+            //var usdRubCourse = _historyRepository.GetNearUsdRubCourse(date);
 
-            var statistic = new Statistic {Date = date, SumInPortfolio = portfolio.Sum};
+            var statistic = new Statistic {Date = date};
 
             long papersCount = 0;
             decimal portfolioCost = 0;
 
-            foreach (var bond in portfolio.Bonds)
+            var content = _portfolioEngine.Build();
+            foreach (var contentPaper in content.Papers)
             {
-                var count = bond.Count;
-                papersCount += count;
+                papersCount += contentPaper.Count;
+                contentPaper.MarketPrice = _historyRepository.GetNearHistoryPriceOnDate(contentPaper.Paper.SecId, date)?.ClosePrice ?? 0;
 
-                var historyPrice = _history.GetHistoryPriceOnDate(bond.Paper.SecId, date);
-                portfolioCost += count * historyPrice.Price;
+                portfolioCost += contentPaper.Count * contentPaper.MarketPrice;
             }
 
-            foreach (var share in portfolio.Shares)
-            {
-                var count = share.Count;
-                papersCount += count;
-
-                var historyPrice = _history.GetHistoryPriceOnDate(share.Paper.SecId, date);
-                portfolioCost += count * historyPrice.Price;
-            }
-
+            statistic.SumInPortfolio = content.AvailSum;
             statistic.PapersCount = papersCount;
             statistic.PortfolioCost = portfolioCost;
-            statistic.UsdPortfolioCost = statistic.PortfolioCost / usdRubCourse.Course;
+            //statistic.UsdPortfolioCost = statistic.PortfolioCost / usdRubCourse.Course;
 
             return statistic;
         }
 
-        public void Run(Portfolio portfolio, IStrategy strategy, DateTime fromDate, ref DateTime toDate)
+        public PortfolioEngine PortfolioEngine => _portfolioEngine;
+
+        public void Run(IStrategy strategy, DateTime fromDate, ref DateTime toDate)
         {
             var statistics = new List<Statistic>();
 
@@ -69,14 +74,14 @@ namespace BackTesting
                 _logger.Warn($"Shifted start date {fromDate} to nearest date with prices {date}");
             }
 
-            strategy.Init(portfolio, date);
+            strategy.Init(this, _portfolioEngine.Portfolio, date);
 
             if (date != fromDate)
             {
                 _logger.Info($"Start date shifted from {fromDate} to {date}");
             }
 
-            statistics.Add(FillStatistic(portfolio, date));
+            statistics.Add(FillStatistic(date));
 
             while (date <= toDate)
             {
@@ -94,10 +99,22 @@ namespace BackTesting
 
                 do
                 {
-                    ProcessSplitIfNeeds(portfolio, date);
-                    CalculateIncomeCoupons(portfolio, date);
-                    CheckBondCloseDates(portfolio, date);
-                    CalculateIncomeDividends(portfolio, date);
+                    var actions = _portfolioEngine.Automate(date);
+                    foreach (var action in actions)
+                    {
+                        if (action is PortfolioPaperAction p)
+                        {
+                            _paperActionRepository.Insert(p);
+                        }
+                        else if (action is PortfolioMoneyAction m)
+                        {
+                            _moneyActionRepository.Insert(m);
+                        }
+                        else
+                        {
+                            throw new ApplicationException($"Неизвестный тип действия: {action.GetType()}");
+                        }
+                    }
 
                     if (date != nextProcessDate)
                     {
@@ -111,7 +128,7 @@ namespace BackTesting
 
                 var result = strategy.Process(date);
 
-                statistics.Add(FillStatistic(portfolio, date));
+                statistics.Add(FillStatistic(date));
 
                 if (!result)
                 {
@@ -124,355 +141,28 @@ namespace BackTesting
             _logger.Info($"Complete at {date}");
         }
 
-        protected void CalculateIncomeDividends(Portfolio portfolio, DateTime date)
+        public void BuyPaper(DateTime date, AbstractPaper paper, long count)
         {
-            var codes = portfolio.Shares.Select(x => x.Paper.SecId).ToList();
-            var dividendsOnDate = _dividends.Where(x => x.CutOffDate == date && codes.Contains(x.Code)).ToList();
-            if (!dividendsOnDate.Any())
+            var priceEntity = _historyRepository.GetHistoryPriceOnDate(paper.SecId, date);
+            var price = priceEntity?.ClosePrice ?? 0;
+            if (0 == price)
             {
-                return;
+                throw new ApplicationException($"Нет цены для {paper.SecId} на {date}");
             }
 
-            foreach (var dividendInfo in dividendsOnDate)
-            {
-                var code = dividendInfo.Code;
-                var dividend = dividendInfo.Dividend;
-                var dividendTax = dividend * portfolio.Settings.Tax / 100;
-
-                var paper = portfolio.Shares.Single(x => x.Paper.SecId == code);
-
-                var totalSum = (dividend - dividendTax) * paper.Count;
-
-                portfolio.Sum += totalSum;
-
-                portfolio.MoneyMoves.Add(new BaseMoneyMove
-                {
-                    Comment = $"Income dividends from {code}, per one paper is {dividend:C} without tax",
-                    Date = date,
-                    MoneyMoveType = MoneyMoveType.IncomeDividend,
-                    Sum = totalSum
-                });
-
-                _logger.Info($"Income dividends from {code}, value {dividend:C}, tax {dividendTax:C}, total sum: {totalSum:C}");
-            }
+            _portfolioEngine.BuyPaper(paper, count, price, date);
         }
 
-        protected void ProcessSplitIfNeeds(Portfolio portfolio, DateTime date)
+        public void SellPaper(DateTime date, AbstractPaper paper, long count)
         {
-            var splitOnDate = _splits.Where(x => x.Date == date).ToList();
-            if (!splitOnDate.Any())
+            var priceEntity = _historyRepository.GetHistoryPriceOnDate(paper.SecId, date);
+            var price = priceEntity?.ClosePrice ?? 0;
+            if (0 == price)
             {
-                return;
+                throw new ApplicationException($"Нет цены для {paper.SecId} на {date}");
             }
 
-            var splitCodes = splitOnDate.Select(x => x.Code).ToList();
-
-            var bondsInPortfolio = portfolio.Bonds.Where(x => splitCodes.Contains(x.Paper.SecId)).ToList();
-            foreach (var bondInPortfolio in bondsInPortfolio)
-            {
-                var split = splitOnDate.First(x => x.Date == date && x.Code == bondInPortfolio.Paper.SecId);
-
-                _logger.Info($"Perform split for {bondInPortfolio.Paper.SecId}, multiplier {split.Multiplier:N4}");
-
-                foreach (var action in bondInPortfolio.Actions)
-                {
-                    action.Count = Convert.ToInt64(Math.Floor(action.Count * split.Multiplier));
-                    action.Price /= split.Multiplier;
-                }
-            }
-
-            var sharesInPortfolio = portfolio.Shares.Where(x => splitCodes.Contains(x.Paper.SecId)).ToList();
-            foreach (var shareInPortfolio in sharesInPortfolio)
-            {
-                var split = splitOnDate.First(x => x.Date == date && x.Code == shareInPortfolio.Paper.SecId);
-
-                _logger.Info($"Perform split for {shareInPortfolio.Paper.SecId}, multiplier {split.Multiplier:N4}");
-
-                foreach (var action in shareInPortfolio.Actions)
-                {
-                    action.Count = Convert.ToInt64(Math.Floor(action.Count * split.Multiplier));
-                    action.Price /= split.Multiplier;
-                }
-            }
-        }
-
-        public decimal CalculateIncomeCoupons(Portfolio portfolio, DateTime date)
-        {
-            decimal incomeCoupons = 0;
-
-            if (0 == portfolio.Bonds.Count)
-            {
-                return incomeCoupons;
-            }
-
-            foreach (var bondPaperInPortfolio in portfolio.Bonds)
-            {
-                var bond = bondPaperInPortfolio.Paper;
-                var coupon = bond.Coupons.FirstOrDefault(c => c.Date == date);
-                if (null == coupon)
-                {
-                    continue;
-                }
-
-                var nkd = coupon.Value * bondPaperInPortfolio.Count;
-                var tax = nkd * portfolio.Settings.Tax / 100;
-                var totalSum = nkd - tax;
-
-                portfolio.Sum += totalSum;
-                incomeCoupons += totalSum;
-
-                portfolio.MoneyMoves.Add(new BaseMoneyMove
-                {
-                    Comment = $"Income coupons {bond.SecId}, value: {coupon.Value}, tax: {tax:C}, total sum: {totalSum:C}",
-                    Date = date,
-                    MoneyMoveType = MoneyMoveType.IncomeCoupon,
-                    Sum = totalSum,
-                });
-
-                if (tax > 0)
-                {
-                    portfolio.MoneyMoves.Add(new BaseMoneyMove
-                    {
-                        Comment = $"Income coupons {bond.SecId}, tax: {tax:C}",
-                        Date = date,
-                        MoneyMoveType = MoneyMoveType.OutcomeTax,
-                        Sum = -tax,
-                    });
-                }
-            }
-
-            return incomeCoupons;
-        }
-
-        public decimal CheckBondCloseDates(Portfolio portfolio, DateTime date)
-        {
-            decimal incomeClosedBonds = 0;
-
-            if (0 == portfolio.Bonds.Count)
-            {
-                return incomeClosedBonds;
-            }
-
-            foreach (var bondInPortfolio in portfolio.Bonds)
-            {
-                var bond = bondInPortfolio.Paper;
-                if (bond.MatDate == date || bond.OfferDate == date)
-                {
-                    var totalSum = bond.FaceValue * bondInPortfolio.Count;
-
-                    portfolio.Sum += totalSum;
-
-                    bondInPortfolio.Actions.Add(new BondSellAction
-                    {
-                        Nkd = 0,
-                        Date = date,
-                        Paper = bond,
-                        Count = bondInPortfolio.Count,
-                        Price = bond.FaceValue
-                    });
-
-                    portfolio.MoneyMoves.Add(new BaseMoneyMove
-                    {
-                        Comment = $"Close bond {bond.SecId}, count: {bondInPortfolio.Count:N0}, close par: {bond.FaceValue:C}, total sum: {totalSum:C}",
-                        Date = date,
-                        MoneyMoveType = MoneyMoveType.IncomeCloseBond,
-                        Sum = totalSum,
-                    });
-                }
-            }
-
-            return incomeClosedBonds;
-        }
-
-        public void BuyPaper(Portfolio portfolio, DateTime date, BaseStockPaper paper, long count, IBondCalculator bondCalculator)
-        {
-            var historyPrice = _history.GetHistoryPriceOnDate(paper.SecId, date);
-            var price = historyPrice.Price;
-
-            var sum = count * price;
-            var commission = sum * portfolio.Settings.Commissions / 100;
-            var totalSum = sum + commission;
-
-            //if (totalSum > _portfolio.Sum)
-            //{
-            //    throw new ApplicationException("Money is not enough");
-            //}
-
-            portfolio.MoneyMoves.Add(new BaseMoneyMove
-            {
-                Comment = $"Buy {paper.SecId}, count: {count:N0}, price: {price:C}, sum: {sum:C}, commission: {commission:C}, total sum: {totalSum:C}",
-                Date = date,
-                MoneyMoveType = MoneyMoveType.OutcomeBuyOnMarket,
-                Sum = -sum,
-            });
-
-            portfolio.MoneyMoves.Add(new BaseMoneyMove
-            {
-                Comment = $"Buy {paper.SecId}, commission: {commission:C}",
-                Date = date,
-                MoneyMoveType = MoneyMoveType.OutcomeCommission,
-                Sum = -commission,
-            });
-
-            portfolio.Sum -= totalSum;
-
-            if (paper.IsBond)
-            {
-                var bp = portfolio.Bonds.FirstOrDefault(p => p.Paper.SecId == paper.SecId);
-
-                if (null == bp)
-                {
-                    bp = new BaseBondPaperInPortfolio
-                    {
-                        Paper = paper,
-                        Actions = new List<BaseAction>()
-                    };
-
-                    portfolio.Bonds.Add(bp);
-                }
-
-                var nkd = bondCalculator.CalculateAci(paper, date);
-
-                bp.Actions.Add(new BondBuyAction
-                {
-                    Nkd = nkd * count,
-                    Date = date,
-                    Paper = paper,
-                    Count = count,
-                    Price = price
-                });
-            }
-            else if (paper is BaseStockPaper sharePaper)
-            {
-                var sp = portfolio.Shares.FirstOrDefault(p => p.Paper.SecId == paper.SecId);
-
-                if (null == sp)
-                {
-                    sp = new BaseSharePaperInPortfolio
-                    {
-                        Paper = sharePaper,
-                        Actions = new List<BaseAction>()
-                    };
-
-                    portfolio.Shares.Add(sp);
-                }
-
-                sp.Actions.Add(new ShareBuyAction
-                {
-                    Date = date,
-                    Paper = sharePaper,
-                    Count = count,
-                    Price = price
-                });
-            }
-            else
-            {
-                throw new NotSupportedException($"Unknown paper type: {paper.GetType()}");
-            }
-        }
-
-        public void SellPaper(Portfolio portfolio, DateTime date, BaseStockPaper paper, long count, IBondCalculator bondCalculator)
-        {
-            var historyPrice = _history.GetHistoryPriceOnDate(paper.SecId, date);
-            var price = historyPrice.Price;
-
-            bool isShare;
-            if (paper.IsBond)
-            {
-                isShare = false;
-            }
-            else if (paper.IsShare)
-            {
-                isShare = true;
-            }
-            else
-            {
-                throw new NotSupportedException($"Unknown paper type: {paper.Group}");
-            }
-
-            decimal avgPrice;
-            decimal nkd = 0;
-
-            BaseSharePaperInPortfolio shareInPortfolio = null;
-            BaseBondPaperInPortfolio bondInPortfolio = null;
-            if (isShare)
-            {
-                shareInPortfolio = portfolio.Shares.First(p => p.Paper.SecId == paper.SecId);
-                avgPrice = shareInPortfolio.AvgBuySum;
-            }
-            else
-            {
-                bondInPortfolio = portfolio.Bonds.First(p => p.Paper.SecId == paper.SecId);
-                avgPrice = bondInPortfolio.AvgBuySum;
-                nkd = bondCalculator.CalculateAci(bondInPortfolio.Paper, date);
-            }
-
-            var sum = count * price;
-            var commission = sum * portfolio.Settings.Commissions;
-            var tax = price > avgPrice ? 0 : (avgPrice - price) * portfolio.Settings.Tax / 100;
-            var totalSum = sum - commission - tax + nkd;
-
-            portfolio.MoneyMoves.Add(new BaseMoneyMove
-            {
-                Comment = $"Sell {paper.SecId}, count: {count:N0}, price: {price:C}, sum: {sum:C}, commission: {commission:C}, tax: {tax:C}, nkd: {nkd:C}, total sum: {totalSum:C}",
-                Date = date,
-                MoneyMoveType = MoneyMoveType.IncomeSellOnMarket,
-                Sum = sum,
-            });
-
-            if (nkd > 0)
-            {
-                portfolio.MoneyMoves.Add(new BaseMoneyMove
-                {
-                    Comment = $"Sell {paper.SecId}, nkd: {nkd:C}",
-                    Date = date,
-                    MoneyMoveType = MoneyMoveType.IncomeCoupon,
-                    Sum = nkd,
-                });
-            }
-
-            portfolio.MoneyMoves.Add(new BaseMoneyMove
-            {
-                Comment = $"Sell {paper.SecId}, commission: {commission:C}",
-                Date = date,
-                MoneyMoveType = MoneyMoveType.OutcomeCommission,
-                Sum = -commission,
-            });
-
-            if (tax > 0)
-            {
-                portfolio.MoneyMoves.Add(new BaseMoneyMove
-                {
-                    Comment = $"Sell {paper.SecId}, tax: {tax:C}",
-                    Date = date,
-                    MoneyMoveType = MoneyMoveType.OutcomeTax,
-                    Sum = -tax,
-                });
-            }
-
-            portfolio.Sum += totalSum;
-
-            if (!isShare)
-            {
-                bondInPortfolio.Actions.Add(new BondSellAction
-                {
-                    Nkd = nkd * count,
-                    Date = date,
-                    Paper = paper,
-                    Count = count,
-                    Price = price
-                });
-            }
-            else
-            {
-                shareInPortfolio.Actions.Add(new ShareSellAction
-                {
-                    Date = date,
-                    Paper = paper,
-                    Count = count,
-                    Price = price
-                });
-            }
+            _portfolioEngine.SellPaper(paper, count, price, date);
         }
 
         public virtual DateTime FindNearestDateWithPrices(IList<string> codes, DateTime date)
@@ -482,26 +172,25 @@ namespace BackTesting
             {
                 var code = codes[i];
 
-                var paperPrice = _history.GetHistoryPriceOnDate(code, nearDate);
+                var paperPrice = _historyRepository.GetHistoryPriceOnDate(code, nearDate);
                 if (null == paperPrice)
                 {
-                    paperPrice = _history.GetNearHistoryPriceOnDate(code, nearDate);
+                    paperPrice = _historyRepository.GetNearHistoryPriceOnDate(code, nearDate);
                     if (null == paperPrice)
                     {
                         throw new ApplicationException($"Can't find paper price '{code}' after {date}");
                     }
                 }
 
-                if (paperPrice.Date > nearDate)
+                if (paperPrice.When > nearDate)
                 {
-                    _logger.Warn($"Paper {code} shift date from {nearDate} to {paperPrice.Date}");
-                    nearDate = paperPrice.Date;
+                    _logger.Warn($"Paper {code} shift date from {nearDate} to {paperPrice.When}");
+                    nearDate = paperPrice.When;
                     i = -1;
                 }
             }
 
             return nearDate;
         }
-
     }
 }

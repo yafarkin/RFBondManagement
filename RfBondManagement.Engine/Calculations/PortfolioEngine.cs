@@ -23,6 +23,8 @@ namespace RfBondManagement.Engine.Calculations
 
         protected readonly ILogger _logger;
 
+        public Portfolio Portfolio => _portfolio;
+
         public PortfolioEngine(
             Portfolio portfolio,
             IExternalImport import,

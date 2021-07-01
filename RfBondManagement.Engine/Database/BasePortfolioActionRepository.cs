@@ -8,8 +8,6 @@ namespace RfBondManagement.Engine.Database
 {
     public abstract class BasePortfolioActionRepository<T> : BaseSecRepository<T> where T : PortfolioAction
     {
-        protected override string _collectionName => "actions";
-
         protected Guid _portfolioId;
 
         protected BasePortfolioActionRepository(IDatabaseLayer db)
@@ -24,7 +22,7 @@ namespace RfBondManagement.Engine.Database
                 throw new InvalidOperationException("Не задан идентификатор портфеля");
             }
 
-            return _entities.FindAll().Where(x => x.PortfolioId == _portfolioId).OfType<T>().OrderBy(x => x.When);
+            return _entities.FindAll().Where(x => x.PortfolioId == _portfolioId).OrderBy(x => x.When);
         }
 
         public override T Insert(T entity)

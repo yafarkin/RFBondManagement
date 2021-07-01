@@ -48,7 +48,7 @@ namespace RfBondManagement.Engine
             var when = GetLastHistoryDate(secId);
             var paper = await _import.ImportPaper(_logger, secId);
 
-            if (null == when || when < paper.IssueDate)
+            if (null == when || paper.IssueDate < when)
             {
                 when = paper.IssueDate;
             }

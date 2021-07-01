@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using RfBondManagement.Engine.Common;
+using RfFondPortfolio.Common.Dtos;
 
 namespace BackTesting.Interfaces
 {
@@ -10,7 +10,7 @@ namespace BackTesting.Interfaces
 
         string Description { get; }
 
-        void Init(Portfolio portfolio, DateTime date);
+        void Init(IBacktestEngine backtestEngine, Portfolio portfolio, DateTime date);
 
         bool Process(DateTime date);
     }

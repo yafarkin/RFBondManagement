@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using RfBondManagement.Engine.Common;
-using RfBondManagement.Engine.Interfaces;
+using RfBondManagement.Engine.Calculations;
+using RfFondPortfolio.Common.Dtos;
 
 namespace BackTesting.Interfaces
 {
     public interface IBacktestEngine
     {
-        void Run(Portfolio portfolio, IStrategy strategy, DateTime fromDate, ref DateTime toDate);
+        PortfolioEngine PortfolioEngine { get; }
 
-        Statistic FillStatistic(Portfolio portfolio, DateTime date);
+        void Run(IStrategy strategy, DateTime fromDate, ref DateTime toDate);
+
+        Statistic FillStatistic(DateTime date);
         DateTime FindNearestDateWithPrices(IList<string> codes, DateTime date);
 
-        void BuyPaper(Portfolio portfolio, DateTime date, BaseStockPaper paper, long count, IBondCalculator bondCalculator);
-        void SellPaper(Portfolio portfolio, DateTime date, BaseStockPaper paper, long count, IBondCalculator bondCalculator);
+        void BuyPaper(DateTime date, AbstractPaper paper, long count);
+        void SellPaper(DateTime date, AbstractPaper paper, long count);
     }
 }

@@ -35,6 +35,9 @@ namespace RfFondPortfolio.Integration.Moex
                     var couponResponse = await couponRequest.Read();
                     result = StockPaperConverter.MapBond(response, couponResponse);
                     break;
+                case PaperType.Etf:
+                    result = StockPaperConverter.MapEtf(response);
+                    break;
                 default:
                     throw new InvalidOperationException($"Нет конвертора {paperType} для бумаги {secId}");
             }

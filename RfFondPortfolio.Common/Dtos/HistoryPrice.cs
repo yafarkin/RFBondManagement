@@ -34,6 +34,6 @@ namespace RfFondPortfolio.Common.Dtos
 
         public decimal LegalClosePrice { get; set; }
 
-        public string Index => $"{SecId},{When}";
+        public string Index => $"{SecId},{When:yyyyMMdd}";
     }
 }

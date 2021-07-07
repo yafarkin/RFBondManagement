@@ -61,14 +61,9 @@
         OutcomeTax = 104,
 
         /// <summary>
-        /// Отложенный налог (списывается при выводе денег)
+        /// "Грязный" (до уплаты налогов) результат продажи бумаги
         /// </summary>
-        OutcomeDelayTax = 105,
-
-        /// <summary>
-        /// Списание отложенного налога
-        /// </summary>
-        OutcomeDelayTaxPay = 106
+        DraftProfit = 105
     }
 
     public static class MoneyActionTypeHelper
@@ -87,8 +82,7 @@
             MoneyActionType.OutcomeBuyOnMarket,
             MoneyActionType.OutcomeAci,
             MoneyActionType.OutcomeCommission,
-            MoneyActionType.OutcomeTax,
-            MoneyActionType.OutcomeDelayTaxPay
+            MoneyActionType.OutcomeTax
         };
     }
 }

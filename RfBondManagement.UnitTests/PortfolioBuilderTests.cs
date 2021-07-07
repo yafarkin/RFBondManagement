@@ -134,9 +134,46 @@ namespace RfBondManagement.UnitTests
             content.Sums[MoneyActionType.OutcomeBuyOnMarket].ShouldBe(950 + 980);
             content.Sums[MoneyActionType.OutcomeAci].ShouldBe(25 + 25);
             content.Sums[MoneyActionType.OutcomeCommission].ShouldBe(18.969353m);
-            content.Sums[MoneyActionType.OutcomeDelayTax].ShouldBe(16.9m);
+            content.Sums[MoneyActionType.DraftProfit].ShouldBe(130);
             content.AvailSum.ShouldBe(1630.760647m);
             content.Profit.ShouldBe(70);
+        }
+
+
+        [Test]
+        public void PayTaxByDraftProfit_Test()
+        {
+            LastPrice = 105;
+            Portfolio.Commissions = 0.61m;
+            Portfolio.Tax = 13m;
+
+            var when = DateTime.UtcNow.AddDays(-91);
+
+            var paper = BondSample;
+            PortfolioEngine.MoveMoney(2500, MoneyActionType.IncomeExternal, "пополнение счёта", null, when);
+            PortfolioEngine.BuyPaper(paper, 1, 95, when);
+
+            when = DateTime.UtcNow;
+            PortfolioEngine.SellPaper(paper, 1, 108, when);
+
+            var content = PortfolioEngine.Build();
+
+            content.ShouldNotBeNull();
+            content.Sums[MoneyActionType.DraftProfit].ShouldBe(130);
+            content.Sums.ContainsKey(MoneyActionType.OutcomeTax).ShouldBeFalse();
+
+            var moneyActions = PortfolioEngine.PayTaxByDraftProfit(130).ToList();
+            moneyActions.Count.ShouldBe(2);
+            moneyActions[0].MoneyAction.ShouldBe(MoneyActionType.OutcomeTax);
+            moneyActions[0].Sum.ShouldBe(16.9m);
+            moneyActions[1].MoneyAction.ShouldBe(MoneyActionType.DraftProfit);
+            moneyActions[1].Sum.ShouldBe(-130);
+
+            content = PortfolioEngine.Build();
+
+            content.ShouldNotBeNull();
+            content.Sums[MoneyActionType.DraftProfit].ShouldBe(0);
+            content.Sums[MoneyActionType.OutcomeTax].ShouldBe(16.9m);
         }
 
         [Test]
@@ -256,8 +293,8 @@ namespace RfBondManagement.UnitTests
             m[1].Sum.ShouldBe(9.97m);
             m[2].MoneyAction.ShouldBe(MoneyActionType.IncomeSellOnMarket);
             m[2].Sum.ShouldBe(1000);
-            m[3].MoneyAction.ShouldBe(MoneyActionType.OutcomeDelayTax);
-            m[3].Sum.ShouldBe(5);
+            m[3].MoneyAction.ShouldBe(MoneyActionType.DraftProfit);
+            m[3].Sum.ShouldBe(50);
         }
 
         [Test]
@@ -362,7 +399,7 @@ namespace RfBondManagement.UnitTests
             content.Sums[MoneyActionType.IncomeSellOnMarket].ShouldBe(250);
             content.Sums[MoneyActionType.OutcomeBuyOnMarket].ShouldBe(300);
             content.Sums[MoneyActionType.OutcomeCommission].ShouldBe(3.355m);
-            content.Sums[MoneyActionType.OutcomeDelayTax].ShouldBe(19.5m);
+            content.Sums[MoneyActionType.DraftProfit].ShouldBe(150);
 
             content.AvailSum.ShouldBe(946.645m);
             content.Profit.ShouldBe(100);

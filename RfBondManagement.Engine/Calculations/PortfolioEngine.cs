@@ -243,6 +243,27 @@ namespace RfBondManagement.Engine.Calculations
             return content;
         }
 
+        public IEnumerable<PortfolioMoneyAction> PayTaxByDraftProfit(decimal draftSum, string comment = null, DateTime when = default(DateTime))
+        {
+            if (draftSum <= 0)
+            {
+                yield break;
+            }
+
+            if (when == default(DateTime))
+            {
+                when = DateTime.UtcNow;
+            }
+
+            var tax = _portfolio.Tax;
+            var taxSum = draftSum * tax / 100;
+
+            comment ??= $"Оплата налога с суммы {draftSum:N4}, ставка {tax}%, сумма налога: {taxSum:N4}";
+
+            yield return MoveMoney(taxSum, MoneyActionType.OutcomeTax, comment, null, when);
+            yield return MoveMoney(-draftSum, MoneyActionType.DraftProfit, "Уменьшение налогооблагаемой суммы, т.к. налог по ней выплачен", null, when);
+        }
+
         public PortfolioMoneyAction MoveMoney(decimal sum, MoneyActionType moneyActionType, string comment, string secId = null, DateTime when = default(DateTime))
         {
             if (0 == sum)
@@ -430,13 +451,7 @@ namespace RfBondManagement.Engine.Calculations
                 profit = profit / 100 * paper.FaceValue;
             }
 
-            if (profit > 0)
-            {
-                var delayTaxSum = profit * _portfolio.Tax / 100;
-                MoveMoney(delayTaxSum, MoneyActionType.OutcomeDelayTax,
-                    $"Отложенный налог, ставка {_portfolio.Tax:P}; разница покупка/продажа: {profit}", paper.SecId,
-                    when);
-            }
+            MoveMoney(profit, MoneyActionType.DraftProfit, $"Прибыль/убыток по сделке", paper.SecId, when);
 
             var paperAction = new PortfolioPaperAction
                 {

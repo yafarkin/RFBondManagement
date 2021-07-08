@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using RfBondManagement.Engine.Interfaces;
+﻿using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 

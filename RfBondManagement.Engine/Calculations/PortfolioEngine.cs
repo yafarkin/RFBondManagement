@@ -310,7 +310,7 @@ namespace RfBondManagement.Engine.Calculations
             }
 
             var commission = sum * _portfolio.Commissions / 100;
-            MoveMoney(commission, MoneyActionType.OutcomeCommission, $"Списание комиссии, ставка {_portfolio.Commissions:P}", paper.SecId, when);
+            MoveMoney(commission, MoneyActionType.OutcomeCommission, $"Списание комиссии, ставка {_portfolio.Commissions/100:P}", paper.SecId, when);
 
             var paperAction = new PortfolioPaperAction
             {
@@ -382,7 +382,7 @@ namespace RfBondManagement.Engine.Calculations
             }
 
             var commission = sum * _portfolio.Commissions / 100;
-            MoveMoney(commission, MoneyActionType.OutcomeCommission, $"Списание комиссии, ставка {_portfolio.Commissions:P}", paper.SecId, when);
+            MoveMoney(commission, MoneyActionType.OutcomeCommission, $"Списание комиссии, ставка {_portfolio.Commissions/100:P}", paper.SecId, when);
 
             var today = DateTime.UtcNow.Date;
             var threeYears = new DateTime(2014, 1, 1);

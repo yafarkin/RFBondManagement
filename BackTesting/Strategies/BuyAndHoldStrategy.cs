@@ -17,6 +17,12 @@ namespace BackTesting.Strategies
         protected decimal _initialSum;
         protected decimal _monthlyIncome;
 
+        /// <summary>
+        /// Use Value Averaging (VA) method instead Dollar Cost Avergaing (DCA)
+        /// </summary>
+        /// <remarks>see https://investprofit.info/value-averaging/</remarks>
+        protected bool _useVaMethod;
+
         protected DateTime _nextMonthlyIncome;
 
         protected Dictionary<string, AbstractPaper> _papers;
@@ -33,8 +39,14 @@ namespace BackTesting.Strategies
             _paperRepository = paperRepository;
         }
 
-        public Portfolio Configure(bool reinvestIncome, decimal initialSum, decimal monthlyIncome, IEnumerable<Tuple<string, decimal>> portfolioPercent, decimal tax, decimal commission)
+        public Portfolio Configure(bool useVaMethod, bool reinvestIncome, decimal initialSum, decimal monthlyIncome, IEnumerable<Tuple<string, decimal>> portfolioPercent, decimal tax, decimal commission)
         {
+            if (useVaMethod)
+            {
+                throw new NotImplementedException();
+            }
+
+            _useVaMethod = useVaMethod;
             _reinvestIncome = reinvestIncome;
             _portfolioPercent = portfolioPercent;
             _initialSum = initialSum;

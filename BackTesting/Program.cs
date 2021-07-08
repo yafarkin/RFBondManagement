@@ -7,8 +7,6 @@ using BackTesting.Interfaces;
 using BackTesting.Strategies;
 using NLog;
 using RfBondManagement.Engine;
-using RfBondManagement.Engine.Common;
-using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 using Unity;
@@ -69,8 +67,9 @@ namespace BackTesting
                 }
             }
 
+            var useVa = false;
             var strategy = container.Resolve<BuyAndHoldStrategy>();
-            var portfolio = strategy.Configure(true, initialSum, monthlyIncome, portfolioPercent, 13, 0.061m);
+            var portfolio = strategy.Configure(useVa, true, initialSum, monthlyIncome, portfolioPercent, 13, 0.061m);
 
             var backtest = container.Resolve<IBacktestEngine>(new ParameterOverride("portfolio", portfolio));
             backtest.Run(strategy, startDate, ref endDate);
@@ -122,9 +121,6 @@ namespace BackTesting
                 var part = totalSum / statistic.PortfolioCost;
                 logger.Info($"Paper {p.Paper.SecId}; count: {p.Count}; part in portfolio: {part:P}; avg price: {p.AveragePrice:C} (market: {currPrice.ClosePrice:C}); sum: {p.Count * p.AveragePrice:C} (market: {totalSum:C})");
             }
-
-            var db = container.Resolve<IDatabaseLayer>();
-            db.Dispose();
         }
     }
 }

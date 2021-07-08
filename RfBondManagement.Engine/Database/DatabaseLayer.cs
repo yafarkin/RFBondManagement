@@ -12,6 +12,11 @@ namespace RfBondManagement.Engine.Database
             Database = new LiteDatabase("portfolios.db");
         }
 
+        ~DatabaseLayer()
+        {
+            Dispose();
+        }
+
         public void Dispose()
         {
             Database?.Dispose();

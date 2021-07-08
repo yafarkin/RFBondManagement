@@ -145,7 +145,9 @@ namespace BackTesting
                         }
 
                         csv.WriteField(Math.Round(s.PortfolioCost, 2));
-                        csv.WriteField(0 == incomeSum ? string.Empty : Math.Round((s.Cash + s.PortfolioCost) / incomeSum * 100, 2).ToString());
+                        csv.WriteField(0 == incomeSum
+                            ? string.Empty
+                            : Math.Round((s.Cash + s.PortfolioCost) / incomeSum * 100 - 100, 2).ToString());
                         csv.WriteField(Math.Round(s.Cash, 2));
 
                         foreach (var moneyType in moneyTypes)

@@ -41,11 +41,6 @@ namespace BackTesting.Strategies
 
         public Portfolio Configure(bool useVaMethod, bool reinvestIncome, decimal initialSum, decimal monthlyIncome, IEnumerable<Tuple<string, decimal>> portfolioPercent, decimal tax, decimal commission)
         {
-            if (useVaMethod)
-            {
-                throw new NotImplementedException();
-            }
-
             _useVaMethod = useVaMethod;
             _reinvestIncome = reinvestIncome;
             _portfolioPercent = portfolioPercent;
@@ -85,7 +80,7 @@ namespace BackTesting.Strategies
             {
                 _nextMonthlyIncome = _nextMonthlyIncome.AddMonths(1);
 
-                _backtestEngine.PortfolioEngine.MoveMoney(_monthlyIncome, MoneyActionType.IncomeExternal, "Ежемесячный взнос", null, date);
+                _backtestEngine.PortfolioEngine.MoveMoney(_monthlyIncome, MoneyActionType.IncomeExternal, "Ежемесячное пополнение", null, date);
                 _logger.Info($"Monthly income, {_monthlyIncome:C}");
             }
 
@@ -103,11 +98,11 @@ namespace BackTesting.Strategies
             return true;
         }
 
-        protected virtual void FindMaxDisbalance(DateTime date, decimal portfolioCost, PortfolioAggregatedContent content, out string code, out decimal percentDisbalance)
+        protected virtual void FindMaxDisbalance(DateTime date, decimal portfolioCost, PortfolioAggregatedContent content, out string secId, out decimal percentDisbalance)
         {
             if (_portfolioPercent.Count() == 1)
             {
-                code = _portfolioPercent.First().Item1;
+                secId = _portfolioPercent.First().Item1;
                 percentDisbalance = -1;
 
                 return;
@@ -135,7 +130,7 @@ namespace BackTesting.Strategies
 
             var sl = l.OrderByDescending(x => x.Item2 - x.Item3).First();
 
-            code = sl.Item1;
+            secId = sl.Item1;
             percentDisbalance = Math.Abs(sl.Item2 - sl.Item3);
         }
 
@@ -143,27 +138,52 @@ namespace BackTesting.Strategies
         {
             while (true)
             {
-                string code;
+                string secId;
                 decimal needPercent;
 
                 var content = _backtestEngine.PortfolioEngine.Build(date);
                 var statistic = _backtestEngine.FillStatistic(date);
                 var portfolioCost = statistic.PortfolioCost;
 
-                FindMaxDisbalance(date, portfolioCost, content, out code, out needPercent);
+                FindMaxDisbalance(date, portfolioCost, content, out secId, out needPercent);
 
-                var priceEntity = _historyRepository.GetHistoryPriceOnDate(code, date);
+                var priceEntity = _historyRepository.GetHistoryPriceOnDate(secId, date);
                 var price = priceEntity.ClosePrice;
 
-                var paper = _papers[code];
+                var paper = _papers[secId];
                 if (paper.PaperType == PaperType.Bond)
                 {
                     var aci = _bondCalculator.CalculateAci(paper as BondPaper, date);
                     price += aci;
                 }
 
+                long paperCount = 0;
                 var sumToPaper = needPercent == -1 ? content.AvailSum : (portfolioCost + content.AvailSum) * needPercent / 100;
-                var paperCount = Convert.ToInt64(Math.Floor(sumToPaper / price));
+
+                if (_useVaMethod)
+                {
+                    var incomeTotal = content.TotalIncome;
+
+                    var paperInPortfolio = content.Papers.SingleOrDefault(p => p.Paper.SecId == secId);
+                    if (null == paperInPortfolio)
+                    {
+                        paperCount = Convert.ToInt64(Math.Floor(sumToPaper / price));
+                    }
+                    else
+                    {
+                        var alreadyExist = paperInPortfolio.Count;
+
+                        paperCount = Convert.ToInt64((incomeTotal - price * alreadyExist) / price);
+                        if (paperCount <= 0)
+                        {
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    paperCount = Convert.ToInt64(Math.Floor(sumToPaper / price));
+                }
 
                 if (0 == paperCount && content.AvailSum > price)
                 {
@@ -178,7 +198,7 @@ namespace BackTesting.Strategies
                         break;
                     }
 
-                    _logger.Info($"Buy {code}, price {price:C}, count: {paperCount:N0}, total sum: {totalSum:C}; free sum: {content.AvailSum:C}");
+                    _logger.Info($"Buy {secId}, price {price:C}, count: {paperCount:N0}, total sum: {totalSum:C}; free sum: {content.AvailSum:C}");
                     _backtestEngine.BuyPaper(date, paper, paperCount);
                 }
                 else

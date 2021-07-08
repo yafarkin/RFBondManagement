@@ -16,19 +16,14 @@ namespace RfFondPortfolio.Common.Dtos
         /// </summary>
         public IReadOnlyList<IPaperInPortfolio<AbstractPaper>> Papers { get; set; }
 
+        public decimal TotalIncome => Sums.Where(s => MoneyActionTypeHelper.IncomeTypes.Contains(s.Key)).Sum(s => s.Value);
+
+        public decimal TotalOutcome => Sums.Where(s => MoneyActionTypeHelper.OutcomeTypes.Contains(s.Key)).Sum(s => s.Value);
+
         /// <summary>
         /// Доступный кэш
         /// </summary>
-        public decimal AvailSum
-        {
-            get
-            {
-                var incomeSum = Sums.Where(s => MoneyActionTypeHelper.IncomeTypes.Contains(s.Key)).Sum(s => s.Value);
-                var outcomeSum = Sums.Where(s => MoneyActionTypeHelper.OutcomeTypes.Contains(s.Key)).Sum(s => s.Value);
-                var diff = incomeSum - outcomeSum;
-                return diff;
-            }
-        }
+        public decimal AvailSum => TotalIncome - TotalOutcome;
 
         /// <summary>
         /// Разница между покупкой и текущей ценой портфеля

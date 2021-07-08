@@ -7,6 +7,7 @@ using BackTesting.Interfaces;
 using BackTesting.Strategies;
 using NLog;
 using RfBondManagement.Engine;
+using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 using Unity;
@@ -121,6 +122,9 @@ namespace BackTesting
                 var part = totalSum / statistic.PortfolioCost;
                 logger.Info($"Paper {p.Paper.SecId}; count: {p.Count}; part in portfolio: {part:P}; avg price: {p.AveragePrice:C} (market: {currPrice.ClosePrice:C}); sum: {p.Count * p.AveragePrice:C} (market: {totalSum:C})");
             }
+
+            var db = container.Resolve<IDatabaseLayer>();
+            db.Dispose();
         }
     }
 }

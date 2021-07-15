@@ -48,7 +48,7 @@ namespace RfBondManagement.WinForm.Forms
             foreach (var paper in _papers)
             {
                 var itemText = new[] {paper.SecId, paper.Isin, paper.Type, paper.Name};
-                var lvi = new ListViewItem(itemText) { Tag = paper };
+                var lvi = new ListViewItem(itemText) {Tag = paper};
                 lvPapers.Items.Add(lvi);
 
                 if (paper.Id == selectedPaper?.Id)

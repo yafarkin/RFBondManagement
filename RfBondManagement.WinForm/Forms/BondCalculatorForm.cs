@@ -6,6 +6,7 @@ using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
+using Unity;
 
 namespace RfBondManagement.WinForm.Forms
 {
@@ -13,19 +14,17 @@ namespace RfBondManagement.WinForm.Forms
     {
         public BondInPortfolio SelectedPaper;
 
-        protected readonly IPortfolioRepository _portfolioRepository;
-        protected readonly IPaperRepository _paperRepository;
-        protected readonly IBondCalculator _calculator;
+        [Dependency]
+        public IPortfolioRepository PortfolioRepository { get; set; }
 
-        public BondCalculatorForm(IPortfolioRepository portfolioRepository, IPaperRepository paperRepository, IBondCalculator calculator)
+        [Dependency]
+        public IBondCalculator BondCalculator { get; set; }
+
+        public BondCalculatorForm(IUnityContainer container)
         {
-            _portfolioRepository = portfolioRepository;
-            _paperRepository = paperRepository;
-            _calculator = calculator;
-
             InitializeComponent();
 
-            psBond.InitDI(_paperRepository);
+            container.BuildUp(psBond);
             psBond.WhereFilter = p => p.PaperType == PaperType.Bond;
         }
 
@@ -41,7 +40,7 @@ namespace RfBondManagement.WinForm.Forms
         {
             cbUntilMaturityDate.Checked = true;
 
-            var portfolio = _portfolioRepository.Get().FirstOrDefault() ?? new Portfolio();
+            var portfolio = PortfolioRepository.Get().FirstOrDefault() ?? new Portfolio();
             tbComission.Text = portfolio.Commissions.ToString("F3");
             tbTax.Text = portfolio.Tax.ToString("F");
             tbInflation.Text = 0.ToString("F");
@@ -166,7 +165,7 @@ namespace RfBondManagement.WinForm.Forms
                 Tax = tax
             };
 
-            _calculator.CalculateIncome(bii, portfolio, untilMaturity ? obj.MatDate : dtpSellDate.Value);
+            BondCalculator.CalculateIncome(bii, portfolio, untilMaturity ? obj.MatDate : dtpSellDate.Value);
 
             lblRealIncomePercent.Text = (bii.RealIncomePercent/100m).ToString("P");
             lblExpectedIncome.Text = bii.ExpectedIncome.ToString("C");

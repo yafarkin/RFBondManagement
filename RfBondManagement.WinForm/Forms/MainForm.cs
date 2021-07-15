@@ -14,18 +14,19 @@ namespace RfBondManagement.WinForm.Forms
 {
     public partial class MainForm : Form
     {
-        protected ILogger _logger;
-        protected IPortfolioRepository _portfolioRepository;
-        protected IUnityContainer _container;
+        [Dependency]
+        public ILogger Logger { get; set; }
+
+        [Dependency]
+        public IPortfolioRepository PortfolioRepository { get; set; }
+
+        [Dependency]
+        public IUnityContainer Container { get; set; }
 
         protected Portfolio _portfolio;
 
-        public MainForm(ILogger logger, IPortfolioRepository portfolioRepository, IUnityContainer container)
+        public MainForm()
         {
-            _logger = logger;
-            _container = container;
-            _portfolioRepository = portfolioRepository;
-
             InitializeComponent();
         }
 
@@ -36,22 +37,22 @@ namespace RfBondManagement.WinForm.Forms
 
         private void menuItemGeneralSettings_Click(object sender, EventArgs e)
         {
-            using (var f = _container.Resolve<SettingsForm>())
+            using (var f = Container.Resolve<SettingsForm>())
             {
                 f.Portfolio = _portfolio;
                 if (f.ShowDialog() == DialogResult.OK)
                 {
                     _portfolio = f.Portfolio;
-                    _portfolioRepository.Update(_portfolio);
+                    PortfolioRepository.Update(_portfolio);
                 }
             }
         }
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
-            _portfolio = _portfolioRepository.Get().FirstOrDefault() ?? new Portfolio {Id = Guid.NewGuid()};
+            _portfolio = PortfolioRepository.Get().FirstOrDefault() ?? new Portfolio {Id = Guid.NewGuid()};
 
-            var engine = _container.Resolve<PortfolioEngine>(new ParameterOverride("portfolio", _portfolio));
+            var engine = Container.Resolve<PortfolioEngine>(new ParameterOverride("portfolio", _portfolio));
             var content = engine.Build();
             await engine.FillPrice(content);
 
@@ -66,7 +67,7 @@ namespace RfBondManagement.WinForm.Forms
                     var bondPaper = paper as BondPaper;
                     var bondInPortfolio = paperInPortfolio as BondInPortfolio;
 
-                    var calc = _container.Resolve<IBondCalculator>();
+                    var calc = Container.Resolve<IBondCalculator>();
                     var biiToClose = new BondIncomeInfo
                     {
                         BondInPortfolio = bondInPortfolio
@@ -101,7 +102,7 @@ namespace RfBondManagement.WinForm.Forms
 
         private void menuItemBondCalculator_Click(object sender, EventArgs e)
         {
-            using (var f = _container.Resolve<BondCalculatorForm>())
+            using (var f = Container.Resolve<BondCalculatorForm>())
             {
                 f.ShowDialog();
             }
@@ -109,7 +110,7 @@ namespace RfBondManagement.WinForm.Forms
 
         private void menuItemPapers_Click(object sender, EventArgs e)
         {
-            using (var f = _container.Resolve<PaperListForm>())
+            using (var f = Container.Resolve<PaperListForm>())
             {
                 f.ShowDialog();
             }
@@ -117,7 +118,7 @@ namespace RfBondManagement.WinForm.Forms
 
         private void btnAddPaper_Click(object sender, EventArgs e)
         {
-            using (var f = _container.Resolve<PaperActionForm>())
+            using (var f = Container.Resolve<PaperActionForm>())
             {
                 f.ShowDialog();
             }

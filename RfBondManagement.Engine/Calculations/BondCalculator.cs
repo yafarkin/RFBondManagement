@@ -259,7 +259,7 @@ namespace RfBondManagement.Engine.Calculations
             ContinueCalculateIncome(bondIncomeInfo, buyAction, portfolio, nextDate, toDate, ref balance);
         }
 
-        protected BondCoupon NearFutureCoupon(BondPaper bond, DateTime toDate)
+        public BondCoupon NearFutureCoupon(BondPaper bond, DateTime toDate)
         {
             var coupons = bond.Coupons.Where(c => c.CouponDate > toDate).ToList();
 

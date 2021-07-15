@@ -11,5 +11,7 @@ namespace RfBondManagement.Engine.Interfaces
         void CalculateIncome(BondIncomeInfo bondIncomeInfo, Portfolio portfolio, DateTime toDate);
 
         decimal CalculateAci(BondPaper paper, DateTime toDate);
+
+        BondCoupon NearFutureCoupon(BondPaper bond, DateTime toDate);
     }
 }

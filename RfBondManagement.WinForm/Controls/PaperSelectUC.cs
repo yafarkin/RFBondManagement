@@ -5,12 +5,15 @@ using System.Linq;
 using System.Windows.Forms;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
+using Unity;
 
 namespace RfBondManagement.WinForm.Controls
 {
     public partial class PaperSelectUC : UserControl
     {
-        protected IPaperRepository _paperRepository;
+        [Dependency]
+        public IPaperRepository PaperRepository { get; set; }
+
         protected IEnumerable<AbstractPaper> _papers;
 
         protected const int TAKE_COUNT = 25;
@@ -27,14 +30,9 @@ namespace RfBondManagement.WinForm.Controls
             InitializeComponent();
         }
 
-        public void InitDI(IPaperRepository paperRepository)
-        {
-            _paperRepository = paperRepository;
-        }
-
         private void PaperSelectUC_Load(object sender, EventArgs e)
         {
-            if (null == _paperRepository)
+            if (null == PaperRepository)
             {
                 return;
             }
@@ -44,7 +42,7 @@ namespace RfBondManagement.WinForm.Controls
             cbbPaper.DisplayMember = "Name";
             cbbPaper.ValueMember = "Code";
 
-            _papers = _paperRepository.Get();
+            _papers = PaperRepository.Get();
             if (WhereFilter != null)
             {
                 _papers = _papers.Where(WhereFilter);
@@ -55,7 +53,7 @@ namespace RfBondManagement.WinForm.Controls
 
         private void cbPaper_TextChanged(object sender, EventArgs e)
         {
-            if (null == _paperRepository)
+            if (null == PaperRepository)
             {
                 return;
             }

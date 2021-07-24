@@ -50,6 +50,8 @@ namespace RfBondManagement.WinForm.Forms
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
+            Container.BuildUp(watchList);
+
             _portfolio = PortfolioRepository.Get().FirstOrDefault() ?? new Portfolio {Id = Guid.NewGuid()};
 
             var engine = Container.Resolve<PortfolioEngine>(new ParameterOverride("portfolio", _portfolio));
@@ -58,46 +60,46 @@ namespace RfBondManagement.WinForm.Forms
 
             var papers = content.Papers;
 
-            lvPapers.Items.Clear();
-            foreach (var paperInPortfolio in papers)
-            {
-                var paper = paperInPortfolio.Paper;
-                if (paper.PaperType == PaperType.Bond)
-                {
-                    var bondPaper = paper as BondPaper;
-                    var bondInPortfolio = paperInPortfolio as BondInPortfolio;
+            //lvPapers.Items.Clear();
+            //foreach (var paperInPortfolio in papers)
+            //{
+            //    var paper = paperInPortfolio.Paper;
+            //    if (paper.PaperType == PaperType.Bond)
+            //    {
+            //        var bondPaper = paper as BondPaper;
+            //        var bondInPortfolio = paperInPortfolio as BondInPortfolio;
 
-                    var calc = Container.Resolve<IBondCalculator>();
-                    var biiToClose = new BondIncomeInfo
-                    {
-                        BondInPortfolio = bondInPortfolio
-                    };
+            //        var calc = Container.Resolve<IBondCalculator>();
+            //        var biiToClose = new BondIncomeInfo
+            //        {
+            //            BondInPortfolio = bondInPortfolio
+            //        };
 
-                    var biiToToday = new BondIncomeInfo
-                    {
-                        BondInPortfolio = bondInPortfolio,
-                        SellPrice = paperInPortfolio.MarketPrice
-                    };
+            //        var biiToToday = new BondIncomeInfo
+            //        {
+            //            BondInPortfolio = bondInPortfolio,
+            //            SellPrice = paperInPortfolio.MarketPrice
+            //        };
 
-                    calc.CalculateIncome(biiToClose, _portfolio, bondPaper.MatDate);
-                    calc.CalculateIncome(biiToToday, _portfolio, DateTime.UtcNow.Date.AddDays(30));
+            //        calc.CalculateIncome(biiToClose, _portfolio, bondPaper.MatDate);
+            //        calc.CalculateIncome(biiToToday, _portfolio, DateTime.UtcNow.Date.AddDays(30));
 
-                    var lvi = new ListViewItem(new[]
-                    {
-                        paper.Name,
-                        paper.FaceValue.ToString("C"),
-                        paperInPortfolio.Count.ToString("### ### ###"),
-                        biiToClose.BalanceOnSell.ToString("C"),
-                        biiToClose.ExpectedIncome.ToString("C"),
-                        (biiToClose.RealIncomePercent / 100).ToString("P"),
-                        biiToClose.BreakevenDate.ToShortDateString(),
-                        (bondPaper.MatDate - DateTime.UtcNow.Date).Days.ToString(),
-                    });
-                    lvPapers.Items.Add(lvi);
-                }
-            }
+            //        var lvi = new ListViewItem(new[]
+            //        {
+            //            paper.Name,
+            //            paper.FaceValue.ToString("C"),
+            //            paperInPortfolio.Count.ToString("### ### ###"),
+            //            biiToClose.BalanceOnSell.ToString("C"),
+            //            biiToClose.ExpectedIncome.ToString("C"),
+            //            (biiToClose.RealIncomePercent / 100).ToString("P"),
+            //            biiToClose.BreakevenDate.ToShortDateString(),
+            //            (bondPaper.MatDate - DateTime.UtcNow.Date).Days.ToString(),
+            //        });
+            //        lvPapers.Items.Add(lvi);
+            //    }
+            //}
 
-            lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+            //lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
         }
 
         private void menuItemBondCalculator_Click(object sender, EventArgs e)
@@ -122,6 +124,11 @@ namespace RfBondManagement.WinForm.Forms
             {
                 f.ShowDialog();
             }
+        }
+
+        private void tpWatchList_Enter(object sender, EventArgs e)
+        {
+            watchList.DataBind();
         }
     }
 }

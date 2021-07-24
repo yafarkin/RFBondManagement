@@ -73,5 +73,10 @@ namespace RfFondPortfolio.Common.Dtos
         /// Основная доска
         /// </summary>
         public PaperBoard PrimaryBoard => Boards?.Single(b => b.IsPrimary);
+
+        /// <summary>
+        /// Бумага в списке избранного
+        /// </summary>
+        public bool IsFavorite { get; set; }
     }
 }

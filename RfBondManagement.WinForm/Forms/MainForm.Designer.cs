@@ -40,24 +40,19 @@ namespace RfBondManagement.WinForm.Forms
             this.menuItemPapers = new System.Windows.Forms.ToolStripMenuItem();
             this.pnlPaperDetails = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
-            this.pnlPapers = new System.Windows.Forms.Panel();
-            this.lvPapers = new System.Windows.Forms.ListView();
-            this.chPaperName = new System.Windows.Forms.ColumnHeader();
-            this.chBondPar = new System.Windows.Forms.ColumnHeader();
-            this.chCount = new System.Windows.Forms.ColumnHeader();
-            this.chSummToClose = new System.Windows.Forms.ColumnHeader();
-            this.chIncome = new System.Windows.Forms.ColumnHeader();
-            this.chPercent = new System.Windows.Forms.ColumnHeader();
-            this.chPositiveDate = new System.Windows.Forms.ColumnHeader();
-            this.chDaysToClose = new System.Windows.Forms.ColumnHeader();
+            this.pnlData = new System.Windows.Forms.Panel();
+            this.tcData = new System.Windows.Forms.TabControl();
+            this.tpWatchList = new System.Windows.Forms.TabPage();
+            this.watchList = new RfBondManagement.WinForm.Controls.WatchListUC();
             this.pnlActions = new System.Windows.Forms.Panel();
             this.btnDeletePaper = new System.Windows.Forms.Button();
             this.btnEditPaper = new System.Windows.Forms.Button();
             this.btnAddPaper = new System.Windows.Forms.Button();
-            this.lblPaperList = new System.Windows.Forms.Label();
             this.mainMenu.SuspendLayout();
             this.pnlPaperDetails.SuspendLayout();
-            this.pnlPapers.SuspendLayout();
+            this.pnlData.SuspendLayout();
+            this.tcData.SuspendLayout();
+            this.tpWatchList.SuspendLayout();
             this.pnlActions.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -147,84 +142,51 @@ namespace RfBondManagement.WinForm.Forms
             this.label1.TabIndex = 0;
             this.label1.Text = "Детали по выбранной бумаге";
             // 
-            // pnlPapers
+            // pnlData
             // 
-            this.pnlPapers.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pnlPapers.Controls.Add(this.lvPapers);
-            this.pnlPapers.Controls.Add(this.pnlActions);
-            this.pnlPapers.Controls.Add(this.lblPaperList);
-            this.pnlPapers.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlPapers.Location = new System.Drawing.Point(0, 24);
-            this.pnlPapers.Name = "pnlPapers";
-            this.pnlPapers.Size = new System.Drawing.Size(574, 502);
-            this.pnlPapers.TabIndex = 4;
+            this.pnlData.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pnlData.Controls.Add(this.tcData);
+            this.pnlData.Controls.Add(this.pnlActions);
+            this.pnlData.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlData.Location = new System.Drawing.Point(0, 24);
+            this.pnlData.Name = "pnlData";
+            this.pnlData.Size = new System.Drawing.Size(574, 502);
+            this.pnlData.TabIndex = 4;
             // 
-            // lvPapers
+            // tcData
             // 
-            this.lvPapers.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lvPapers.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lvPapers.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.chPaperName,
-            this.chBondPar,
-            this.chCount,
-            this.chSummToClose,
-            this.chIncome,
-            this.chPercent,
-            this.chPositiveDate,
-            this.chDaysToClose});
-            this.lvPapers.FullRowSelect = true;
-            this.lvPapers.GridLines = true;
-            this.lvPapers.HideSelection = false;
-            this.lvPapers.Location = new System.Drawing.Point(12, 62);
-            this.lvPapers.MultiSelect = false;
-            this.lvPapers.Name = "lvPapers";
-            this.lvPapers.ShowGroups = false;
-            this.lvPapers.Size = new System.Drawing.Size(545, 420);
-            this.lvPapers.TabIndex = 4;
-            this.lvPapers.UseCompatibleStateImageBehavior = false;
-            this.lvPapers.View = System.Windows.Forms.View.Details;
+            this.tcData.Controls.Add(this.tpWatchList);
+            this.tcData.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tcData.Location = new System.Drawing.Point(0, 41);
+            this.tcData.Name = "tcData";
+            this.tcData.SelectedIndex = 0;
+            this.tcData.Size = new System.Drawing.Size(572, 459);
+            this.tcData.TabIndex = 4;
             // 
-            // chPaperName
+            // tpWatchList
             // 
-            this.chPaperName.Name = "chPaperName";
-            this.chPaperName.Text = "Бумага";
+            this.tpWatchList.Controls.Add(this.watchList);
+            this.tpWatchList.Location = new System.Drawing.Point(4, 24);
+            this.tpWatchList.Name = "tpWatchList";
+            this.tpWatchList.Padding = new System.Windows.Forms.Padding(3);
+            this.tpWatchList.Size = new System.Drawing.Size(564, 431);
+            this.tpWatchList.TabIndex = 0;
+            this.tpWatchList.Text = "Watch list";
+            this.tpWatchList.UseVisualStyleBackColor = true;
+            this.tpWatchList.Enter += new System.EventHandler(this.tpWatchList_Enter);
             // 
-            // chBondPar
+            // watchList
             // 
-            this.chBondPar.Name = "chBondPar";
-            this.chBondPar.Text = "Номинал";
-            // 
-            // chCount
-            // 
-            this.chCount.Name = "chCount";
-            this.chCount.Text = "Количество";
-            // 
-            // chSummToClose
-            // 
-            this.chSummToClose.Name = "chSummToClose";
-            this.chSummToClose.Text = "Сумма к закр.";
-            // 
-            // chIncome
-            // 
-            this.chIncome.Name = "chIncome";
-            this.chIncome.Text = "Доход";
-            // 
-            // chPercent
-            // 
-            this.chPercent.Name = "chPercent";
-            this.chPercent.Text = "% доход";
-            // 
-            // chPositiveDate
-            // 
-            this.chPositiveDate.Name = "chPositiveDate";
-            this.chPositiveDate.Text = "В плюс после";
-            // 
-            // chDaysToClose
-            // 
-            this.chDaysToClose.Name = "chDaysToClose";
-            this.chDaysToClose.Text = "Дней до закрытия";
+            this.watchList.Container = null;
+            this.watchList.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.watchList.ExternalImport = null;
+            this.watchList.HistoryEngine = null;
+            this.watchList.Location = new System.Drawing.Point(3, 3);
+            this.watchList.Logger = null;
+            this.watchList.Name = "watchList";
+            this.watchList.PaperRepository = null;
+            this.watchList.Size = new System.Drawing.Size(558, 425);
+            this.watchList.TabIndex = 0;
             // 
             // pnlActions
             // 
@@ -268,21 +230,12 @@ namespace RfBondManagement.WinForm.Forms
             this.btnAddPaper.UseVisualStyleBackColor = true;
             this.btnAddPaper.Click += new System.EventHandler(this.btnAddPaper_Click);
             // 
-            // lblPaperList
-            // 
-            this.lblPaperList.AutoSize = true;
-            this.lblPaperList.Location = new System.Drawing.Point(12, 44);
-            this.lblPaperList.Name = "lblPaperList";
-            this.lblPaperList.Size = new System.Drawing.Size(84, 15);
-            this.lblPaperList.TabIndex = 0;
-            this.lblPaperList.Text = "Список бумаг";
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(844, 526);
-            this.Controls.Add(this.pnlPapers);
+            this.Controls.Add(this.pnlData);
             this.Controls.Add(this.pnlPaperDetails);
             this.Controls.Add(this.mainMenu);
             this.MainMenuStrip = this.mainMenu;
@@ -293,8 +246,9 @@ namespace RfBondManagement.WinForm.Forms
             this.mainMenu.PerformLayout();
             this.pnlPaperDetails.ResumeLayout(false);
             this.pnlPaperDetails.PerformLayout();
-            this.pnlPapers.ResumeLayout(false);
-            this.pnlPapers.PerformLayout();
+            this.pnlData.ResumeLayout(false);
+            this.tcData.ResumeLayout(false);
+            this.tpWatchList.ResumeLayout(false);
             this.pnlActions.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -309,26 +263,19 @@ namespace RfBondManagement.WinForm.Forms
         private System.Windows.Forms.ToolStripMenuItem menuItemSettings;
         private System.Windows.Forms.ToolStripMenuItem menuItemGeneralSettings;
         private System.Windows.Forms.Panel pnlPaperDetails;
-        private System.Windows.Forms.Panel pnlPapers;
+        private System.Windows.Forms.Panel pnlData;
         private System.Windows.Forms.Panel pnlActions;
-        private System.Windows.Forms.Label lblPaperList;
         private System.Windows.Forms.Button btnEditPaper;
         private System.Windows.Forms.Button btnAddPaper;
         private System.Windows.Forms.Button btnDeletePaper;
-        private System.Windows.Forms.ListView lvPapers;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ColumnHeader chPaperName;
-        private System.Windows.Forms.ColumnHeader chSummToClose;
-        private System.Windows.Forms.ColumnHeader chPercent;
-        private System.Windows.Forms.ColumnHeader chDaysToClose;
         private System.Windows.Forms.ColumnHeader chFaceValue;
-        private System.Windows.Forms.ColumnHeader chCount;
-        private System.Windows.Forms.ColumnHeader chIncome;
-        private System.Windows.Forms.ColumnHeader chPositiveDate;
         private System.Windows.Forms.ToolStripMenuItem menuItemBondCalculator;
         private System.Windows.Forms.ToolStripMenuItem menuItemDictionary;
         private System.Windows.Forms.ToolStripMenuItem menuItemPapers;
-        private System.Windows.Forms.ColumnHeader chBondPar;
+        private System.Windows.Forms.TabControl tcData;
+        private System.Windows.Forms.TabPage tpWatchList;
+        private WatchListUC watchList;
     }
 }
 

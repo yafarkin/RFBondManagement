@@ -10,5 +10,10 @@ namespace RfBondManagement.Engine.Database
         {
             _entities.EnsureIndex(p => p.SecId);
         }
+
+        public T Get(string secId)
+        {
+            return _entities.FindOne(e => e.SecId == secId);
+        }
     }
 }

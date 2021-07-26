@@ -13,6 +13,7 @@ using RfBondManagement.Engine;
 using RfBondManagement.WinForm.Forms;
 using RfFondPortfolio.Common.Interfaces;
 using Unity;
+using Unity.Injection;
 using ZedGraph;
 
 namespace RfBondManagement.WinForm.Controls
@@ -114,23 +115,46 @@ namespace RfBondManagement.WinForm.Controls
             };
 
             var gp = chart.GraphPane;
+            gp.Title.Text = secId;
+
             var yAxis = gp.YAxis;
             var xAxis = gp.XAxis;
 
-            gp.Title.Text = secId;
-            gp.AddBar(
-                string.Empty,
-                Enumerable.Range(0, historyPrices.Count).Select(x => (double) x).ToArray(),
-                historyPrices.Select(x => (double) x.ClosePrice).ToArray(),
-                Color.Red);
+            var list = new StockPointList();
+            for (var i = 0; i < historyPrices.Count; i++)
+            {
+                var d = new XDate(historyPrices[i].When);
+                var open = (double)historyPrices[i].OpenPrice;
+                var close = (double) historyPrices[i].ClosePrice;
+                var high = (double) historyPrices[i].HighPrice;
+                var low = (double) historyPrices[i].LowPrice;
+                var vol = (double) historyPrices[i].Volume;
 
-            yAxis.Title.Text = "Y";
-            yAxis.Scale.MinAuto = true;
-            yAxis.Scale.MaxAuto = true;
+                var p = new StockPt(d.XLDate, high, low, open, close, vol);
 
-            xAxis.Type = AxisType.Text;
+                list.Add(p);
+            }
+
+            var lastPriceValues = historyPrices.TakeLast(60).ToList();
+            var fromPrice = lastPriceValues.First();
+            var toPrice = lastPriceValues.Last();
+
+            var curve = gp.AddJapaneseCandleStick(string.Empty, list);
+            curve.Stick.RisingFill = new Fill(Color.Green, Color.LightGreen);
+            curve.Stick.FallingFill = new Fill(Color.Red, Color.IndianRed);
+
+            yAxis.Title.Text = "Цена";
+            yAxis.Scale.Min = (double) lastPriceValues.Min(x => x.LowPrice) * 0.95;
+            yAxis.Scale.Max = (double) lastPriceValues.Max(x => x.HighPrice) * 1.05;
+
+            xAxis.Title.Text = "Дата";
+            xAxis.Type = AxisType.Date;
             xAxis.Scale.TextLabels = historyPrices.Select(x => x.When.ToShortDateString()).ToArray();
+            xAxis.Scale.Min = fromPrice.When.ToOADate();
+            xAxis.Scale.Max = toPrice.When.ToOADate();
 
+            chart.IsAntiAlias = true;
+            chart.IsShowPointValues = true;
             chart.AxisChange();
 
             pnlGraph.Controls.Clear();
@@ -147,8 +171,21 @@ namespace RfBondManagement.WinForm.Controls
                 }
 
                 var paper = f.Paper;
-                paper.IsFavorite = true;
-                PaperRepository.Insert(paper);
+
+                var existPaper = PaperRepository.Get(paper.SecId);
+                if (existPaper != null)
+                {
+                    if (!existPaper.IsFavorite)
+                    {
+                        existPaper.IsFavorite = true;
+                        PaperRepository.Update(existPaper);
+                    }
+                }
+                else
+                {
+                    paper.IsFavorite = true;
+                    PaperRepository.Insert(paper);
+                }
 
                 DataBind();
             }

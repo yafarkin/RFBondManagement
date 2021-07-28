@@ -29,6 +29,7 @@ namespace RfBondManagement.WinForm.Controls
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.pnlActions = new System.Windows.Forms.Panel();
             this.rbMonth = new System.Windows.Forms.RadioButton();
             this.rbWeek = new System.Windows.Forms.RadioButton();
@@ -42,6 +43,7 @@ namespace RfBondManagement.WinForm.Controls
             this.chMaxPrice = new System.Windows.Forms.ColumnHeader();
             this.chDelete = new System.Windows.Forms.ColumnHeader();
             this.pnlGraph = new System.Windows.Forms.Panel();
+            this.timerRefresh = new System.Windows.Forms.Timer(this.components);
             this.pnlActions.SuspendLayout();
             this.pnlPapers.SuspendLayout();
             this.SuspendLayout();
@@ -54,47 +56,55 @@ namespace RfBondManagement.WinForm.Controls
             this.pnlActions.Controls.Add(this.btnAdd);
             this.pnlActions.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlActions.Location = new System.Drawing.Point(0, 0);
+            this.pnlActions.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.pnlActions.Name = "pnlActions";
-            this.pnlActions.Size = new System.Drawing.Size(566, 40);
+            this.pnlActions.Size = new System.Drawing.Size(647, 53);
             this.pnlActions.TabIndex = 0;
             // 
             // rbMonth
             // 
             this.rbMonth.AutoSize = true;
-            this.rbMonth.Location = new System.Drawing.Point(215, 8);
+            this.rbMonth.Checked = true;
+            this.rbMonth.Location = new System.Drawing.Point(246, 11);
+            this.rbMonth.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.rbMonth.Name = "rbMonth";
-            this.rbMonth.Size = new System.Drawing.Size(66, 19);
+            this.rbMonth.Size = new System.Drawing.Size(84, 24);
             this.rbMonth.TabIndex = 3;
+            this.rbMonth.TabStop = true;
             this.rbMonth.Text = "30 дней";
             this.rbMonth.UseVisualStyleBackColor = true;
+            this.rbMonth.CheckedChanged += new System.EventHandler(this.rbPeriod_CheckedChanged);
             // 
             // rbWeek
             // 
             this.rbWeek.AutoSize = true;
-            this.rbWeek.Location = new System.Drawing.Point(149, 8);
+            this.rbWeek.Location = new System.Drawing.Point(170, 11);
+            this.rbWeek.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.rbWeek.Name = "rbWeek";
-            this.rbWeek.Size = new System.Drawing.Size(60, 19);
+            this.rbWeek.Size = new System.Drawing.Size(76, 24);
             this.rbWeek.TabIndex = 2;
             this.rbWeek.Text = "7 дней";
             this.rbWeek.UseVisualStyleBackColor = true;
+            this.rbWeek.CheckedChanged += new System.EventHandler(this.rbPeriod_CheckedChanged);
             // 
             // rbDay
             // 
             this.rbDay.AutoSize = true;
-            this.rbDay.Checked = true;
-            this.rbDay.Location = new System.Drawing.Point(86, 7);
+            this.rbDay.Location = new System.Drawing.Point(98, 9);
+            this.rbDay.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.rbDay.Name = "rbDay";
-            this.rbDay.Size = new System.Drawing.Size(57, 19);
+            this.rbDay.Size = new System.Drawing.Size(68, 24);
             this.rbDay.TabIndex = 1;
-            this.rbDay.TabStop = true;
             this.rbDay.Text = "Сутки";
             this.rbDay.UseVisualStyleBackColor = true;
+            this.rbDay.CheckedChanged += new System.EventHandler(this.rbPeriod_CheckedChanged);
             // 
             // btnAdd
             // 
-            this.btnAdd.Location = new System.Drawing.Point(4, 4);
+            this.btnAdd.Location = new System.Drawing.Point(5, 5);
+            this.btnAdd.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(75, 23);
+            this.btnAdd.Size = new System.Drawing.Size(86, 31);
             this.btnAdd.TabIndex = 0;
             this.btnAdd.Text = "Добавить";
             this.btnAdd.UseVisualStyleBackColor = true;
@@ -104,9 +114,10 @@ namespace RfBondManagement.WinForm.Controls
             // 
             this.pnlPapers.Controls.Add(this.lvPapers);
             this.pnlPapers.Dock = System.Windows.Forms.DockStyle.Left;
-            this.pnlPapers.Location = new System.Drawing.Point(0, 40);
+            this.pnlPapers.Location = new System.Drawing.Point(0, 53);
+            this.pnlPapers.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.pnlPapers.Name = "pnlPapers";
-            this.pnlPapers.Size = new System.Drawing.Size(320, 294);
+            this.pnlPapers.Size = new System.Drawing.Size(366, 392);
             this.pnlPapers.TabIndex = 1;
             // 
             // lvPapers
@@ -121,9 +132,10 @@ namespace RfBondManagement.WinForm.Controls
             this.lvPapers.FullRowSelect = true;
             this.lvPapers.HideSelection = false;
             this.lvPapers.Location = new System.Drawing.Point(0, 0);
+            this.lvPapers.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.lvPapers.MultiSelect = false;
             this.lvPapers.Name = "lvPapers";
-            this.lvPapers.Size = new System.Drawing.Size(320, 294);
+            this.lvPapers.Size = new System.Drawing.Size(366, 392);
             this.lvPapers.TabIndex = 0;
             this.lvPapers.UseCompatibleStateImageBehavior = false;
             this.lvPapers.View = System.Windows.Forms.View.Details;
@@ -152,20 +164,28 @@ namespace RfBondManagement.WinForm.Controls
             // pnlGraph
             // 
             this.pnlGraph.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlGraph.Location = new System.Drawing.Point(320, 40);
+            this.pnlGraph.Location = new System.Drawing.Point(366, 53);
+            this.pnlGraph.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.pnlGraph.Name = "pnlGraph";
-            this.pnlGraph.Size = new System.Drawing.Size(246, 294);
+            this.pnlGraph.Size = new System.Drawing.Size(281, 392);
             this.pnlGraph.TabIndex = 2;
+            // 
+            // timerRefresh
+            // 
+            this.timerRefresh.Enabled = true;
+            this.timerRefresh.Interval = 1200000;
+            this.timerRefresh.Tick += new System.EventHandler(this.timerRefresh_Tick);
             // 
             // WatchListUC
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.pnlGraph);
             this.Controls.Add(this.pnlPapers);
             this.Controls.Add(this.pnlActions);
+            this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "WatchListUC";
-            this.Size = new System.Drawing.Size(566, 334);
+            this.Size = new System.Drawing.Size(647, 445);
             this.Load += new System.EventHandler(this.WatchListUC_Load);
             this.pnlActions.ResumeLayout(false);
             this.pnlActions.PerformLayout();
@@ -189,5 +209,6 @@ namespace RfBondManagement.WinForm.Controls
         private System.Windows.Forms.ColumnHeader chMinPrice;
         private System.Windows.Forms.ColumnHeader chMaxPrice;
         private System.Windows.Forms.ColumnHeader chDelete;
+        private System.Windows.Forms.Timer timerRefresh;
     }
 }

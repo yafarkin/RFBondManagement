@@ -6,11 +6,13 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using NLog;
 using RfBondManagement.Engine;
 using RfBondManagement.WinForm.Forms;
+using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 using Unity;
 using Unity.Injection;
@@ -35,23 +37,64 @@ namespace RfBondManagement.WinForm.Controls
         [Dependency]
         public IUnityContainer Container { get; set; }
 
+        public string SelectedPaper
+        {
+            get
+            {
+                if (0 == lvPapers.SelectedItems.Count)
+                {
+                    return string.Empty;
+                }
+
+                return lvPapers.SelectedItems[0].Text;
+            }
+        }
+
+        protected SynchronizationContext _syncContext;
+
+        protected IDictionary<string, IList<HistoryPrice>> _historyPrices = new ConcurrentDictionary<string, IList<HistoryPrice>>();
+
         public WatchListUC()
         {
             InitializeComponent();
         }
 
-        private void WatchListUC_Load(object sender, EventArgs e)
+        public void FillMinMax(string secId)
+        {
+            var lvi = lvPapers.FindItemWithText(secId);
+            if (null == lvi)
+            {
+                return;
+            }
+
+            if (!_historyPrices.ContainsKey(secId))
+            {
+                lvi.SubItems[2].Text = "---";
+                lvi.SubItems[3].Text = "---";
+            }
+            else
+            {
+                var to = DateTime.Today;
+                var from = rbDay.Checked ? to.AddDays(-1) : rbWeek.Checked ? to.AddDays(-7) : to.AddMonths(-1);
+
+                var pricePeriod = _historyPrices[secId].Where(p => p.When >= from && p.When <= to);
+                var minPrice = pricePeriod.DefaultIfEmpty().Min(p => p?.ClosePrice);
+                var maxPrice = pricePeriod.DefaultIfEmpty().Max(p => p?.ClosePrice);
+
+                lvi.SubItems[2].Text = minPrice?.ToString("N2") ?? "---";
+                lvi.SubItems[3].Text = maxPrice?.ToString("N2") ?? "---";
+            }
+
+            lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+        }
+
+        public void DataBind()
         {
             if (null == PaperRepository)
             {
                 return;
             }
 
-            DataBind();
-        }
-
-        public void DataBind()
-        {
             var favoritePapers = PaperRepository.Get().Where(p => p.IsFavorite).ToList();
 
             var selectedSecId = 0 == lvPapers.SelectedItems.Count ? string.Empty : lvPapers.SelectedItems[0].Text;
@@ -59,24 +102,6 @@ namespace RfBondManagement.WinForm.Controls
 
             foreach (var favoritePaper in favoritePapers)
             {
-                var lastPriceDate = HistoryEngine.GetLastHistoryDate(favoritePaper.SecId);
-                if (null == lastPriceDate || lastPriceDate > DateTime.Today.AddDays(-3))
-                {
-                    var t = HistoryEngine.ImportHistory(favoritePaper.SecId);
-                }
-
-                ExternalImport.LastPrice(Logger, favoritePaper);
-                    //.ContinueWith(pp =>
-                    //{
-                    //    var secId = pp.Result.SecId;
-                    //    var lastPrice = pp.Result.Price;
-                    //    var i = lvPapers.Items.Find(secId, false);
-                    //    if (1 == i.Length)
-                    //    {
-                    //        i[0].SubItems[0].Text = lastPrice.ToString("N2");
-                    //    }
-                    //});
-
                 var lvi = new ListViewItem(new[]
                 {
                     favoritePaper.SecId,
@@ -94,6 +119,49 @@ namespace RfBondManagement.WinForm.Controls
                 {
                     lvi.Selected = true;
                 }
+
+                var lastPriceDate = HistoryEngine.GetLastHistoryDate(favoritePaper.SecId);
+                if (null == lastPriceDate || lastPriceDate > DateTime.Today.AddDays(-3))
+                {
+                    HistoryEngine.ImportHistory(favoritePaper.SecId).ContinueWith(t =>
+                    {
+                        _historyPrices.TryAdd(favoritePaper.SecId,
+                            HistoryEngine.GetHistoryPrices(favoritePaper.SecId).OrderBy(x => x.When).ToList());
+
+                        _syncContext.Send(s =>
+                        {
+                            FillMinMax(s + string.Empty);
+                        }, favoritePaper.SecId);
+                    });
+                }
+                else
+                {
+                    _historyPrices.TryAdd(favoritePaper.SecId,
+                        HistoryEngine.GetHistoryPrices(favoritePaper.SecId).OrderBy(x => x.When).ToList());
+                    FillMinMax(favoritePaper.SecId);
+                }
+
+                ExternalImport.LastPrice(Logger, favoritePaper)
+                    .ContinueWith(pp =>
+                    {
+                        _syncContext.Send(paperPriceObj =>
+                        {
+                            var paperPrice = paperPriceObj as PaperPrice;
+
+                            var secId = paperPrice.SecId;
+                            var lastPrice = paperPrice.Price;
+                            var lvi = lvPapers.FindItemWithText(secId);
+                            if (lvi != null)
+                            {
+                                lvi.SubItems[1].Text = lastPrice.ToString("N2");
+                                lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+                            }
+                            else
+                            {
+                                
+                            }
+                        }, pp.Result);
+                    });
             }
 
             lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
@@ -101,13 +169,13 @@ namespace RfBondManagement.WinForm.Controls
 
         private void DrawGraph(string secId)
         {
-            if (string.IsNullOrWhiteSpace(secId))
+            if (string.IsNullOrWhiteSpace(secId) || !_historyPrices.ContainsKey(secId))
             {
                 pnlGraph.Controls.Clear();
                 return;
             }
 
-            var historyPrices = HistoryEngine.GetHistoryPrices(secId).OrderBy(x => x.When).ToList();
+            var historyPrices = _historyPrices[secId];
 
             var chart = new ZedGraphControl
             {
@@ -135,7 +203,9 @@ namespace RfBondManagement.WinForm.Controls
                 list.Add(p);
             }
 
-            var lastPriceValues = historyPrices.TakeLast(60).ToList();
+            var days = rbDay.Checked ? 1 : rbWeek.Checked ? 7 : 30;
+
+            var lastPriceValues = historyPrices.TakeLast(days).ToList();
             var fromPrice = lastPriceValues.First();
             var toPrice = lastPriceValues.Last();
 
@@ -195,6 +265,28 @@ namespace RfBondManagement.WinForm.Controls
         {
             var selectedItem = 0 == lvPapers.SelectedItems.Count ? string.Empty : lvPapers.SelectedItems[0].Text;
             DrawGraph(selectedItem);
+        }
+
+        private void WatchListUC_Load(object sender, EventArgs e)
+        {
+            _syncContext = SynchronizationContext.Current;
+
+            DataBind();
+        }
+
+        private void timerRefresh_Tick(object sender, EventArgs e)
+        {
+            DataBind();
+        }
+
+        private void rbPeriod_CheckedChanged(object sender, EventArgs e)
+        {
+            foreach (var kv in _historyPrices)
+            {
+                FillMinMax(kv.Key);
+            }
+
+            DrawGraph(SelectedPaper);
         }
     }
 }

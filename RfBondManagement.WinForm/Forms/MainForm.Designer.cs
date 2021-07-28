@@ -173,7 +173,6 @@ namespace RfBondManagement.WinForm.Forms
             this.tpWatchList.TabIndex = 0;
             this.tpWatchList.Text = "Watch list";
             this.tpWatchList.UseVisualStyleBackColor = true;
-            this.tpWatchList.Enter += new System.EventHandler(this.tpWatchList_Enter);
             // 
             // watchList
             // 

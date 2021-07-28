@@ -20,14 +20,15 @@ namespace RfBondManagement.WinForm.Forms
         [Dependency]
         public IPortfolioRepository PortfolioRepository { get; set; }
 
-        [Dependency]
         public IUnityContainer Container { get; set; }
 
         protected Portfolio _portfolio;
 
-        public MainForm()
+        public MainForm(IUnityContainer container)
         {
             InitializeComponent();
+            Container = container;
+            Container.BuildUp(watchList);
         }
 
         private void menuItemExit_Click(object sender, EventArgs e)
@@ -50,8 +51,6 @@ namespace RfBondManagement.WinForm.Forms
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
-            Container.BuildUp(watchList);
-
             _portfolio = PortfolioRepository.Get().FirstOrDefault() ?? new Portfolio {Id = Guid.NewGuid()};
 
             var engine = Container.Resolve<PortfolioEngine>(new ParameterOverride("portfolio", _portfolio));
@@ -124,11 +123,6 @@ namespace RfBondManagement.WinForm.Forms
             {
                 f.ShowDialog();
             }
-        }
-
-        private void tpWatchList_Enter(object sender, EventArgs e)
-        {
-            watchList.DataBind();
         }
     }
 }

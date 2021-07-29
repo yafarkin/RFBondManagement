@@ -88,6 +88,63 @@ namespace RfBondManagement.WinForm.Controls
             lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
         }
 
+        public async Task UpdateHistoryPrices(string secId)
+        {
+            var lastPriceDate = HistoryEngine.GetLastHistoryDate(secId);
+            if (null == lastPriceDate || lastPriceDate > DateTime.Today.AddDays(-3))
+            {
+                await HistoryEngine.ImportHistory(secId);
+
+                _historyPrices.TryAdd(secId, HistoryEngine.GetHistoryPrices(secId).OrderBy(x => x.When).ToList());
+
+                FillMinMax(secId);
+
+                //_syncContext.Send(s =>
+                //{
+                //    FillMinMax(s + string.Empty);
+                //}, secId);
+            }
+            else
+            {
+                _historyPrices.TryAdd(secId, HistoryEngine.GetHistoryPrices(secId).OrderBy(x => x.When).ToList());
+                FillMinMax(secId);
+            }
+        }
+
+        public async Task UpdateListPrice(AbstractPaper paper)
+        {
+            var paperPrice = await ExternalImport.LastPrice(Logger, paper);
+
+            var secId = paperPrice.SecId;
+            var lastPrice = paperPrice.Price;
+            var lvi = lvPapers.FindItemWithText(secId);
+            if (lvi != null)
+            {
+                lvi.SubItems[1].Text = lastPrice.ToString("N2");
+                lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+            }
+            else
+            {
+
+            }
+
+            //_syncContext.Send(paperPriceObj =>
+            //{
+            //    var secId = paperPrice.SecId;
+            //    var lastPrice = paperPrice.Price;
+            //    var lvi = lvPapers.FindItemWithText(secId);
+            //    if (lvi != null)
+            //    {
+            //        lvi.SubItems[1].Text = lastPrice.ToString("N2");
+            //        lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+            //    }
+            //    else
+            //    {
+
+            //    }
+            //}, pp.Result);
+        }
+
         public void DataBind()
         {
             if (null == PaperRepository)
@@ -120,48 +177,8 @@ namespace RfBondManagement.WinForm.Controls
                     lvi.Selected = true;
                 }
 
-                var lastPriceDate = HistoryEngine.GetLastHistoryDate(favoritePaper.SecId);
-                if (null == lastPriceDate || lastPriceDate > DateTime.Today.AddDays(-3))
-                {
-                    HistoryEngine.ImportHistory(favoritePaper.SecId).ContinueWith(t =>
-                    {
-                        _historyPrices.TryAdd(favoritePaper.SecId,
-                            HistoryEngine.GetHistoryPrices(favoritePaper.SecId).OrderBy(x => x.When).ToList());
-
-                        _syncContext.Send(s =>
-                        {
-                            FillMinMax(s + string.Empty);
-                        }, favoritePaper.SecId);
-                    });
-                }
-                else
-                {
-                    _historyPrices.TryAdd(favoritePaper.SecId,
-                        HistoryEngine.GetHistoryPrices(favoritePaper.SecId).OrderBy(x => x.When).ToList());
-                    FillMinMax(favoritePaper.SecId);
-                }
-
-                ExternalImport.LastPrice(Logger, favoritePaper)
-                    .ContinueWith(pp =>
-                    {
-                        _syncContext.Send(paperPriceObj =>
-                        {
-                            var paperPrice = paperPriceObj as PaperPrice;
-
-                            var secId = paperPrice.SecId;
-                            var lastPrice = paperPrice.Price;
-                            var lvi = lvPapers.FindItemWithText(secId);
-                            if (lvi != null)
-                            {
-                                lvi.SubItems[1].Text = lastPrice.ToString("N2");
-                                lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
-                            }
-                            else
-                            {
-                                
-                            }
-                        }, pp.Result);
-                    });
+                var t = UpdateHistoryPrices(favoritePaper.SecId);
+                t = UpdateListPrice(favoritePaper);
             }
 
             lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);

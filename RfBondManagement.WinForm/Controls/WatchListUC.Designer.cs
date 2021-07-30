@@ -43,9 +43,15 @@ namespace RfBondManagement.WinForm.Controls
             this.chMaxPrice = new System.Windows.Forms.ColumnHeader();
             this.chDelete = new System.Windows.Forms.ColumnHeader();
             this.pnlGraph = new System.Windows.Forms.Panel();
+            this.pnlGraphType = new System.Windows.Forms.Panel();
+            this.rbGraphPoints = new System.Windows.Forms.RadioButton();
+            this.rbGraphCandle = new System.Windows.Forms.RadioButton();
             this.timerRefresh = new System.Windows.Forms.Timer(this.components);
+            this.pnlGraphData = new System.Windows.Forms.Panel();
             this.pnlActions.SuspendLayout();
             this.pnlPapers.SuspendLayout();
+            this.pnlGraph.SuspendLayout();
+            this.pnlGraphType.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlActions
@@ -163,6 +169,8 @@ namespace RfBondManagement.WinForm.Controls
             // 
             // pnlGraph
             // 
+            this.pnlGraph.Controls.Add(this.pnlGraphData);
+            this.pnlGraph.Controls.Add(this.pnlGraphType);
             this.pnlGraph.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlGraph.Location = new System.Drawing.Point(366, 53);
             this.pnlGraph.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -170,11 +178,53 @@ namespace RfBondManagement.WinForm.Controls
             this.pnlGraph.Size = new System.Drawing.Size(281, 392);
             this.pnlGraph.TabIndex = 2;
             // 
+            // pnlGraphType
+            // 
+            this.pnlGraphType.Controls.Add(this.rbGraphPoints);
+            this.pnlGraphType.Controls.Add(this.rbGraphCandle);
+            this.pnlGraphType.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pnlGraphType.Location = new System.Drawing.Point(0, 0);
+            this.pnlGraphType.Name = "pnlGraphType";
+            this.pnlGraphType.Size = new System.Drawing.Size(281, 51);
+            this.pnlGraphType.TabIndex = 0;
+            // 
+            // rbGraphPoints
+            // 
+            this.rbGraphPoints.AutoSize = true;
+            this.rbGraphPoints.Location = new System.Drawing.Point(93, 13);
+            this.rbGraphPoints.Name = "rbGraphPoints";
+            this.rbGraphPoints.Size = new System.Drawing.Size(80, 24);
+            this.rbGraphPoints.TabIndex = 1;
+            this.rbGraphPoints.Text = "График";
+            this.rbGraphPoints.UseVisualStyleBackColor = true;
+            this.rbGraphPoints.CheckedChanged += new System.EventHandler(this.rbGraph_CheckedChanged);
+            // 
+            // rbGraphCandle
+            // 
+            this.rbGraphCandle.AutoSize = true;
+            this.rbGraphCandle.Checked = true;
+            this.rbGraphCandle.Location = new System.Drawing.Point(15, 13);
+            this.rbGraphCandle.Name = "rbGraphCandle";
+            this.rbGraphCandle.Size = new System.Drawing.Size(72, 24);
+            this.rbGraphCandle.TabIndex = 0;
+            this.rbGraphCandle.TabStop = true;
+            this.rbGraphCandle.Text = "Свечи";
+            this.rbGraphCandle.UseVisualStyleBackColor = true;
+            this.rbGraphCandle.CheckedChanged += new System.EventHandler(this.rbGraph_CheckedChanged);
+            // 
             // timerRefresh
             // 
             this.timerRefresh.Enabled = true;
             this.timerRefresh.Interval = 1200000;
             this.timerRefresh.Tick += new System.EventHandler(this.timerRefresh_Tick);
+            // 
+            // pnlGraphData
+            // 
+            this.pnlGraphData.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlGraphData.Location = new System.Drawing.Point(0, 51);
+            this.pnlGraphData.Name = "pnlGraphData";
+            this.pnlGraphData.Size = new System.Drawing.Size(281, 341);
+            this.pnlGraphData.TabIndex = 1;
             // 
             // WatchListUC
             // 
@@ -190,6 +240,9 @@ namespace RfBondManagement.WinForm.Controls
             this.pnlActions.ResumeLayout(false);
             this.pnlActions.PerformLayout();
             this.pnlPapers.ResumeLayout(false);
+            this.pnlGraph.ResumeLayout(false);
+            this.pnlGraphType.ResumeLayout(false);
+            this.pnlGraphType.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -210,5 +263,9 @@ namespace RfBondManagement.WinForm.Controls
         private System.Windows.Forms.ColumnHeader chMaxPrice;
         private System.Windows.Forms.ColumnHeader chDelete;
         private System.Windows.Forms.Timer timerRefresh;
+        private System.Windows.Forms.Panel pnlGraphType;
+        private System.Windows.Forms.RadioButton rbGraphPoints;
+        private System.Windows.Forms.RadioButton rbGraphCandle;
+        private System.Windows.Forms.Panel pnlGraphData;
     }
 }

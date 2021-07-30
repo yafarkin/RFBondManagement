@@ -26,6 +26,7 @@ namespace RfFondPortfolio.Integration.Moex
             switch (paperType)
             {
                 case PaperType.Share:
+                case PaperType.DR:
                     var divRequest = new MoexDividendsRequest(logger, secId);
                     var divResponse = await divRequest.Read();
                     result = StockPaperConverter.MapShare(response, divResponse);

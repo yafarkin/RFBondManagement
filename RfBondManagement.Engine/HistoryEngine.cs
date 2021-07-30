@@ -23,7 +23,10 @@ namespace RfBondManagement.Engine
 
         public DateTime? GetLastHistoryDate(string secId)
         {
-            var when = _historyRepository.Get().FirstOrDefault(s => s.SecId == secId)?.When;
+            var when = _historyRepository.Get()
+                .Where(s => s.SecId == secId)
+                .OrderByDescending(s => s.When)
+                .FirstOrDefault()?.When;
             return when;
         }
 
@@ -48,7 +51,7 @@ namespace RfBondManagement.Engine
             var when = GetLastHistoryDate(secId);
             var paper = await _import.ImportPaper(_logger, secId);
 
-            if (null == when || paper.IssueDate < when)
+            if (null == when || paper.IssueDate > when)
             {
                 when = paper.IssueDate;
             }
@@ -58,6 +61,8 @@ namespace RfBondManagement.Engine
             {
                 _historyRepository.Insert(price);
             }
+
+            when = GetLastHistoryDate(secId);
         }
     }
 }

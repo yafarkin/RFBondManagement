@@ -1,21 +1,16 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using NLog;
+﻿using NLog;
 using RfBondManagement.Engine;
 using RfBondManagement.WinForm.Forms;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using Unity;
-using Unity.Injection;
 using ZedGraph;
 
 namespace RfBondManagement.WinForm.Controls
@@ -49,8 +44,6 @@ namespace RfBondManagement.WinForm.Controls
                 return lvPapers.SelectedItems[0].Text;
             }
         }
-
-        protected SynchronizationContext _syncContext;
 
         protected IDictionary<string, IList<HistoryPrice>> _historyPrices = new ConcurrentDictionary<string, IList<HistoryPrice>>();
 
@@ -91,18 +84,13 @@ namespace RfBondManagement.WinForm.Controls
         public async Task UpdateHistoryPrices(string secId)
         {
             var lastPriceDate = HistoryEngine.GetLastHistoryDate(secId);
-            if (null == lastPriceDate || lastPriceDate > DateTime.Today.AddDays(-3))
+            if (null == lastPriceDate || lastPriceDate < DateTime.Today.AddDays(-3))
             {
                 await HistoryEngine.ImportHistory(secId);
 
                 _historyPrices.TryAdd(secId, HistoryEngine.GetHistoryPrices(secId).OrderBy(x => x.When).ToList());
 
                 FillMinMax(secId);
-
-                //_syncContext.Send(s =>
-                //{
-                //    FillMinMax(s + string.Empty);
-                //}, secId);
             }
             else
             {
@@ -123,26 +111,6 @@ namespace RfBondManagement.WinForm.Controls
                 lvi.SubItems[1].Text = lastPrice.ToString("N2");
                 lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
             }
-            else
-            {
-
-            }
-
-            //_syncContext.Send(paperPriceObj =>
-            //{
-            //    var secId = paperPrice.SecId;
-            //    var lastPrice = paperPrice.Price;
-            //    var lvi = lvPapers.FindItemWithText(secId);
-            //    if (lvi != null)
-            //    {
-            //        lvi.SubItems[1].Text = lastPrice.ToString("N2");
-            //        lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
-            //    }
-            //    else
-            //    {
-
-            //    }
-            //}, pp.Result);
         }
 
         public void DataBind()
@@ -177,8 +145,10 @@ namespace RfBondManagement.WinForm.Controls
                     lvi.Selected = true;
                 }
 
-                var t = UpdateHistoryPrices(favoritePaper.SecId);
-                t = UpdateListPrice(favoritePaper);
+#pragma warning disable 4014
+                UpdateHistoryPrices(favoritePaper.SecId);
+                UpdateListPrice(favoritePaper);
+#pragma warning restore 4014
             }
 
             lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
@@ -188,7 +158,7 @@ namespace RfBondManagement.WinForm.Controls
         {
             if (string.IsNullOrWhiteSpace(secId) || !_historyPrices.ContainsKey(secId))
             {
-                pnlGraph.Controls.Clear();
+                pnlGraphData.Controls.Clear();
                 return;
             }
 
@@ -202,50 +172,83 @@ namespace RfBondManagement.WinForm.Controls
             var gp = chart.GraphPane;
             gp.Title.Text = secId;
 
-            var yAxis = gp.YAxis;
-            var xAxis = gp.XAxis;
-
-            var list = new StockPointList();
-            for (var i = 0; i < historyPrices.Count; i++)
-            {
-                var d = new XDate(historyPrices[i].When);
-                var open = (double)historyPrices[i].OpenPrice;
-                var close = (double) historyPrices[i].ClosePrice;
-                var high = (double) historyPrices[i].HighPrice;
-                var low = (double) historyPrices[i].LowPrice;
-                var vol = (double) historyPrices[i].Volume;
-
-                var p = new StockPt(d.XLDate, high, low, open, close, vol);
-
-                list.Add(p);
-            }
-
             var days = rbDay.Checked ? 1 : rbWeek.Checked ? 7 : 30;
-
             var lastPriceValues = historyPrices.TakeLast(days).ToList();
             var fromPrice = lastPriceValues.First();
             var toPrice = lastPriceValues.Last();
 
-            var curve = gp.AddJapaneseCandleStick(string.Empty, list);
-            curve.Stick.RisingFill = new Fill(Color.Green, Color.LightGreen);
-            curve.Stick.FallingFill = new Fill(Color.Red, Color.IndianRed);
+            var yAxis = gp.YAxis;
+            var xAxis = gp.XAxis;
 
             yAxis.Title.Text = "Цена";
-            yAxis.Scale.Min = (double) lastPriceValues.Min(x => x.LowPrice) * 0.95;
-            yAxis.Scale.Max = (double) lastPriceValues.Max(x => x.HighPrice) * 1.05;
+            yAxis.Scale.Min = (double)lastPriceValues.Min(x => x.LowPrice) * 0.95;
+            yAxis.Scale.Max = (double)lastPriceValues.Max(x => x.HighPrice) * 1.05;
 
             xAxis.Title.Text = "Дата";
             xAxis.Type = AxisType.Date;
             xAxis.Scale.TextLabels = historyPrices.Select(x => x.When.ToShortDateString()).ToArray();
-            xAxis.Scale.Min = fromPrice.When.ToOADate();
-            xAxis.Scale.Max = toPrice.When.ToOADate();
+
+            IPointList list;
+
+            if (rbGraphCandle.Checked)
+            {
+                list = new StockPointList();
+
+                for (var i = 0; i < historyPrices.Count; i++)
+                {
+                    var d = new XDate(historyPrices[i].When);
+                    var open = (double) historyPrices[i].OpenPrice;
+                    var close = (double) historyPrices[i].ClosePrice;
+                    var high = (double) historyPrices[i].HighPrice;
+                    var low = (double) historyPrices[i].LowPrice;
+                    var vol = (double) historyPrices[i].Volume;
+
+                    var p = new StockPt(d.XLDate, high, low, open, close, vol);
+
+                    (list as StockPointList).Add(p);
+                }
+
+                var curve = gp.AddJapaneseCandleStick(string.Empty, list);
+                curve.Stick.RisingFill = new Fill(Color.Green, Color.LightGreen);
+                curve.Stick.FallingFill = new Fill(Color.Red, Color.IndianRed);
+
+                xAxis.Scale.Min = fromPrice.When.ToOADate();
+                xAxis.Scale.Max = toPrice.When.ToOADate();
+            }
+            else
+            {
+                list = new PointPairList();
+
+                var fromValue = 0;
+                var toValue = 0;
+
+                for (var i = 0; i < historyPrices.Count; i++)
+                {
+                    if (historyPrices[i].When == fromPrice.When)
+                    {
+                        fromValue = i;
+                    }
+
+                    if (historyPrices[i].When == toPrice.When)
+                    {
+                        toValue = i;
+                    }
+
+                    (list as PointPairList).Add((double)i, (double)historyPrices[i].ClosePrice);
+                }
+
+                gp.AddCurve(string.Empty, list, Color.Blue, SymbolType.None);
+
+                xAxis.Scale.Min = fromValue;
+                xAxis.Scale.Max = toValue;
+            }
 
             chart.IsAntiAlias = true;
             chart.IsShowPointValues = true;
             chart.AxisChange();
 
-            pnlGraph.Controls.Clear();
-            pnlGraph.Controls.Add(chart);
+            pnlGraphData.Controls.Clear();
+            pnlGraphData.Controls.Add(chart);
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
@@ -286,8 +289,6 @@ namespace RfBondManagement.WinForm.Controls
 
         private void WatchListUC_Load(object sender, EventArgs e)
         {
-            _syncContext = SynchronizationContext.Current;
-
             DataBind();
         }
 
@@ -303,6 +304,11 @@ namespace RfBondManagement.WinForm.Controls
                 FillMinMax(kv.Key);
             }
 
+            DrawGraph(SelectedPaper);
+        }
+
+        private void rbGraph_CheckedChanged(object sender, EventArgs e)
+        {
             DrawGraph(SelectedPaper);
         }
     }

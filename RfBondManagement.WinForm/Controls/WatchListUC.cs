@@ -67,10 +67,18 @@ namespace RfBondManagement.WinForm.Controls
             }
             else
             {
-                var to = DateTime.Today;
-                var from = rbDay.Checked ? to.AddDays(-1) : rbWeek.Checked ? to.AddDays(-7) : to.AddMonths(-1);
+                var historyPrices = _historyPrices[secId];
+                var lastPriceDate = historyPrices.Last().When;
+                var fromPriceDate = FindFromPriceDate(lastPriceDate) ?? historyPrices.First().When;
 
-                var pricePeriod = _historyPrices[secId].Where(p => p.When >= from && p.When <= to);
+                var lastPriceValues = historyPrices
+                    .Where(x => (x.When - fromPriceDate).TotalDays >= 0)
+                    .OrderBy(x => x.When).ToList();
+
+                fromPriceDate = lastPriceValues.First().When;
+                var toPriceDate = lastPriceValues.Last().When;
+
+                var pricePeriod = _historyPrices[secId].Where(p => p.When >= fromPriceDate && p.When <= toPriceDate);
                 var minPrice = pricePeriod.DefaultIfEmpty().Min(p => p?.ClosePrice);
                 var maxPrice = pricePeriod.DefaultIfEmpty().Max(p => p?.ClosePrice);
 
@@ -154,6 +162,46 @@ namespace RfBondManagement.WinForm.Controls
             lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
         }
 
+        private DateTime? FindFromPriceDate(DateTime lastPriceDate)
+        {
+            DateTime? fromPriceDate;
+
+            if (rbWeek.Checked)
+            {
+                fromPriceDate = lastPriceDate.AddDays(-7);
+            }
+            else if (rbMonth.Checked)
+            {
+                fromPriceDate = lastPriceDate.AddMonths(-1);
+            }
+            else if (rb3Months.Checked)
+            {
+                fromPriceDate = lastPriceDate.AddMonths(-3);
+            }
+            else if (rb6Months.Checked)
+            {
+                fromPriceDate = lastPriceDate.AddMonths(-6);
+            }
+            else if (rbYear.Checked)
+            {
+                fromPriceDate = lastPriceDate.AddYears(-1);
+            }
+            else if (rbYTD.Checked)
+            {
+                fromPriceDate = new DateTime(lastPriceDate.Year, 1, 1);
+            }
+            else if (rb5Years.Checked)
+            {
+                fromPriceDate = lastPriceDate.AddYears(-5);
+            }
+            else
+            {
+                fromPriceDate = null;
+            }
+
+            return fromPriceDate;
+        }
+
         private void DrawGraph(string secId)
         {
             if (string.IsNullOrWhiteSpace(secId) || !_historyPrices.ContainsKey(secId))
@@ -172,21 +220,17 @@ namespace RfBondManagement.WinForm.Controls
             var gp = chart.GraphPane;
             gp.Title.Text = secId;
 
-            var days = rbDay.Checked ? 1 : rbWeek.Checked ? 7 : 30;
-            var lastPriceValues = historyPrices.TakeLast(days).ToList();
-            var fromPrice = lastPriceValues.First();
-            var toPrice = lastPriceValues.Last();
+            var lastPriceDate = historyPrices.Last().When;
+            var fromPriceDate = FindFromPriceDate(lastPriceDate) ?? historyPrices.First().When;
+
+            var lastPriceValues = historyPrices
+                .Where(x => (x.When - fromPriceDate).TotalDays >= 0)
+                .OrderBy(x => x.When).ToList();
+
+            fromPriceDate = lastPriceValues.First().When;
 
             var yAxis = gp.YAxis;
             var xAxis = gp.XAxis;
-
-            yAxis.Title.Text = "Цена";
-            yAxis.Scale.Min = (double)lastPriceValues.Min(x => x.LowPrice) * 0.95;
-            yAxis.Scale.Max = (double)lastPriceValues.Max(x => x.HighPrice) * 1.05;
-
-            xAxis.Title.Text = "Дата";
-            xAxis.Type = AxisType.Date;
-            xAxis.Scale.TextLabels = historyPrices.Select(x => x.When.ToShortDateString()).ToArray();
 
             IPointList list;
 
@@ -212,36 +256,55 @@ namespace RfBondManagement.WinForm.Controls
                 curve.Stick.RisingFill = new Fill(Color.Green, Color.LightGreen);
                 curve.Stick.FallingFill = new Fill(Color.Red, Color.IndianRed);
 
-                xAxis.Scale.Min = fromPrice.When.ToOADate();
-                xAxis.Scale.Max = toPrice.When.ToOADate();
+                xAxis.Scale.Min = fromPriceDate.ToOADate();
+                xAxis.Scale.Max = lastPriceDate.ToOADate();
             }
             else
             {
                 list = new PointPairList();
 
-                var fromValue = 0;
-                var toValue = 0;
+                double fromValue = 0;
+                double toValue = 0;
 
                 for (var i = 0; i < historyPrices.Count; i++)
                 {
-                    if (historyPrices[i].When == fromPrice.When)
+                    var whenXDate = new XDate(historyPrices[i].When);
+
+                    if (historyPrices[i].When == fromPriceDate)
                     {
-                        fromValue = i;
+                        fromValue = whenXDate.XLDate;
                     }
 
-                    if (historyPrices[i].When == toPrice.When)
+                    if (historyPrices[i].When == lastPriceDate)
                     {
-                        toValue = i;
+                        toValue = whenXDate.XLDate;
                     }
 
-                    (list as PointPairList).Add((double)i, (double)historyPrices[i].ClosePrice);
+                    (list as PointPairList).Add(whenXDate, (double)historyPrices[i].ClosePrice);
                 }
 
-                gp.AddCurve(string.Empty, list, Color.Blue, SymbolType.None);
+                var curve = gp.AddCurve(string.Empty, list, Color.Blue, SymbolType.Default);
+                curve.Line.Fill = new Fill(Color.FromArgb(153, 212, 255));
+                curve.Line.IsSmooth = true;
+                curve.Line.Width = 4;
+                curve.Color = Color.FromArgb(0, 148, 255);
+                curve.Symbol.Size = 4;
 
                 xAxis.Scale.Min = fromValue;
                 xAxis.Scale.Max = toValue;
             }
+
+            yAxis.Title.Text = "Цена";
+            yAxis.Scale.Min = (double)lastPriceValues.Min(x => x.LowPrice) * 0.95;
+            yAxis.Scale.Max = (double)lastPriceValues.Max(x => x.HighPrice) * 1.05;
+            yAxis.MajorGrid.IsVisible = true;
+            yAxis.MinorGrid.IsVisible = true;
+
+            xAxis.Title.Text = "Дата";
+            xAxis.Type = AxisType.Date;
+            xAxis.Scale.TextLabels = historyPrices.Select(x => x.When.ToShortDateString()).ToArray();
+            xAxis.MajorGrid.IsVisible = true;
+            xAxis.MinorGrid.IsVisible = true;
 
             chart.IsAntiAlias = true;
             chart.IsShowPointValues = true;
@@ -299,6 +362,11 @@ namespace RfBondManagement.WinForm.Controls
 
         private void rbPeriod_CheckedChanged(object sender, EventArgs e)
         {
+            if (sender is RadioButton rb && !rb.Checked)
+            {
+                return;
+            }
+
             foreach (var kv in _historyPrices)
             {
                 FillMinMax(kv.Key);
@@ -309,6 +377,11 @@ namespace RfBondManagement.WinForm.Controls
 
         private void rbGraph_CheckedChanged(object sender, EventArgs e)
         {
+            if (sender is RadioButton rb && !rb.Checked)
+            {
+                return;
+            }
+
             DrawGraph(SelectedPaper);
         }
     }

@@ -239,7 +239,7 @@ namespace RfBondManagement.WinForm.Forms
             this.Controls.Add(this.mainMenu);
             this.MainMenuStrip = this.mainMenu;
             this.Name = "MainForm";
-            this.Text = "Портфель облигаций";
+            this.Text = "Портфель";
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.mainMenu.ResumeLayout(false);
             this.mainMenu.PerformLayout();

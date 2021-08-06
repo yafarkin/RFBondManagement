@@ -38,8 +38,6 @@ namespace RfBondManagement.WinForm.Forms
             this.menuItemGeneralSettings = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemDictionary = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemPapers = new System.Windows.Forms.ToolStripMenuItem();
-            this.pnlPaperDetails = new System.Windows.Forms.Panel();
-            this.label1 = new System.Windows.Forms.Label();
             this.pnlData = new System.Windows.Forms.Panel();
             this.tcData = new System.Windows.Forms.TabControl();
             this.tpWatchList = new System.Windows.Forms.TabPage();
@@ -49,7 +47,6 @@ namespace RfBondManagement.WinForm.Forms
             this.btnEditPaper = new System.Windows.Forms.Button();
             this.btnAddPaper = new System.Windows.Forms.Button();
             this.mainMenu.SuspendLayout();
-            this.pnlPaperDetails.SuspendLayout();
             this.pnlData.SuspendLayout();
             this.tcData.SuspendLayout();
             this.tpWatchList.SuspendLayout();
@@ -124,24 +121,6 @@ namespace RfBondManagement.WinForm.Forms
             this.menuItemPapers.Text = "Бумаги";
             this.menuItemPapers.Click += new System.EventHandler(this.menuItemPapers_Click);
             // 
-            // pnlPaperDetails
-            // 
-            this.pnlPaperDetails.Controls.Add(this.label1);
-            this.pnlPaperDetails.Dock = System.Windows.Forms.DockStyle.Right;
-            this.pnlPaperDetails.Location = new System.Drawing.Point(574, 24);
-            this.pnlPaperDetails.Name = "pnlPaperDetails";
-            this.pnlPaperDetails.Size = new System.Drawing.Size(270, 502);
-            this.pnlPaperDetails.TabIndex = 3;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(6, 10);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(171, 15);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Детали по выбранной бумаге";
-            // 
             // pnlData
             // 
             this.pnlData.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -150,7 +129,7 @@ namespace RfBondManagement.WinForm.Forms
             this.pnlData.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlData.Location = new System.Drawing.Point(0, 24);
             this.pnlData.Name = "pnlData";
-            this.pnlData.Size = new System.Drawing.Size(574, 502);
+            this.pnlData.Size = new System.Drawing.Size(844, 502);
             this.pnlData.TabIndex = 4;
             // 
             // tcData
@@ -160,7 +139,7 @@ namespace RfBondManagement.WinForm.Forms
             this.tcData.Location = new System.Drawing.Point(0, 41);
             this.tcData.Name = "tcData";
             this.tcData.SelectedIndex = 0;
-            this.tcData.Size = new System.Drawing.Size(572, 459);
+            this.tcData.Size = new System.Drawing.Size(842, 459);
             this.tcData.TabIndex = 4;
             // 
             // tpWatchList
@@ -169,7 +148,7 @@ namespace RfBondManagement.WinForm.Forms
             this.tpWatchList.Location = new System.Drawing.Point(4, 24);
             this.tpWatchList.Name = "tpWatchList";
             this.tpWatchList.Padding = new System.Windows.Forms.Padding(3);
-            this.tpWatchList.Size = new System.Drawing.Size(564, 431);
+            this.tpWatchList.Size = new System.Drawing.Size(834, 431);
             this.tpWatchList.TabIndex = 0;
             this.tpWatchList.Text = "Watch list";
             this.tpWatchList.UseVisualStyleBackColor = true;
@@ -184,7 +163,7 @@ namespace RfBondManagement.WinForm.Forms
             this.watchList.Logger = null;
             this.watchList.Name = "watchList";
             this.watchList.PaperRepository = null;
-            this.watchList.Size = new System.Drawing.Size(558, 425);
+            this.watchList.Size = new System.Drawing.Size(828, 425);
             this.watchList.TabIndex = 0;
             // 
             // pnlActions
@@ -196,7 +175,7 @@ namespace RfBondManagement.WinForm.Forms
             this.pnlActions.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlActions.Location = new System.Drawing.Point(0, 0);
             this.pnlActions.Name = "pnlActions";
-            this.pnlActions.Size = new System.Drawing.Size(572, 41);
+            this.pnlActions.Size = new System.Drawing.Size(842, 41);
             this.pnlActions.TabIndex = 3;
             // 
             // btnDeletePaper
@@ -235,7 +214,6 @@ namespace RfBondManagement.WinForm.Forms
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(844, 526);
             this.Controls.Add(this.pnlData);
-            this.Controls.Add(this.pnlPaperDetails);
             this.Controls.Add(this.mainMenu);
             this.MainMenuStrip = this.mainMenu;
             this.Name = "MainForm";
@@ -243,8 +221,6 @@ namespace RfBondManagement.WinForm.Forms
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.mainMenu.ResumeLayout(false);
             this.mainMenu.PerformLayout();
-            this.pnlPaperDetails.ResumeLayout(false);
-            this.pnlPaperDetails.PerformLayout();
             this.pnlData.ResumeLayout(false);
             this.tcData.ResumeLayout(false);
             this.tpWatchList.ResumeLayout(false);
@@ -261,13 +237,11 @@ namespace RfBondManagement.WinForm.Forms
         private System.Windows.Forms.ToolStripMenuItem menuItemExit;
         private System.Windows.Forms.ToolStripMenuItem menuItemSettings;
         private System.Windows.Forms.ToolStripMenuItem menuItemGeneralSettings;
-        private System.Windows.Forms.Panel pnlPaperDetails;
         private System.Windows.Forms.Panel pnlData;
         private System.Windows.Forms.Panel pnlActions;
         private System.Windows.Forms.Button btnEditPaper;
         private System.Windows.Forms.Button btnAddPaper;
         private System.Windows.Forms.Button btnDeletePaper;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ColumnHeader chFaceValue;
         private System.Windows.Forms.ToolStripMenuItem menuItemBondCalculator;
         private System.Windows.Forms.ToolStripMenuItem menuItemDictionary;

@@ -316,14 +316,18 @@ namespace RfBondManagement.WinForm.Controls
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            using (var f = Container.Resolve<PaperForm>())
+            using (var f = Container.Resolve<PaperListForm>())
             {
                 if (f.ShowDialog() != DialogResult.OK)
                 {
                     return;
                 }
 
-                var paper = f.Paper;
+                var paper = f.SelectedPaper;
+                if (null == paper)
+                {
+                    return;
+                }
 
                 var existPaper = PaperRepository.Get(paper.SecId);
                 if (existPaper != null)

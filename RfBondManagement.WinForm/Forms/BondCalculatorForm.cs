@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Forms;
-using RfBondManagement.Engine.Common;
+﻿using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Forms;
 using Unity;
 
 namespace RfBondManagement.WinForm.Forms
@@ -25,7 +25,6 @@ namespace RfBondManagement.WinForm.Forms
             InitializeComponent();
 
             container.BuildUp(psBond);
-            psBond.WhereFilter = p => p.PaperType == PaperType.Bond;
         }
 
         private void cbUntilMaturityDate_CheckedChanged(object sender, EventArgs e)
@@ -38,6 +37,8 @@ namespace RfBondManagement.WinForm.Forms
 
         private void BondCalculatorForm_Load(object sender, EventArgs e)
         {
+            psBond.WhereFilter = p => p.PaperType == PaperType.Bond;
+
             cbUntilMaturityDate.Checked = true;
 
             var portfolio = PortfolioRepository.Get().FirstOrDefault() ?? new Portfolio();

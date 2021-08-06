@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Forms;
-using NLog;
+﻿using NLog;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
+using System;
+using System.Windows.Forms;
 using Unity;
 
 namespace RfBondManagement.WinForm.Forms
@@ -12,9 +10,10 @@ namespace RfBondManagement.WinForm.Forms
     public partial class PaperListForm : Form
     {
         protected ILogger _logger;
-        protected readonly IList<AbstractPaper> _papers;
         protected IUnityContainer _container;
         protected IPaperRepository _paperRepository;
+
+        public AbstractPaper SelectedPaper => paperList.SelectedPaper;
 
         public PaperListForm(ILogger logger, IPaperRepository paperRepository, IUnityContainer container)
         {
@@ -22,42 +21,14 @@ namespace RfBondManagement.WinForm.Forms
             _paperRepository = paperRepository;
             _container = container;
 
-            _papers = _paperRepository.Get().ToList();
-
             InitializeComponent();
+
+            _container.BuildUp(paperList);
         }
 
         private void menuItemClose_Click(object sender, EventArgs e)
         {
             Close();
-        }
-
-        private void PaperListForm_Load(object sender, EventArgs e)
-        {
-            tbSearch.Focus();
-
-            DataBind();
-        }
-
-        private void DataBind()
-        {
-            var selectedPaper = 0 == lvPapers.SelectedItems.Count ? null : lvPapers.SelectedItems[0].Tag as AbstractPaper;
-
-            lvPapers.Items.Clear();
-
-            foreach (var paper in _papers)
-            {
-                var itemText = new[] {paper.SecId, paper.Isin, paper.Type, paper.Name};
-                var lvi = new ListViewItem(itemText) {Tag = paper};
-                lvPapers.Items.Add(lvi);
-
-                if (paper.Id == selectedPaper?.Id)
-                {
-                    lvi.Selected = true;
-                }
-            }
-
-            lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
         }
 
         private void menuItemNew_Click(object sender, EventArgs e)
@@ -72,7 +43,7 @@ namespace RfBondManagement.WinForm.Forms
                     }
 
                     var paper = f.Paper;
-                    if (_papers.Any(p => p.SecId == paper.SecId))
+                    if (_paperRepository.Get(paper.SecId) != null)
                     {
                         MessageBox.Show("Бумага с таким SECID уже есть в системе", "Ошибка", MessageBoxButtons.OK,
                             MessageBoxIcon.Error);
@@ -80,10 +51,8 @@ namespace RfBondManagement.WinForm.Forms
 
                     }
 
-                    paper = _paperRepository.Insert(paper);
-                    _papers.Add(paper);
-
-                    DataBind();
+                    _paperRepository.Insert(paper);
+                    paperList.DataBind();
 
                     break;
                 }
@@ -92,14 +61,14 @@ namespace RfBondManagement.WinForm.Forms
 
         private void menuItemEdit_Click(object sender, EventArgs e)
         {
-            if (lvPapers.SelectedItems.Count != 1)
+            if (null == SelectedPaper)
             {
                 return;
             }
 
             using (var f = _container.Resolve<PaperForm>())
             {
-                var originalPaper = lvPapers.SelectedItems[0].Tag as AbstractPaper;
+                var originalPaper = SelectedPaper;
                 f.Paper = originalPaper;
 
                 while (true)
@@ -110,20 +79,16 @@ namespace RfBondManagement.WinForm.Forms
                     }
 
                     var paper = f.Paper;
-                    if (_papers.Any(p => p.SecId == paper.SecId && p.Id != paper.Id))
+                    var repoPaper = _paperRepository.Get(paper.SecId);
+                    if (repoPaper !=null && repoPaper.Id != paper.Id)
                     {
-                        MessageBox.Show("Бумага с таким SECID уже есть в системе", "Ошибка", MessageBoxButtons.OK,
-                            MessageBoxIcon.Error);
+                        MessageBox.Show("Бумага с таким SECID уже есть в системе", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         continue;
 
                     }
 
                     _paperRepository.Update(paper);
-
-                    _papers.Remove(originalPaper);
-                    _papers.Add(paper);
-
-                    DataBind();
+                    paperList.DataBind();
 
                     break;
                 }
@@ -132,20 +97,24 @@ namespace RfBondManagement.WinForm.Forms
 
         private void menuItemDelete_Click(object sender, EventArgs e)
         {
-            if (lvPapers.SelectedItems.Count != 1)
+            if (null == SelectedPaper)
             {
                 return;
             }
 
-            if (MessageBox.Show("Подтвердите удаление бумаги", "Удаление бумаги", MessageBoxButtons.OKCancel) != DialogResult.OK)
+            if (MessageBox.Show("Подтвердите удаление бумаги. Может привести к несогласованности данных.", "Удаление бумаги", MessageBoxButtons.OKCancel) != DialogResult.OK)
             {
                 return;
             }
 
-            var paper = lvPapers.SelectedItems[0].Tag as AbstractPaper;
-            _paperRepository.Delete(paper);
-            _papers.Remove(paper);
-            DataBind();
+            _paperRepository.Delete(SelectedPaper);
+            paperList.DataBind();
+        }
+
+        private void menuItemSelect_Click(object sender, EventArgs e)
+        {
+            DialogResult = DialogResult.OK;
+            Close();
         }
     }
 }

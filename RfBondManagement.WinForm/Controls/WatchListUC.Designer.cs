@@ -168,7 +168,7 @@ namespace RfBondManagement.WinForm.Controls
             // 
             // btnAdd
             // 
-            this.btnAdd.Location = new System.Drawing.Point(4, 4);
+            this.btnAdd.Location = new System.Drawing.Point(3, 8);
             this.btnAdd.Name = "btnAdd";
             this.btnAdd.Size = new System.Drawing.Size(75, 23);
             this.btnAdd.TabIndex = 0;

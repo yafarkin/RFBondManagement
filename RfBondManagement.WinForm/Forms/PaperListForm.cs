@@ -15,6 +15,8 @@ namespace RfBondManagement.WinForm.Forms
 
         public AbstractPaper SelectedPaper => paperList.SelectedPaper;
 
+        public bool AllowSelectPaper { get; set; }
+
         public PaperListForm(ILogger logger, IPaperRepository paperRepository, IUnityContainer container)
         {
             _logger = logger;
@@ -115,6 +117,11 @@ namespace RfBondManagement.WinForm.Forms
         {
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        private void PaperListForm_Load(object sender, EventArgs e)
+        {
+            menuItemSelect.Visible = AllowSelectPaper;
         }
     }
 }

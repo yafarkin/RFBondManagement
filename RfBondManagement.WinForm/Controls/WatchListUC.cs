@@ -318,14 +318,18 @@ namespace RfBondManagement.WinForm.Controls
         {
             using (var f = Container.Resolve<PaperListForm>())
             {
+                f.AllowSelectPaper = true;
+
                 if (f.ShowDialog() != DialogResult.OK)
                 {
+                    DataBind();
                     return;
                 }
 
                 var paper = f.SelectedPaper;
                 if (null == paper)
                 {
+                    DataBind();
                     return;
                 }
 

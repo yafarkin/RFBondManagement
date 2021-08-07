@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using RfFondPortfolio.Common.Dtos;
+﻿using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
+using System;
+using System.Linq;
+using System.Windows.Forms;
 using Unity;
 
 namespace RfBondManagement.WinForm.Controls
@@ -17,6 +11,8 @@ namespace RfBondManagement.WinForm.Controls
     {
         [Dependency]
         public IPaperRepository PaperRepository { get; set; }
+
+        public string Filter { get; set; }
 
         public AbstractPaper SelectedPaper
         {
@@ -33,7 +29,19 @@ namespace RfBondManagement.WinForm.Controls
 
         public void DataBind()
         {
-            dgvPapers.DataSource = PaperRepository.Get().ToList();
+            var papers = PaperRepository.Get();
+
+            if (!string.IsNullOrWhiteSpace(Filter))
+            {
+                Filter = Filter.ToLower();
+                papers = papers.Where(x =>
+                    x.SecId.ToLower().Contains(Filter) ||
+                    x.Isin.ToLower().Contains(Filter) ||
+                    x.Name.ToLower().Contains(Filter) ||
+                    x.ShortName.ToLower().Contains(Filter));
+            }
+
+            dgvPapers.DataSource = papers.ToList();
         }
 
         public PaperListUC()
@@ -49,6 +57,21 @@ namespace RfBondManagement.WinForm.Controls
             }
 
             DataBind();
+        }
+
+        private void btnSearch_Click(object sender, EventArgs e)
+        {
+            Filter = tbSearch.Text.Trim();
+            tbSearch.Focus();
+            DataBind();
+        }
+
+        private void tbSearch_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                btnSearch_Click(sender, e);
+            }
         }
     }
 }

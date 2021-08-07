@@ -1,12 +1,9 @@
 ﻿using NLog;
-using RfBondManagement.Engine.Calculations;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 using System;
-using System.Linq;
 using System.Windows.Forms;
 using Unity;
-using Unity.Resolution;
 
 namespace RfBondManagement.WinForm.Forms
 {
@@ -49,13 +46,13 @@ namespace RfBondManagement.WinForm.Forms
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
-            _portfolio = PortfolioRepository.Get().FirstOrDefault() ?? new Portfolio {Id = Guid.NewGuid()};
+            //_portfolio = PortfolioRepository.Get().FirstOrDefault() ?? new Portfolio {Id = Guid.NewGuid()};
 
-            var engine = Container.Resolve<PortfolioEngine>(new ParameterOverride("portfolio", _portfolio));
-            var content = engine.Build();
-            await engine.FillPrice(content);
+            //var engine = Container.Resolve<PortfolioEngine>(new ParameterOverride("portfolio", _portfolio));
+            //var content = engine.Build();
+            //await engine.FillPrice(content);
 
-            var papers = content.Papers;
+            //var papers = content.Papers;
 
             //lvPapers.Items.Clear();
             //foreach (var paperInPortfolio in papers)
@@ -112,14 +109,7 @@ namespace RfBondManagement.WinForm.Forms
             using (var f = Container.Resolve<PaperListForm>())
             {
                 f.ShowDialog();
-            }
-        }
-
-        private void btnAddPaper_Click(object sender, EventArgs e)
-        {
-            using (var f = Container.Resolve<PaperActionForm>())
-            {
-                f.ShowDialog();
+                watchList.DataBind();
             }
         }
     }

@@ -14,6 +14,8 @@ namespace RfBondManagement.WinForm.Forms
         protected IExternalImport _import;
         protected ILogger _logger;
 
+        protected bool IsNewPaper;
+
         public PaperForm(IExternalImport import, ILogger logger)
         {
             InitializeComponent();
@@ -36,6 +38,14 @@ namespace RfBondManagement.WinForm.Forms
             tbGroupName.Text = Paper?.GroupName;
             tbPrimaryMarket.Text = Paper?.PrimaryBoard?.Market;
             tbPrimaryBoardId.Text = Paper?.PrimaryBoard?.BoardId;
+            cbFavorite.Checked = Paper?.IsFavorite ?? false;
+
+            tbSecId.Enabled = IsNewPaper;
+            tbIsin.Enabled = tbSecId.Enabled;
+            tbType.Enabled = tbSecId.Enabled;
+            tbTypeName.Enabled = tbSecId.Enabled;
+            tbGroup.Enabled = tbSecId.Enabled;
+            tbGroupName.Enabled = tbSecId.Enabled;
         }
 
         private async void btnSearch_Click(object sender, EventArgs e)
@@ -74,10 +84,7 @@ namespace RfBondManagement.WinForm.Forms
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            if (null == Paper)
-            {
-                Paper = new SharePaper {Boards = new List<PaperBoard> {new PaperBoard {IsPrimary = true}}};
-            }
+            Paper ??= new SharePaper {Boards = new List<PaperBoard> {new PaperBoard {IsPrimary = true}}};
 
             Paper.SecId = tbSecId.Text;
             Paper.Name = tbName.Text;
@@ -89,6 +96,7 @@ namespace RfBondManagement.WinForm.Forms
             Paper.Group = tbGroup.Text;
             Paper.TypeName = tbType.Text;
             Paper.GroupName = tbGroupName.Text;
+            Paper.IsFavorite = cbFavorite.Checked;
 
             Paper.PrimaryBoard.Market = tbPrimaryMarket.Text;
             Paper.PrimaryBoard.BoardId = tbPrimaryBoardId.Text;
@@ -96,6 +104,8 @@ namespace RfBondManagement.WinForm.Forms
 
         private void PaperForm_Load(object sender, EventArgs e)
         {
+            IsNewPaper = null == Paper;
+
             DataBind();
         }
     }

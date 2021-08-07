@@ -33,6 +33,7 @@ namespace RfBondManagement.WinForm.Forms
             this.btnSearch = new System.Windows.Forms.Button();
             this.tbSearch = new System.Windows.Forms.TextBox();
             this.pnlEdit = new System.Windows.Forms.Panel();
+            this.cbFavorite = new System.Windows.Forms.CheckBox();
             this.tbPrimaryBoardId = new System.Windows.Forms.TextBox();
             this.label13 = new System.Windows.Forms.Label();
             this.tbPrimaryMarket = new System.Windows.Forms.TextBox();
@@ -79,11 +80,11 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // btnSearch
             // 
-            this.btnSearch.Location = new System.Drawing.Point(323, 12);
+            this.btnSearch.Location = new System.Drawing.Point(307, 12);
             this.btnSearch.Name = "btnSearch";
-            this.btnSearch.Size = new System.Drawing.Size(37, 23);
+            this.btnSearch.Size = new System.Drawing.Size(53, 23);
             this.btnSearch.TabIndex = 1;
-            this.btnSearch.Text = "->";
+            this.btnSearch.Text = ">>>";
             this.btnSearch.UseVisualStyleBackColor = true;
             this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
             // 
@@ -91,12 +92,13 @@ namespace RfBondManagement.WinForm.Forms
             // 
             this.tbSearch.Location = new System.Drawing.Point(12, 12);
             this.tbSearch.Name = "tbSearch";
-            this.tbSearch.Size = new System.Drawing.Size(305, 23);
+            this.tbSearch.Size = new System.Drawing.Size(289, 23);
             this.tbSearch.TabIndex = 0;
             this.tbSearch.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tbSearch_KeyUp);
             // 
             // pnlEdit
             // 
+            this.pnlEdit.Controls.Add(this.cbFavorite);
             this.pnlEdit.Controls.Add(this.tbPrimaryBoardId);
             this.pnlEdit.Controls.Add(this.label13);
             this.pnlEdit.Controls.Add(this.tbPrimaryMarket);
@@ -126,20 +128,30 @@ namespace RfBondManagement.WinForm.Forms
             this.pnlEdit.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlEdit.Location = new System.Drawing.Point(0, 47);
             this.pnlEdit.Name = "pnlEdit";
-            this.pnlEdit.Size = new System.Drawing.Size(378, 448);
+            this.pnlEdit.Size = new System.Drawing.Size(378, 438);
             this.pnlEdit.TabIndex = 1;
+            // 
+            // cbFavorite
+            // 
+            this.cbFavorite.AutoSize = true;
+            this.cbFavorite.Location = new System.Drawing.Point(117, 31);
+            this.cbFavorite.Name = "cbFavorite";
+            this.cbFavorite.Size = new System.Drawing.Size(211, 19);
+            this.cbFavorite.TabIndex = 1;
+            this.cbFavorite.Text = "Отображать в списке избранного";
+            this.cbFavorite.UseVisualStyleBackColor = true;
             // 
             // tbPrimaryBoardId
             // 
-            this.tbPrimaryBoardId.Location = new System.Drawing.Point(117, 361);
+            this.tbPrimaryBoardId.Location = new System.Drawing.Point(117, 379);
             this.tbPrimaryBoardId.Name = "tbPrimaryBoardId";
             this.tbPrimaryBoardId.Size = new System.Drawing.Size(243, 23);
-            this.tbPrimaryBoardId.TabIndex = 25;
+            this.tbPrimaryBoardId.TabIndex = 13;
             // 
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(12, 364);
+            this.label13.Location = new System.Drawing.Point(12, 382);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(95, 15);
             this.label13.TabIndex = 24;
@@ -147,15 +159,15 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // tbPrimaryMarket
             // 
-            this.tbPrimaryMarket.Location = new System.Drawing.Point(117, 332);
+            this.tbPrimaryMarket.Location = new System.Drawing.Point(117, 350);
             this.tbPrimaryMarket.Name = "tbPrimaryMarket";
             this.tbPrimaryMarket.Size = new System.Drawing.Size(243, 23);
-            this.tbPrimaryMarket.TabIndex = 23;
+            this.tbPrimaryMarket.TabIndex = 12;
             // 
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(12, 335);
+            this.label12.Location = new System.Drawing.Point(12, 353);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(91, 15);
             this.label12.TabIndex = 22;
@@ -181,15 +193,15 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // tbGroupName
             // 
-            this.tbGroupName.Location = new System.Drawing.Point(117, 303);
+            this.tbGroupName.Location = new System.Drawing.Point(117, 321);
             this.tbGroupName.Name = "tbGroupName";
             this.tbGroupName.Size = new System.Drawing.Size(243, 23);
-            this.tbGroupName.TabIndex = 19;
+            this.tbGroupName.TabIndex = 11;
             // 
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(12, 306);
+            this.label10.Location = new System.Drawing.Point(12, 324);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(104, 15);
             this.label10.TabIndex = 18;
@@ -197,15 +209,15 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // tbType
             // 
-            this.tbType.Location = new System.Drawing.Point(117, 274);
+            this.tbType.Location = new System.Drawing.Point(117, 292);
             this.tbType.Name = "tbType";
             this.tbType.Size = new System.Drawing.Size(243, 23);
-            this.tbType.TabIndex = 17;
+            this.tbType.TabIndex = 10;
             // 
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(12, 277);
+            this.label9.Location = new System.Drawing.Point(12, 295);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(30, 15);
             this.label9.TabIndex = 16;
@@ -213,15 +225,15 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // tbGroup
             // 
-            this.tbGroup.Location = new System.Drawing.Point(117, 245);
+            this.tbGroup.Location = new System.Drawing.Point(117, 263);
             this.tbGroup.Name = "tbGroup";
             this.tbGroup.Size = new System.Drawing.Size(243, 23);
-            this.tbGroup.TabIndex = 15;
+            this.tbGroup.TabIndex = 9;
             // 
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(12, 248);
+            this.label8.Location = new System.Drawing.Point(12, 266);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(58, 15);
             this.label8.TabIndex = 14;
@@ -229,15 +241,15 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // tbTypeName
             // 
-            this.tbTypeName.Location = new System.Drawing.Point(117, 216);
+            this.tbTypeName.Location = new System.Drawing.Point(117, 234);
             this.tbTypeName.Name = "tbTypeName";
             this.tbTypeName.Size = new System.Drawing.Size(243, 23);
-            this.tbTypeName.TabIndex = 13;
+            this.tbTypeName.TabIndex = 8;
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(12, 219);
+            this.label7.Location = new System.Drawing.Point(12, 237);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(73, 15);
             this.label7.TabIndex = 12;
@@ -245,15 +257,15 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // tbIssueDate
             // 
-            this.tbIssueDate.Location = new System.Drawing.Point(117, 187);
+            this.tbIssueDate.Location = new System.Drawing.Point(117, 205);
             this.tbIssueDate.Name = "tbIssueDate";
             this.tbIssueDate.Size = new System.Drawing.Size(243, 23);
-            this.tbIssueDate.TabIndex = 11;
+            this.tbIssueDate.TabIndex = 7;
             // 
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(12, 190);
+            this.label6.Location = new System.Drawing.Point(12, 208);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(101, 15);
             this.label6.TabIndex = 10;
@@ -261,15 +273,15 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // tbFaceValue
             // 
-            this.tbFaceValue.Location = new System.Drawing.Point(117, 158);
+            this.tbFaceValue.Location = new System.Drawing.Point(117, 176);
             this.tbFaceValue.Name = "tbFaceValue";
             this.tbFaceValue.Size = new System.Drawing.Size(243, 23);
-            this.tbFaceValue.TabIndex = 9;
+            this.tbFaceValue.TabIndex = 6;
             // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(12, 161);
+            this.label5.Location = new System.Drawing.Point(12, 179);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(99, 15);
             this.label5.TabIndex = 8;
@@ -277,14 +289,14 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // tbIsin
             // 
-            this.tbIsin.Location = new System.Drawing.Point(117, 129);
+            this.tbIsin.Location = new System.Drawing.Point(117, 147);
             this.tbIsin.Name = "tbIsin";
             this.tbIsin.Size = new System.Drawing.Size(243, 23);
-            this.tbIsin.TabIndex = 7;
+            this.tbIsin.TabIndex = 5;
             // 
             // label4
             // 
-            this.label4.Location = new System.Drawing.Point(12, 132);
+            this.label4.Location = new System.Drawing.Point(12, 150);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(100, 23);
             this.label4.TabIndex = 6;
@@ -292,15 +304,15 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // tbShortName
             // 
-            this.tbShortName.Location = new System.Drawing.Point(117, 97);
+            this.tbShortName.Location = new System.Drawing.Point(117, 115);
             this.tbShortName.Name = "tbShortName";
             this.tbShortName.Size = new System.Drawing.Size(243, 23);
-            this.tbShortName.TabIndex = 5;
+            this.tbShortName.TabIndex = 4;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 100);
+            this.label3.Location = new System.Drawing.Point(12, 118);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(79, 15);
             this.label3.TabIndex = 4;
@@ -308,7 +320,7 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // tbName
             // 
-            this.tbName.Location = new System.Drawing.Point(117, 67);
+            this.tbName.Location = new System.Drawing.Point(117, 85);
             this.tbName.Name = "tbName";
             this.tbName.Size = new System.Drawing.Size(243, 23);
             this.tbName.TabIndex = 3;
@@ -316,7 +328,7 @@ namespace RfBondManagement.WinForm.Forms
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 70);
+            this.label2.Location = new System.Drawing.Point(12, 88);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(34, 15);
             this.label2.TabIndex = 2;
@@ -324,15 +336,15 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // tbSecId
             // 
-            this.tbSecId.Location = new System.Drawing.Point(117, 38);
+            this.tbSecId.Location = new System.Drawing.Point(117, 56);
             this.tbSecId.Name = "tbSecId";
             this.tbSecId.Size = new System.Drawing.Size(243, 23);
-            this.tbSecId.TabIndex = 1;
+            this.tbSecId.TabIndex = 2;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 41);
+            this.label1.Location = new System.Drawing.Point(12, 59);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(38, 15);
             this.label1.TabIndex = 0;
@@ -343,15 +355,15 @@ namespace RfBondManagement.WinForm.Forms
             this.pnlActions.Controls.Add(this.btnCancel);
             this.pnlActions.Controls.Add(this.btnSave);
             this.pnlActions.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlActions.Location = new System.Drawing.Point(0, 444);
+            this.pnlActions.Location = new System.Drawing.Point(0, 455);
             this.pnlActions.Name = "pnlActions";
-            this.pnlActions.Size = new System.Drawing.Size(378, 51);
+            this.pnlActions.Size = new System.Drawing.Size(378, 30);
             this.pnlActions.TabIndex = 2;
             // 
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(93, 16);
+            this.btnCancel.Location = new System.Drawing.Point(93, 3);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -361,7 +373,7 @@ namespace RfBondManagement.WinForm.Forms
             // btnSave
             // 
             this.btnSave.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnSave.Location = new System.Drawing.Point(12, 16);
+            this.btnSave.Location = new System.Drawing.Point(12, 3);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(75, 23);
             this.btnSave.TabIndex = 0;
@@ -373,7 +385,7 @@ namespace RfBondManagement.WinForm.Forms
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(378, 495);
+            this.ClientSize = new System.Drawing.Size(378, 485);
             this.Controls.Add(this.pnlActions);
             this.Controls.Add(this.pnlEdit);
             this.Controls.Add(this.pnlSearch);
@@ -428,5 +440,6 @@ namespace RfBondManagement.WinForm.Forms
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.TextBox tbPrimaryBoardId;
         private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.CheckBox cbFavorite;
     }
 }

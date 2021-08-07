@@ -79,7 +79,7 @@ namespace RfBondManagement.WinForm.Controls
             // rbAll
             // 
             this.rbAll.AutoSize = true;
-            this.rbAll.Location = new System.Drawing.Point(398, 8);
+            this.rbAll.Location = new System.Drawing.Point(396, 12);
             this.rbAll.Name = "rbAll";
             this.rbAll.Size = new System.Drawing.Size(33, 19);
             this.rbAll.TabIndex = 8;
@@ -90,7 +90,7 @@ namespace RfBondManagement.WinForm.Controls
             // rb5Years
             // 
             this.rb5Years.AutoSize = true;
-            this.rb5Years.Location = new System.Drawing.Point(354, 8);
+            this.rb5Years.Location = new System.Drawing.Point(352, 12);
             this.rb5Years.Name = "rb5Years";
             this.rb5Years.Size = new System.Drawing.Size(38, 19);
             this.rb5Years.TabIndex = 7;
@@ -101,7 +101,7 @@ namespace RfBondManagement.WinForm.Controls
             // rbYTD
             // 
             this.rbYTD.AutoSize = true;
-            this.rbYTD.Location = new System.Drawing.Point(304, 8);
+            this.rbYTD.Location = new System.Drawing.Point(302, 12);
             this.rbYTD.Name = "rbYTD";
             this.rbYTD.Size = new System.Drawing.Size(46, 19);
             this.rbYTD.TabIndex = 6;
@@ -113,7 +113,7 @@ namespace RfBondManagement.WinForm.Controls
             // 
             this.rbYear.AutoSize = true;
             this.rbYear.Checked = true;
-            this.rbYear.Location = new System.Drawing.Point(266, 8);
+            this.rbYear.Location = new System.Drawing.Point(264, 12);
             this.rbYear.Name = "rbYear";
             this.rbYear.Size = new System.Drawing.Size(32, 19);
             this.rbYear.TabIndex = 5;
@@ -125,7 +125,7 @@ namespace RfBondManagement.WinForm.Controls
             // rb6Months
             // 
             this.rb6Months.AutoSize = true;
-            this.rb6Months.Location = new System.Drawing.Point(218, 8);
+            this.rb6Months.Location = new System.Drawing.Point(216, 12);
             this.rb6Months.Name = "rb6Months";
             this.rb6Months.Size = new System.Drawing.Size(42, 19);
             this.rb6Months.TabIndex = 4;
@@ -136,7 +136,7 @@ namespace RfBondManagement.WinForm.Controls
             // rb3Months
             // 
             this.rb3Months.AutoSize = true;
-            this.rb3Months.Location = new System.Drawing.Point(170, 8);
+            this.rb3Months.Location = new System.Drawing.Point(168, 12);
             this.rb3Months.Name = "rb3Months";
             this.rb3Months.Size = new System.Drawing.Size(42, 19);
             this.rb3Months.TabIndex = 3;
@@ -147,7 +147,7 @@ namespace RfBondManagement.WinForm.Controls
             // rbMonth
             // 
             this.rbMonth.AutoSize = true;
-            this.rbMonth.Location = new System.Drawing.Point(128, 8);
+            this.rbMonth.Location = new System.Drawing.Point(126, 12);
             this.rbMonth.Name = "rbMonth";
             this.rbMonth.Size = new System.Drawing.Size(36, 19);
             this.rbMonth.TabIndex = 2;
@@ -158,7 +158,7 @@ namespace RfBondManagement.WinForm.Controls
             // rbWeek
             // 
             this.rbWeek.AutoSize = true;
-            this.rbWeek.Location = new System.Drawing.Point(86, 8);
+            this.rbWeek.Location = new System.Drawing.Point(84, 12);
             this.rbWeek.Name = "rbWeek";
             this.rbWeek.Size = new System.Drawing.Size(36, 19);
             this.rbWeek.TabIndex = 1;

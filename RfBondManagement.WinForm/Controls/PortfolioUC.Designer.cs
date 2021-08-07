@@ -30,11 +30,8 @@ namespace RfBondManagement.WinForm.Controls
         private void InitializeComponent()
         {
             this.label1 = new System.Windows.Forms.Label();
-            this.plBond = new RfBondManagement.WinForm.Controls.DisplayPaperListUC();
             this.label2 = new System.Windows.Forms.Label();
-            this.plFond = new RfBondManagement.WinForm.Controls.DisplayPaperListUC();
             this.label3 = new System.Windows.Forms.Label();
-            this.plShare = new RfBondManagement.WinForm.Controls.DisplayPaperListUC();
             this.SuspendLayout();
             // 
             // label1
@@ -46,14 +43,6 @@ namespace RfBondManagement.WinForm.Controls
             this.label1.TabIndex = 0;
             this.label1.Text = "Облигации:";
             // 
-            // plBond
-            // 
-            this.plBond.Location = new System.Drawing.Point(12, 44);
-            this.plBond.Name = "plBond";
-            this.plBond.Portfolio = null;
-            this.plBond.Size = new System.Drawing.Size(789, 132);
-            this.plBond.TabIndex = 1;
-            // 
             // label2
             // 
             this.label2.AutoSize = true;
@@ -62,14 +51,6 @@ namespace RfBondManagement.WinForm.Controls
             this.label2.Size = new System.Drawing.Size(48, 15);
             this.label2.TabIndex = 2;
             this.label2.Text = "Фонды:";
-            // 
-            // plFond
-            // 
-            this.plFond.Location = new System.Drawing.Point(12, 197);
-            this.plFond.Name = "plFond";
-            this.plFond.Portfolio = null;
-            this.plFond.Size = new System.Drawing.Size(788, 132);
-            this.plFond.TabIndex = 3;
             // 
             // label3
             // 
@@ -80,23 +61,12 @@ namespace RfBondManagement.WinForm.Controls
             this.label3.TabIndex = 4;
             this.label3.Text = "Акции:";
             // 
-            // plShare
-            // 
-            this.plShare.Location = new System.Drawing.Point(12, 350);
-            this.plShare.Name = "plShare";
-            this.plShare.Portfolio = null;
-            this.plShare.Size = new System.Drawing.Size(788, 132);
-            this.plShare.TabIndex = 5;
-            // 
             // PortfolioUC
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.plShare);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.plFond);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.plBond);
             this.Controls.Add(this.label1);
             this.Name = "PortfolioUC";
             this.Size = new System.Drawing.Size(804, 493);
@@ -109,10 +79,7 @@ namespace RfBondManagement.WinForm.Controls
         #endregion
 
         private System.Windows.Forms.Label label1;
-        private DisplayPaperListUC plBond;
         private System.Windows.Forms.Label label2;
-        private DisplayPaperListUC plFond;
         private System.Windows.Forms.Label label3;
-        private DisplayPaperListUC plShare;
     }
 }

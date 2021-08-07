@@ -42,15 +42,10 @@ namespace RfBondManagement.WinForm.Forms
             this.tcData = new System.Windows.Forms.TabControl();
             this.tpWatchList = new System.Windows.Forms.TabPage();
             this.watchList = new RfBondManagement.WinForm.Controls.WatchListUC();
-            this.pnlActions = new System.Windows.Forms.Panel();
-            this.btnDeletePaper = new System.Windows.Forms.Button();
-            this.btnEditPaper = new System.Windows.Forms.Button();
-            this.btnAddPaper = new System.Windows.Forms.Button();
             this.mainMenu.SuspendLayout();
             this.pnlData.SuspendLayout();
             this.tcData.SuspendLayout();
             this.tpWatchList.SuspendLayout();
-            this.pnlActions.SuspendLayout();
             this.SuspendLayout();
             // 
             // mainMenu
@@ -125,7 +120,6 @@ namespace RfBondManagement.WinForm.Forms
             // 
             this.pnlData.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pnlData.Controls.Add(this.tcData);
-            this.pnlData.Controls.Add(this.pnlActions);
             this.pnlData.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlData.Location = new System.Drawing.Point(0, 24);
             this.pnlData.Name = "pnlData";
@@ -136,10 +130,10 @@ namespace RfBondManagement.WinForm.Forms
             // 
             this.tcData.Controls.Add(this.tpWatchList);
             this.tcData.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tcData.Location = new System.Drawing.Point(0, 41);
+            this.tcData.Location = new System.Drawing.Point(0, 0);
             this.tcData.Name = "tcData";
             this.tcData.SelectedIndex = 0;
-            this.tcData.Size = new System.Drawing.Size(842, 459);
+            this.tcData.Size = new System.Drawing.Size(842, 500);
             this.tcData.TabIndex = 4;
             // 
             // tpWatchList
@@ -148,7 +142,7 @@ namespace RfBondManagement.WinForm.Forms
             this.tpWatchList.Location = new System.Drawing.Point(4, 24);
             this.tpWatchList.Name = "tpWatchList";
             this.tpWatchList.Padding = new System.Windows.Forms.Padding(3);
-            this.tpWatchList.Size = new System.Drawing.Size(834, 431);
+            this.tpWatchList.Size = new System.Drawing.Size(834, 472);
             this.tpWatchList.TabIndex = 0;
             this.tpWatchList.Text = "Watch list";
             this.tpWatchList.UseVisualStyleBackColor = true;
@@ -163,50 +157,8 @@ namespace RfBondManagement.WinForm.Forms
             this.watchList.Logger = null;
             this.watchList.Name = "watchList";
             this.watchList.PaperRepository = null;
-            this.watchList.Size = new System.Drawing.Size(828, 425);
+            this.watchList.Size = new System.Drawing.Size(828, 466);
             this.watchList.TabIndex = 0;
-            // 
-            // pnlActions
-            // 
-            this.pnlActions.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pnlActions.Controls.Add(this.btnDeletePaper);
-            this.pnlActions.Controls.Add(this.btnEditPaper);
-            this.pnlActions.Controls.Add(this.btnAddPaper);
-            this.pnlActions.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlActions.Location = new System.Drawing.Point(0, 0);
-            this.pnlActions.Name = "pnlActions";
-            this.pnlActions.Size = new System.Drawing.Size(842, 41);
-            this.pnlActions.TabIndex = 3;
-            // 
-            // btnDeletePaper
-            // 
-            this.btnDeletePaper.Enabled = false;
-            this.btnDeletePaper.Location = new System.Drawing.Point(175, 8);
-            this.btnDeletePaper.Name = "btnDeletePaper";
-            this.btnDeletePaper.Size = new System.Drawing.Size(75, 23);
-            this.btnDeletePaper.TabIndex = 2;
-            this.btnDeletePaper.Text = "Удалить";
-            this.btnDeletePaper.UseVisualStyleBackColor = true;
-            // 
-            // btnEditPaper
-            // 
-            this.btnEditPaper.Enabled = false;
-            this.btnEditPaper.Location = new System.Drawing.Point(93, 8);
-            this.btnEditPaper.Name = "btnEditPaper";
-            this.btnEditPaper.Size = new System.Drawing.Size(75, 23);
-            this.btnEditPaper.TabIndex = 1;
-            this.btnEditPaper.Text = "Изменить";
-            this.btnEditPaper.UseVisualStyleBackColor = true;
-            // 
-            // btnAddPaper
-            // 
-            this.btnAddPaper.Location = new System.Drawing.Point(12, 8);
-            this.btnAddPaper.Name = "btnAddPaper";
-            this.btnAddPaper.Size = new System.Drawing.Size(75, 23);
-            this.btnAddPaper.TabIndex = 0;
-            this.btnAddPaper.Text = "Добавить";
-            this.btnAddPaper.UseVisualStyleBackColor = true;
-            this.btnAddPaper.Click += new System.EventHandler(this.btnAddPaper_Click);
             // 
             // MainForm
             // 
@@ -224,7 +176,6 @@ namespace RfBondManagement.WinForm.Forms
             this.pnlData.ResumeLayout(false);
             this.tcData.ResumeLayout(false);
             this.tpWatchList.ResumeLayout(false);
-            this.pnlActions.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -238,10 +189,6 @@ namespace RfBondManagement.WinForm.Forms
         private System.Windows.Forms.ToolStripMenuItem menuItemSettings;
         private System.Windows.Forms.ToolStripMenuItem menuItemGeneralSettings;
         private System.Windows.Forms.Panel pnlData;
-        private System.Windows.Forms.Panel pnlActions;
-        private System.Windows.Forms.Button btnEditPaper;
-        private System.Windows.Forms.Button btnAddPaper;
-        private System.Windows.Forms.Button btnDeletePaper;
         private System.Windows.Forms.ColumnHeader chFaceValue;
         private System.Windows.Forms.ToolStripMenuItem menuItemBondCalculator;
         private System.Windows.Forms.ToolStripMenuItem menuItemDictionary;

@@ -30,7 +30,6 @@ namespace RfBondManagement.WinForm.Controls
         private void InitializeComponent()
         {
             this.pnlActions = new System.Windows.Forms.Panel();
-            this.btnAdd = new System.Windows.Forms.Button();
             this.btnSearch = new System.Windows.Forms.Button();
             this.tbSearch = new System.Windows.Forms.TextBox();
             this.pnlData = new System.Windows.Forms.Panel();
@@ -42,7 +41,6 @@ namespace RfBondManagement.WinForm.Controls
             // 
             // pnlActions
             // 
-            this.pnlActions.Controls.Add(this.btnAdd);
             this.pnlActions.Controls.Add(this.btnSearch);
             this.pnlActions.Controls.Add(this.tbSearch);
             this.pnlActions.Dock = System.Windows.Forms.DockStyle.Top;
@@ -51,25 +49,16 @@ namespace RfBondManagement.WinForm.Controls
             this.pnlActions.Size = new System.Drawing.Size(829, 31);
             this.pnlActions.TabIndex = 3;
             // 
-            // btnAdd
-            // 
-            this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAdd.Location = new System.Drawing.Point(787, 3);
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(36, 23);
-            this.btnAdd.TabIndex = 5;
-            this.btnAdd.Text = "+";
-            this.btnAdd.UseVisualStyleBackColor = true;
-            // 
             // btnSearch
             // 
             this.btnSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSearch.Location = new System.Drawing.Point(739, 3);
+            this.btnSearch.Location = new System.Drawing.Point(784, 3);
             this.btnSearch.Name = "btnSearch";
             this.btnSearch.Size = new System.Drawing.Size(42, 23);
             this.btnSearch.TabIndex = 4;
             this.btnSearch.Text = ">>>";
             this.btnSearch.UseVisualStyleBackColor = true;
+            this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
             // 
             // tbSearch
             // 
@@ -77,8 +66,9 @@ namespace RfBondManagement.WinForm.Controls
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tbSearch.Location = new System.Drawing.Point(0, 3);
             this.tbSearch.Name = "tbSearch";
-            this.tbSearch.Size = new System.Drawing.Size(733, 23);
+            this.tbSearch.Size = new System.Drawing.Size(778, 23);
             this.tbSearch.TabIndex = 3;
+            this.tbSearch.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tbSearch_KeyUp);
             // 
             // pnlData
             // 
@@ -128,7 +118,6 @@ namespace RfBondManagement.WinForm.Controls
         #endregion
         private System.Windows.Forms.Panel pnlActions;
         private System.Windows.Forms.Panel pnlData;
-        private System.Windows.Forms.Button btnAdd;
         private System.Windows.Forms.Button btnSearch;
         private System.Windows.Forms.TextBox tbSearch;
         private System.Windows.Forms.DataGridView dgvPapers;

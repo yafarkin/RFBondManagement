@@ -34,8 +34,8 @@ namespace RfBondManagement.WinForm.Forms
             this.menuItemNew = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemEdit = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemDelete = new System.Windows.Forms.ToolStripMenuItem();
-            this.paperList = new RfBondManagement.WinForm.Controls.PaperListUC();
             this.menuItemSelect = new System.Windows.Forms.ToolStripMenuItem();
+            this.paperList = new RfBondManagement.WinForm.Controls.PaperListUC();
             this.menuPapers.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -81,6 +81,13 @@ namespace RfBondManagement.WinForm.Forms
             this.menuItemDelete.Text = "Удалить";
             this.menuItemDelete.Click += new System.EventHandler(this.menuItemDelete_Click);
             // 
+            // menuItemSelect
+            // 
+            this.menuItemSelect.Name = "menuItemSelect";
+            this.menuItemSelect.Size = new System.Drawing.Size(66, 20);
+            this.menuItemSelect.Text = "Выбрать";
+            this.menuItemSelect.Click += new System.EventHandler(this.menuItemSelect_Click);
+            // 
             // paperList
             // 
             this.paperList.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -89,13 +96,6 @@ namespace RfBondManagement.WinForm.Forms
             this.paperList.PaperRepository = null;
             this.paperList.Size = new System.Drawing.Size(800, 426);
             this.paperList.TabIndex = 1;
-            // 
-            // menuItemSelect
-            // 
-            this.menuItemSelect.Name = "menuItemSelect";
-            this.menuItemSelect.Size = new System.Drawing.Size(66, 20);
-            this.menuItemSelect.Text = "Выбрать";
-            this.menuItemSelect.Click += new System.EventHandler(this.menuItemSelect_Click);
             // 
             // PaperListForm
             // 
@@ -109,6 +109,7 @@ namespace RfBondManagement.WinForm.Forms
             this.MinimizeBox = false;
             this.Name = "PaperListForm";
             this.Text = "Список бумаг";
+            this.Load += new System.EventHandler(this.PaperListForm_Load);
             this.menuPapers.ResumeLayout(false);
             this.menuPapers.PerformLayout();
             this.ResumeLayout(false);

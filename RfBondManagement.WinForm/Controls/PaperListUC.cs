@@ -1,6 +1,7 @@
 ﻿using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using Unity;
@@ -41,7 +42,8 @@ namespace RfBondManagement.WinForm.Controls
                     x.ShortName.ToLower().Contains(Filter));
             }
 
-            dgvPapers.DataSource = papers.ToList();
+            dgvPapers.AutoGenerateColumns = false;
+            dgvPapers.DataSource = new SortableBindingList<AbstractPaper>(papers.ToList());
         }
 
         public PaperListUC()

@@ -60,7 +60,7 @@ namespace RfBondManagement.WinForm.Controls
                 return;
             }
 
-            if (!_historyPrices.ContainsKey(secId))
+            if (!_historyPrices.ContainsKey(secId) || null == _historyPrices[secId] || 0 == _historyPrices[secId].Count)
             {
                 lvi.SubItems[2].Text = "---";
                 lvi.SubItems[3].Text = "---";
@@ -110,6 +110,10 @@ namespace RfBondManagement.WinForm.Controls
         public async Task UpdateListPrice(AbstractPaper paper)
         {
             var paperPrice = await ExternalImport.LastPrice(Logger, paper);
+            if (null == paperPrice)
+            {
+                return;
+            }
 
             var secId = paperPrice.SecId;
             var lastPrice = paperPrice.Price;
@@ -211,6 +215,11 @@ namespace RfBondManagement.WinForm.Controls
             }
 
             var historyPrices = _historyPrices[secId];
+            if (null == historyPrices || 0 == historyPrices.Count)
+            {
+                pnlGraphData.Controls.Clear();
+                return;
+            }
 
             var chart = new ZedGraphControl
             {
@@ -221,6 +230,7 @@ namespace RfBondManagement.WinForm.Controls
             gp.Title.Text = secId;
 
             var lastPriceDate = historyPrices.Last().When;
+
             var fromPriceDate = FindFromPriceDate(lastPriceDate) ?? historyPrices.First().When;
 
             var lastPriceValues = historyPrices

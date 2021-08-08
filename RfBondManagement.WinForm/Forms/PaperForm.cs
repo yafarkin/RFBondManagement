@@ -57,7 +57,15 @@ namespace RfBondManagement.WinForm.Forms
 
             Cursor.Current = Cursors.WaitCursor;
 
-            Paper = await _import.ImportPaper(_logger,tbSearch.Text.Trim());
+            try
+            {
+                Paper = await _import.ImportPaper(_logger, tbSearch.Text.Trim());
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show(exc.Message, "Ошибка при импорте бумаги");
+                return;
+            }
 
             DataBind();
 

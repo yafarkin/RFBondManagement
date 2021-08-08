@@ -57,6 +57,11 @@ namespace RfBondManagement.Engine
             }
 
             var history = await _import.HistoryPrice(_logger, paper, when);
+            if (null == history)
+            {
+                return;
+            }
+
             foreach (var price in history)
             {
                 _historyRepository.Insert(price);

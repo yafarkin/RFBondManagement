@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace RfFondPortfolio.Common.Dtos
 {
@@ -16,7 +15,7 @@ namespace RfFondPortfolio.Common.Dtos
         /// <summary>
         /// Список дочерних листов
         /// </summary>
-        public IEnumerable<PortfolioStructureLeaf> Childs { get; set; }
+        public IList<PortfolioStructureLeaf> Children { get; set; }
 
         /// <summary>
         /// Размер доли портфеля
@@ -24,13 +23,13 @@ namespace RfFondPortfolio.Common.Dtos
         public decimal PercentLimit { get; set; }
 
         /// <summary>
-        /// Название листа, опционально
+        /// Название листа
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
         /// Список включенных бумаг, опционально (% бумаги и сама бумага)
         /// </summary>
-        public IEnumerable<Tuple<decimal, AbstractPaper>> Papers { get; set; }
+        public IList<PortfolioStructureLeafPaper> Papers { get; set; }
     }
 }

@@ -82,7 +82,6 @@ namespace RfBondManagement.WinForm.Forms
             this.psBond.Name = "psBond";
             this.psBond.Size = new System.Drawing.Size(693, 45);
             this.psBond.TabIndex = 0;
-            this.psBond.OnSelectPaper += new System.Action<BondPaper>(this.psBond_OnSelectStockPaper);
             // 
             // pnlSettings
             // 

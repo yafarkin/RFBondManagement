@@ -30,7 +30,7 @@ namespace RfBondManagement.WinForm.Forms
         private void InitializeComponent()
         {
             this.pnlLeaf = new System.Windows.Forms.Panel();
-            this.tbPercent = new System.Windows.Forms.TextBox();
+            this.tbVolume = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.tbName = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -55,7 +55,7 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // pnlLeaf
             // 
-            this.pnlLeaf.Controls.Add(this.tbPercent);
+            this.pnlLeaf.Controls.Add(this.tbVolume);
             this.pnlLeaf.Controls.Add(this.label2);
             this.pnlLeaf.Controls.Add(this.tbName);
             this.pnlLeaf.Controls.Add(this.label1);
@@ -65,12 +65,12 @@ namespace RfBondManagement.WinForm.Forms
             this.pnlLeaf.Size = new System.Drawing.Size(301, 68);
             this.pnlLeaf.TabIndex = 5;
             // 
-            // tbPercent
+            // tbVolume
             // 
-            this.tbPercent.Location = new System.Drawing.Point(142, 35);
-            this.tbPercent.Name = "tbPercent";
-            this.tbPercent.Size = new System.Drawing.Size(144, 23);
-            this.tbPercent.TabIndex = 7;
+            this.tbVolume.Location = new System.Drawing.Point(142, 35);
+            this.tbVolume.Name = "tbVolume";
+            this.tbVolume.Size = new System.Drawing.Size(144, 23);
+            this.tbVolume.TabIndex = 7;
             // 
             // label2
             // 
@@ -155,6 +155,7 @@ namespace RfBondManagement.WinForm.Forms
             this.btnDeletePaper.TabIndex = 2;
             this.btnDeletePaper.Text = "Удалить";
             this.btnDeletePaper.UseVisualStyleBackColor = true;
+            this.btnDeletePaper.Click += new System.EventHandler(this.btnDeletePaper_Click);
             // 
             // btnEditPaper
             // 
@@ -164,6 +165,7 @@ namespace RfBondManagement.WinForm.Forms
             this.btnEditPaper.TabIndex = 1;
             this.btnEditPaper.Text = "Изменить";
             this.btnEditPaper.UseVisualStyleBackColor = true;
+            this.btnEditPaper.Click += new System.EventHandler(this.btnEditPaper_Click);
             // 
             // btnAddPaper
             // 
@@ -173,6 +175,7 @@ namespace RfBondManagement.WinForm.Forms
             this.btnAddPaper.TabIndex = 0;
             this.btnAddPaper.Text = "Добавить";
             this.btnAddPaper.UseVisualStyleBackColor = true;
+            this.btnAddPaper.Click += new System.EventHandler(this.btnAddPaper_Click);
             // 
             // label3
             // 
@@ -241,7 +244,7 @@ namespace RfBondManagement.WinForm.Forms
 
         #endregion
         private System.Windows.Forms.Panel pnlLeaf;
-        private System.Windows.Forms.TextBox tbPercent;
+        private System.Windows.Forms.TextBox tbVolume;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox tbName;
         private System.Windows.Forms.Label label1;

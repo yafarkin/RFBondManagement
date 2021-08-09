@@ -2,7 +2,7 @@
 {
     public class PortfolioStructureLeafPaper
     {
-        public decimal PaperPercent { get; set; }
+        public decimal Volume { get; set; }
 
         public AbstractPaper Paper { get; set; }
     }

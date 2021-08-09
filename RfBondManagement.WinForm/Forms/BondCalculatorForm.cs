@@ -37,8 +37,6 @@ namespace RfBondManagement.WinForm.Forms
 
         private void BondCalculatorForm_Load(object sender, EventArgs e)
         {
-            psBond.WhereFilter = p => p.PaperType == PaperType.Bond;
-
             cbUntilMaturityDate.Checked = true;
 
             var portfolio = PortfolioRepository.Get().FirstOrDefault() ?? new Portfolio();

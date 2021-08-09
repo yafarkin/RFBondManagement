@@ -30,7 +30,8 @@ namespace RfBondManagement.WinForm.Controls
         private void InitializeComponent()
         {
             this.lblSearch = new System.Windows.Forms.Label();
-            this.cbbPaper = new System.Windows.Forms.ComboBox();
+            this.tbSelectedPaper = new System.Windows.Forms.TextBox();
+            this.btnSearch = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // lblSearch
@@ -42,25 +43,33 @@ namespace RfBondManagement.WinForm.Controls
             this.lblSearch.TabIndex = 0;
             this.lblSearch.Text = "Выберите бумагу:";
             // 
-            // cbbPaper
+            // tbSelectedPaper
             // 
-            this.cbbPaper.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.tbSelectedPaper.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbbPaper.FormattingEnabled = true;
-            this.cbbPaper.Location = new System.Drawing.Point(0, 18);
-            this.cbbPaper.MaxDropDownItems = 25;
-            this.cbbPaper.Name = "cbbPaper";
-            this.cbbPaper.Size = new System.Drawing.Size(245, 23);
-            this.cbbPaper.Sorted = true;
-            this.cbbPaper.TabIndex = 1;
-            this.cbbPaper.SelectionChangeCommitted += new System.EventHandler(this.cbPaper_SelectionChangeCommitted);
-            this.cbbPaper.TextChanged += new System.EventHandler(this.cbPaper_TextChanged);
+            this.tbSelectedPaper.Location = new System.Drawing.Point(0, 19);
+            this.tbSelectedPaper.Name = "tbSelectedPaper";
+            this.tbSelectedPaper.ReadOnly = true;
+            this.tbSelectedPaper.Size = new System.Drawing.Size(207, 23);
+            this.tbSelectedPaper.TabIndex = 1;
+            // 
+            // btnSearch
+            // 
+            this.btnSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSearch.Location = new System.Drawing.Point(213, 19);
+            this.btnSearch.Name = "btnSearch";
+            this.btnSearch.Size = new System.Drawing.Size(32, 23);
+            this.btnSearch.TabIndex = 2;
+            this.btnSearch.Text = "...";
+            this.btnSearch.UseVisualStyleBackColor = true;
+            this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
             // 
             // PaperSelectUC
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.cbbPaper);
+            this.Controls.Add(this.btnSearch);
+            this.Controls.Add(this.tbSelectedPaper);
             this.Controls.Add(this.lblSearch);
             this.Name = "PaperSelectUC";
             this.Size = new System.Drawing.Size(248, 45);
@@ -73,6 +82,7 @@ namespace RfBondManagement.WinForm.Controls
         #endregion
 
         private System.Windows.Forms.Label lblSearch;
-        private System.Windows.Forms.ComboBox cbbPaper;
+        private System.Windows.Forms.TextBox tbSelectedPaper;
+        private System.Windows.Forms.Button btnSearch;
     }
 }

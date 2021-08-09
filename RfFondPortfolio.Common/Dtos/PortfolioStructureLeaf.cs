@@ -18,9 +18,9 @@ namespace RfFondPortfolio.Common.Dtos
         public IList<PortfolioStructureLeaf> Children { get; set; }
 
         /// <summary>
-        /// Размер доли портфеля
+        /// Размер (объём) доли портфеля
         /// </summary>
-        public decimal PercentLimit { get; set; }
+        public decimal Volume { get; set; }
 
         /// <summary>
         /// Название листа

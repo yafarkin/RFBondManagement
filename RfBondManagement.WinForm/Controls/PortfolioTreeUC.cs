@@ -1,5 +1,6 @@
 ﻿using RfFondPortfolio.Common.Dtos;
 using System;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace RfBondManagement.WinForm.Controls
@@ -36,9 +37,11 @@ namespace RfBondManagement.WinForm.Controls
 
         protected TreeNode BindNode(PortfolioStructureLeaf leaf, TreeView tv, object selectedItem)
         {
+            var totalVolume = null == leaf.Parent ? leaf.Volume : leaf.Parent.Children.Sum(x => x.Volume);
+
             var node = new TreeNode
             {
-                Text = $"{leaf.PercentLimit}%, {leaf.Name}",
+                Text = $"{leaf.Volume/totalVolume:P} ({leaf.Volume:N}), {leaf.Name}",
                 Tag = leaf,
                 ImageKey = "group"
             };
@@ -50,11 +53,13 @@ namespace RfBondManagement.WinForm.Controls
 
             if (leaf.Papers != null)
             {
+                totalVolume = leaf.Papers.Sum(x => x.Volume);
+
                 foreach (var leafPaper in leaf.Papers)
                 {
                     var paperNode = new TreeNode
                     {
-                        Text = $"{leafPaper.PaperPercent}%, {leafPaper.Paper.SecId} ({leafPaper.Paper.ShortName})",
+                        Text = $"{leafPaper.Volume/totalVolume:P} ({leafPaper.Volume:N}), {leafPaper.Paper.SecId} ({leafPaper.Paper.ShortName})",
                         Tag = leafPaper,
                         ImageKey = "paper"
                     };

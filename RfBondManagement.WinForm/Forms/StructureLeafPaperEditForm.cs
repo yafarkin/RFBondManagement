@@ -1,6 +1,7 @@
 ﻿using RfFondPortfolio.Common.Dtos;
 using System;
 using System.Windows.Forms;
+using Unity;
 
 namespace RfBondManagement.WinForm.Forms
 {
@@ -8,9 +9,14 @@ namespace RfBondManagement.WinForm.Forms
     {
         public PortfolioStructureLeafPaper SelectedLeafPaper { get; set; }
 
-        public StructureLeafPaperEditForm()
+        protected IUnityContainer _container;
+
+        public StructureLeafPaperEditForm(IUnityContainer container)
         {
             InitializeComponent();
+
+            _container = container;
+            _container.BuildUp(paperSelect);
         }
 
         private void StructureLeafPaperEditForm_Load(object sender, EventArgs e)

@@ -144,8 +144,7 @@ namespace RfBondManagement.WinForm.Controls
                     favoritePaper.SecId,
                     string.Empty,
                     string.Empty,
-                    string.Empty,
-                    "Удалить"
+                    string.Empty
                 })
                 {
                     Tag = favoritePaper

@@ -47,8 +47,7 @@ namespace RfBondManagement.WinForm.Forms
                     var paper = f.Paper;
                     if (_paperRepository.Get(paper.SecId) != null)
                     {
-                        MessageBox.Show("Бумага с таким SECID уже есть в системе", "Ошибка", MessageBoxButtons.OK,
-                            MessageBoxIcon.Error);
+                        MessageBox.Show("Бумага с таким SecID уже есть в системе", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         continue;
 
                     }

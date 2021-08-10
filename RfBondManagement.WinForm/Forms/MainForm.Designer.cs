@@ -42,6 +42,8 @@ namespace RfBondManagement.WinForm.Forms
             this.tcData = new System.Windows.Forms.TabControl();
             this.tpWatchList = new System.Windows.Forms.TabPage();
             this.watchList = new RfBondManagement.WinForm.Controls.WatchListUC();
+            this.menuItemAddPortfolio = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemEditPortfolio = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenu.SuspendLayout();
             this.pnlData.SuspendLayout();
             this.tcData.SuspendLayout();
@@ -88,7 +90,9 @@ namespace RfBondManagement.WinForm.Forms
             // menuItemSettings
             // 
             this.menuItemSettings.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuItemGeneralSettings});
+            this.menuItemGeneralSettings,
+            this.menuItemAddPortfolio,
+            this.menuItemEditPortfolio});
             this.menuItemSettings.Name = "menuItemSettings";
             this.menuItemSettings.Size = new System.Drawing.Size(79, 20);
             this.menuItemSettings.Text = "Настройки";
@@ -97,7 +101,7 @@ namespace RfBondManagement.WinForm.Forms
             // 
             this.menuItemGeneralSettings.Name = "menuItemGeneralSettings";
             this.menuItemGeneralSettings.ShortcutKeys = System.Windows.Forms.Keys.F3;
-            this.menuItemGeneralSettings.Size = new System.Drawing.Size(194, 22);
+            this.menuItemGeneralSettings.Size = new System.Drawing.Size(211, 22);
             this.menuItemGeneralSettings.Text = "Общие настройки";
             this.menuItemGeneralSettings.Click += new System.EventHandler(this.menuItemGeneralSettings_Click);
             // 
@@ -160,6 +164,20 @@ namespace RfBondManagement.WinForm.Forms
             this.watchList.Size = new System.Drawing.Size(828, 466);
             this.watchList.TabIndex = 0;
             // 
+            // menuItemAddPortfolio
+            // 
+            this.menuItemAddPortfolio.Name = "menuItemAddPortfolio";
+            this.menuItemAddPortfolio.Size = new System.Drawing.Size(211, 22);
+            this.menuItemAddPortfolio.Text = "Новый портфель";
+            this.menuItemAddPortfolio.Click += new System.EventHandler(this.menuItemAddPortfolio_Click);
+            // 
+            // menuItemEditPortfolio
+            // 
+            this.menuItemEditPortfolio.Name = "menuItemEditPortfolio";
+            this.menuItemEditPortfolio.Size = new System.Drawing.Size(211, 22);
+            this.menuItemEditPortfolio.Text = "Редактировать портфель";
+            this.menuItemEditPortfolio.Click += new System.EventHandler(this.menuItemEditPortfolio_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -196,6 +214,8 @@ namespace RfBondManagement.WinForm.Forms
         private System.Windows.Forms.TabControl tcData;
         private System.Windows.Forms.TabPage tpWatchList;
         private WatchListUC watchList;
+        private System.Windows.Forms.ToolStripMenuItem menuItemAddPortfolio;
+        private System.Windows.Forms.ToolStripMenuItem menuItemEditPortfolio;
     }
 }
 

@@ -61,6 +61,7 @@ namespace RfBondManagement.WinForm.Controls
             this.btnDelete.TabIndex = 2;
             this.btnDelete.Text = "Удалить";
             this.btnDelete.UseVisualStyleBackColor = true;
+            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
             // btnEdit
             // 
@@ -70,6 +71,7 @@ namespace RfBondManagement.WinForm.Controls
             this.btnEdit.TabIndex = 1;
             this.btnEdit.Text = "Изменить";
             this.btnEdit.UseVisualStyleBackColor = true;
+            this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
             // 
             // btnAdd
             // 
@@ -79,6 +81,7 @@ namespace RfBondManagement.WinForm.Controls
             this.btnAdd.TabIndex = 0;
             this.btnAdd.Text = "Добавить";
             this.btnAdd.UseVisualStyleBackColor = true;
+            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
             // pnlData
             // 

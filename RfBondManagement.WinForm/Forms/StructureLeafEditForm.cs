@@ -13,7 +13,7 @@ namespace RfBondManagement.WinForm.Forms
 
         public PortfolioStructureLeaf Leaf { get; set; }
 
-        public PortfolioStructureLeafPaper SelectedPaper =>
+        protected PortfolioStructureLeafPaper SelectedPaper =>
             lvPapers.SelectedItems.Count != 1
                 ? null
                 : lvPapers.SelectedItems[0].Tag as PortfolioStructureLeafPaper;
@@ -41,63 +41,48 @@ namespace RfBondManagement.WinForm.Forms
             return lvi;
         }
 
-        private void StructureLeafEditForm_Load(object sender, EventArgs e)
+        public void DataBind()
         {
-            if (null == Leaf)
-            {
-                return;
-            }
+            var selectedPaper = SelectedPaper;
+            lvPapers.Items.Clear();
+
+            Leaf ??= new PortfolioStructureLeaf();
+            Leaf.Papers ??= new List<PortfolioStructureLeafPaper>();
 
             tbName.Text = Leaf.Name;
             tbVolume.Text = Leaf.Volume.ToString();
 
-            if (Leaf.Papers != null)
+            var totalVolume = Leaf.Papers.Sum(x => x.Volume);
+            foreach (var leafPaper in Leaf.Papers)
             {
-                var totalVolume = Leaf.Papers.Sum(x => x.Volume);
-                foreach (var leafPaper in Leaf.Papers)
+                var lvi = CreatePaperToListView(leafPaper, leafPaper.Volume / totalVolume);
+                lvPapers.Items.Add(lvi);
+
+                if (leafPaper == selectedPaper)
                 {
-                    var lvi = CreatePaperToListView(leafPaper, leafPaper.Volume / totalVolume);
-                    lvPapers.Items.Add(lvi);
+                    lvi.Selected = true;
                 }
             }
         }
 
+        private void StructureLeafEditForm_Load(object sender, EventArgs e)
+        {
+            DataBind();
+        }
+
         private void btnSave_Click(object sender, EventArgs e)
         {
-            Leaf ??= new PortfolioStructureLeaf();
-            Leaf.Papers ??= new List<PortfolioStructureLeafPaper>();
             Leaf.Name = tbName.Text.Trim();
             Leaf.Volume = Convert.ToDecimal(tbVolume.Text.Trim());
 
-            var cloneList = new List<PortfolioStructureLeafPaper>(Leaf.Papers);
-            foreach (var leafPaper in cloneList)
-            {
-                var lvi = lvPapers.FindItemWithText(leafPaper.Paper.SecId);
-                if (null == lvi)
-                {
-                    Leaf.Papers.Remove(leafPaper);
-                }
-                else
-                {
-                    leafPaper.Volume = Convert.ToDecimal(lvi.SubItems[1].Text);
-                }
-            }
-
+            Leaf.Papers = new List<PortfolioStructureLeafPaper>();
             foreach (ListViewItem lvi in lvPapers.Items)
             {
-                var leafPaper = Leaf.Papers.FirstOrDefault(x => x.Paper.SecId == lvi.Text);
-                if (null == leafPaper)
+                Leaf.Papers.Add(new PortfolioStructureLeafPaper
                 {
-                    Leaf.Papers.Add(new PortfolioStructureLeafPaper
-                    {
-                        Paper = lvi.Tag as AbstractPaper,
-                        Volume = Convert.ToDecimal(lvi.SubItems[1].Text)
-                    });
-                }
-                else
-                {
-                    leafPaper.Volume = Convert.ToDecimal(lvi.SubItems[1].Text);
-                }
+                    Paper = lvi.Tag as AbstractPaper,
+                    Volume = Convert.ToDecimal(lvi.SubItems[1].Text)
+                });
             }
         }
 
@@ -111,10 +96,7 @@ namespace RfBondManagement.WinForm.Forms
                 }
 
                 Leaf.Papers.Add(f.SelectedLeafPaper);
-
-                var totalVolume = Leaf.Papers.Sum(x => x.Volume);
-                var lvi = CreatePaperToListView(f.SelectedLeafPaper, f.SelectedLeafPaper.Volume / totalVolume);
-                lvPapers.Items.Add(lvi);
+                DataBind();
             }
         }
 
@@ -134,14 +116,7 @@ namespace RfBondManagement.WinForm.Forms
                     return;
                 }
 
-                var totalVolume = Leaf.Papers.Sum(x => x.Volume);
-
-                var lvi = lvPapers.SelectedItems[0];
-                lvi.Tag = f.SelectedLeafPaper.Paper;
-                lvi.SubItems[0].Text = (f.SelectedLeafPaper.Volume / totalVolume).ToString("P");
-                lvi.SubItems[1].Text = f.SelectedLeafPaper.Volume.ToString();
-                lvi.SubItems[2].Text = f.SelectedLeafPaper.Paper.SecId;
-                lvi.SubItems[3].Text = f.SelectedLeafPaper.Paper.ShortName;
+                DataBind();
             }
         }
 
@@ -152,6 +127,13 @@ namespace RfBondManagement.WinForm.Forms
                 return;
             }
 
+            if (MessageBox.Show("Подтвердите удаление записи.", "Удаление записи по бумаге", MessageBoxButtons.OKCancel) != DialogResult.OK)
+            {
+                return;
+            }
+
+            Leaf.Papers.Remove(SelectedPaper);
+            DataBind();
         }
     }
 }

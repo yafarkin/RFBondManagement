@@ -46,7 +46,6 @@ namespace RfBondManagement.WinForm.Controls
             this.chLastPrice = new System.Windows.Forms.ColumnHeader();
             this.chMinPrice = new System.Windows.Forms.ColumnHeader();
             this.chMaxPrice = new System.Windows.Forms.ColumnHeader();
-            this.chDelete = new System.Windows.Forms.ColumnHeader();
             this.pnlGraph = new System.Windows.Forms.Panel();
             this.pnlGraphData = new System.Windows.Forms.Panel();
             this.pnlGraphType = new System.Windows.Forms.Panel();
@@ -191,8 +190,7 @@ namespace RfBondManagement.WinForm.Controls
             this.chSecId,
             this.chLastPrice,
             this.chMinPrice,
-            this.chMaxPrice,
-            this.chDelete});
+            this.chMaxPrice});
             this.lvPapers.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvPapers.FullRowSelect = true;
             this.lvPapers.HideSelection = false;
@@ -220,10 +218,6 @@ namespace RfBondManagement.WinForm.Controls
             // chMaxPrice
             // 
             this.chMaxPrice.Text = "Макс. цена";
-            // 
-            // chDelete
-            // 
-            this.chDelete.Text = "Удалить";
             // 
             // pnlGraph
             // 
@@ -321,7 +315,6 @@ namespace RfBondManagement.WinForm.Controls
         private System.Windows.Forms.ColumnHeader chLastPrice;
         private System.Windows.Forms.ColumnHeader chMinPrice;
         private System.Windows.Forms.ColumnHeader chMaxPrice;
-        private System.Windows.Forms.ColumnHeader chDelete;
         private System.Windows.Forms.Timer timerRefresh;
         private System.Windows.Forms.Panel pnlGraphType;
         private System.Windows.Forms.RadioButton rbGraphPoints;

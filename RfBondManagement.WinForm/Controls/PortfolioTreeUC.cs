@@ -2,12 +2,41 @@
 using System;
 using System.Linq;
 using System.Windows.Forms;
+using RfBondManagement.WinForm.Forms;
+using RfFondPortfolio.Common.Interfaces;
+using Unity;
 
 namespace RfBondManagement.WinForm.Controls
 {
     public partial class PortfolioTreeUC : UserControl
     {
         public Portfolio Portfolio { get; set; }
+
+        [Dependency]
+        public IUnityContainer Container { get; set; }
+
+        public PortfolioStructureLeaf SelectedLeaf
+        {
+            get
+            {
+                var selectedItem = tvPortfolio.SelectedNode?.Tag;
+                if (null == selectedItem)
+                {
+                    return null;
+                }
+
+                if (selectedItem is PortfolioStructureLeaf leaf)
+                {
+                    return leaf;
+                }
+                else if (selectedItem is PortfolioStructureLeafPaper paperLeaf)
+                {
+                    return tvPortfolio.SelectedNode.Parent?.Tag as PortfolioStructureLeaf;
+                }
+
+                return null;
+            }
+        }
 
         public PortfolioTreeUC()
         {
@@ -26,18 +55,27 @@ namespace RfBondManagement.WinForm.Controls
 
         public void DataBind()
         {
-            var selectedItem = tvPortfolio.SelectedNode.Tag;
+            var selectedItem = tvPortfolio.SelectedNode?.Tag;
 
             tvPortfolio.Nodes.Clear();
 
             var rootLeaf = Portfolio.RootLeaf;
             var rootNode = BindNode(rootLeaf, tvPortfolio, selectedItem);
-            tvPortfolio.Nodes.Add(rootNode);
+
+            if (rootNode != null)
+            {
+                tvPortfolio.Nodes.Add(rootNode);
+            }
         }
 
         protected TreeNode BindNode(PortfolioStructureLeaf leaf, TreeView tv, object selectedItem)
         {
-            var totalVolume = null == leaf.Parent ? leaf.Volume : leaf.Parent.Children.Sum(x => x.Volume);
+            if (null == leaf)
+            {
+                return null;
+            }
+
+            var totalVolume = leaf.Parent?.Children.Sum(x => x.Volume) ?? leaf.Volume;
 
             var node = new TreeNode
             {
@@ -81,6 +119,53 @@ namespace RfBondManagement.WinForm.Controls
             }
 
             return node;
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            using (var f = Container.Resolve<StructureLeafEditForm>())
+            {
+                if (null == SelectedLeaf && tvPortfolio.HasChildren)
+                {
+                    MessageBox.Show("Добавлять можно только в дочерние записи", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (f.ShowDialog() != DialogResult.OK)
+                {
+                    return;
+                }
+
+                if (null == SelectedLeaf)
+                {
+                    Portfolio.RootLeaf = f.Leaf;
+                }
+                else
+                {
+                    SelectedLeaf.Children.Add(f.Leaf);
+                }
+
+                DataBind();
+            }
+        }
+
+        private void btnEdit_Click(object sender, EventArgs e)
+        {
+            using (var f = Container.Resolve<StructureLeafEditForm>())
+            {
+                f.Leaf = SelectedLeaf;
+                if (f.ShowDialog() != DialogResult.OK)
+                {
+                    return;
+                }
+
+                DataBind();
+            }
+        }
+
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

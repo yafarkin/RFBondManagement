@@ -7,18 +7,21 @@ namespace RfBondManagement.WinForm.Controls
 {
     public partial class PortfolioUC : UserControl
     {
-        [Dependency]
-        public IUnityContainer Container { get; set; }
+        public readonly Portfolio Portfolio;
 
-        public Portfolio Portfolio { get; set; }
-
-        public PortfolioUC()
+        public PortfolioUC(IUnityContainer container, Portfolio portfolio)
         {
             InitializeComponent();
+
+            Portfolio = portfolio;
+
+            container.BuildUp(portfolioTree);
+            portfolioTree.Portfolio = Portfolio;
         }
 
         private void PortfolioUC_Load(object sender, EventArgs e)
         {
+            lblPortfolio.Text = $"{Portfolio.Name} ({Portfolio.AccountNumber})";
         }
     }
 }

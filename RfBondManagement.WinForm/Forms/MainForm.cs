@@ -2,8 +2,11 @@
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 using System;
+using System.Linq;
 using System.Windows.Forms;
+using RfBondManagement.WinForm.Controls;
 using Unity;
+using Unity.Resolution;
 
 namespace RfBondManagement.WinForm.Forms
 {
@@ -17,11 +20,24 @@ namespace RfBondManagement.WinForm.Forms
 
         public IUnityContainer Container { get; set; }
 
-        protected Portfolio _portfolio;
+        public Portfolio SelectedPortfolio
+        {
+            get
+            {
+                var selectedTab = tcData.SelectedTab;
+                if (null == selectedTab || 0 == tcData.SelectedIndex)
+                {
+                    return null;
+                }
+
+                return selectedTab.Tag as Portfolio;
+            }
+        }
 
         public MainForm(IUnityContainer container)
         {
             InitializeComponent();
+
             Container = container;
             Container.BuildUp(watchList);
         }
@@ -33,67 +49,37 @@ namespace RfBondManagement.WinForm.Forms
 
         private void menuItemGeneralSettings_Click(object sender, EventArgs e)
         {
-            using (var f = Container.Resolve<SettingsForm>())
+        }
+
+        public void DataBind()
+        {
+            var selectedPortfolio = SelectedPortfolio;
+            for (var i = 1; i < tcData.TabPages.Count; i++)
             {
-                f.Portfolio = _portfolio;
-                if (f.ShowDialog() == DialogResult.OK)
+                tcData.TabPages.RemoveAt(i);
+            }
+
+            var portfolios = PortfolioRepository.Get().Where(x => x.Actual);
+            foreach (var portfolio in portfolios)
+            {
+                var p = Container.Resolve<PortfolioUC>(new ParameterOverride("portfolio", portfolio));
+
+                var tp = new TabPage(portfolio.Name);
+                tp.Controls.Add(p);
+                tp.Tag = portfolio;
+
+                tcData.TabPages.Add(tp);
+
+                if (portfolio == selectedPortfolio)
                 {
-                    _portfolio = f.Portfolio;
-                    PortfolioRepository.Update(_portfolio);
+                    tcData.SelectedTab = tp;
                 }
             }
         }
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
-            //_portfolio = PortfolioRepository.Get().FirstOrDefault() ?? new Portfolio {Id = Guid.NewGuid()};
-
-            //var engine = Container.Resolve<PortfolioEngine>(new ParameterOverride("portfolio", _portfolio));
-            //var content = engine.Build();
-            //await engine.FillPrice(content);
-
-            //var papers = content.Papers;
-
-            //lvPapers.Items.Clear();
-            //foreach (var paperInPortfolio in papers)
-            //{
-            //    var paper = paperInPortfolio.Paper;
-            //    if (paper.PaperType == PaperType.Bond)
-            //    {
-            //        var bondPaper = paper as BondPaper;
-            //        var bondInPortfolio = paperInPortfolio as BondInPortfolio;
-
-            //        var calc = Container.Resolve<IBondCalculator>();
-            //        var biiToClose = new BondIncomeInfo
-            //        {
-            //            BondInPortfolio = bondInPortfolio
-            //        };
-
-            //        var biiToToday = new BondIncomeInfo
-            //        {
-            //            BondInPortfolio = bondInPortfolio,
-            //            SellPrice = paperInPortfolio.MarketPrice
-            //        };
-
-            //        calc.CalculateIncome(biiToClose, _portfolio, bondPaper.MatDate);
-            //        calc.CalculateIncome(biiToToday, _portfolio, DateTime.UtcNow.Date.AddDays(30));
-
-            //        var lvi = new ListViewItem(new[]
-            //        {
-            //            paper.Name,
-            //            paper.FaceValue.ToString("C"),
-            //            paperInPortfolio.Count.ToString("### ### ###"),
-            //            biiToClose.BalanceOnSell.ToString("C"),
-            //            biiToClose.ExpectedIncome.ToString("C"),
-            //            (biiToClose.RealIncomePercent / 100).ToString("P"),
-            //            biiToClose.BreakevenDate.ToShortDateString(),
-            //            (bondPaper.MatDate - DateTime.UtcNow.Date).Days.ToString(),
-            //        });
-            //        lvPapers.Items.Add(lvi);
-            //    }
-            //}
-
-            //lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+            DataBind();
         }
 
         private void menuItemBondCalculator_Click(object sender, EventArgs e)
@@ -110,6 +96,41 @@ namespace RfBondManagement.WinForm.Forms
             {
                 f.ShowDialog();
                 watchList.DataBind();
+            }
+        }
+
+        private void menuItemAddPortfolio_Click(object sender, EventArgs e)
+        {
+            using (var f = Container.Resolve<SettingsForm>())
+            {
+                if (f.ShowDialog() != DialogResult.OK)
+                {
+                    return;
+                }
+
+                PortfolioRepository.Insert(f.Portfolio);
+                DataBind();
+            }
+        }
+
+        private void menuItemEditPortfolio_Click(object sender, EventArgs e)
+        {
+            using (var f = Container.Resolve<SettingsForm>())
+            {
+                f.Portfolio = SelectedPortfolio;
+                if (f.ShowDialog() != DialogResult.OK)
+                {
+                    return;
+                }
+
+                SelectedPortfolio.Actual = f.Portfolio.Actual;
+                SelectedPortfolio.Commissions = f.Portfolio.Commissions;
+                SelectedPortfolio.Tax = f.Portfolio.Tax;
+                SelectedPortfolio.Name = f.Portfolio.Name;
+                SelectedPortfolio.AccountNumber = f.Portfolio.AccountNumber;
+                SelectedPortfolio.LongTermBenefit = f.Portfolio.LongTermBenefit;
+                PortfolioRepository.Update(SelectedPortfolio);
+                DataBind();
             }
         }
     }

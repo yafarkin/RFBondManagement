@@ -17,6 +17,15 @@ namespace RfBondManagement.WinForm.Forms
         {
             decimal comissions, tax;
 
+            DialogResult = DialogResult.None;
+
+            if (string.IsNullOrWhiteSpace(tbName.Text))
+            {
+                tbName.Focus();
+                MessageBox.Show($"Заполните название портфеля", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             if (!decimal.TryParse(tbComission.Text, out comissions))
             {
                 tbComission.Focus();
@@ -31,6 +40,10 @@ namespace RfBondManagement.WinForm.Forms
                 return;
             }
 
+            Portfolio.Actual = cbActual.Checked;
+            Portfolio.Name = tbName.Text.Trim();
+            Portfolio.AccountNumber = tbAccount.Text.Trim();
+            Portfolio.LongTermBenefit = cbLTB.Checked;
             Portfolio.Commissions = comissions;
             Portfolio.Tax = tax;
 
@@ -39,8 +52,20 @@ namespace RfBondManagement.WinForm.Forms
 
         private void SettingsForm_Load(object sender, EventArgs e)
         {
+            Portfolio ??= new Portfolio
+            {
+                Actual = true,
+                LongTermBenefit = true
+            };
+
+            cbActual.Checked = Portfolio.Actual;
+            tbName.Text = Portfolio.Name;
+            tbAccount.Text = Portfolio.AccountNumber;
+            cbLTB.Checked = Portfolio.LongTermBenefit;
             tbComission.Text = Portfolio.Commissions.ToString("F3");
             tbTax.Text = Portfolio.Tax.ToString("F");
+
+            tbName.Focus();
         }
     }
 }

@@ -63,6 +63,7 @@ namespace RfBondManagement.WinForm.Forms
             foreach (var portfolio in portfolios)
             {
                 var p = Container.Resolve<PortfolioUC>(new ParameterOverride("portfolio", portfolio));
+                p.Dock = DockStyle.Fill;
 
                 var tp = new TabPage(portfolio.Name);
                 tp.Controls.Add(p);

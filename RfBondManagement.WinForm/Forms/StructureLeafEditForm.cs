@@ -41,16 +41,19 @@ namespace RfBondManagement.WinForm.Forms
             return lvi;
         }
 
-        public void DataBind()
+        public void DataBind(bool fullRefresh)
         {
-            var selectedPaper = SelectedPaper;
-            lvPapers.Items.Clear();
-
             Leaf ??= new PortfolioStructureLeaf();
             Leaf.Papers ??= new List<PortfolioStructureLeafPaper>();
 
-            tbName.Text = Leaf.Name;
-            tbVolume.Text = Leaf.Volume.ToString();
+            var selectedPaper = SelectedPaper;
+            lvPapers.Items.Clear();
+
+            if (fullRefresh)
+            {
+                tbName.Text = Leaf.Name;
+                tbVolume.Text = Leaf.Volume.ToString();
+            }
 
             var totalVolume = Leaf.Papers.Sum(x => x.Volume);
             foreach (var leafPaper in Leaf.Papers)
@@ -63,24 +66,27 @@ namespace RfBondManagement.WinForm.Forms
                     lvi.Selected = true;
                 }
             }
+
+            lvPapers.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
         }
 
         private void StructureLeafEditForm_Load(object sender, EventArgs e)
         {
-            DataBind();
+            DataBind(true);
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
             Leaf.Name = tbName.Text.Trim();
             Leaf.Volume = Convert.ToDecimal(tbVolume.Text.Trim());
+            Leaf.Children ??= new List<PortfolioStructureLeaf>();
 
             Leaf.Papers = new List<PortfolioStructureLeafPaper>();
             foreach (ListViewItem lvi in lvPapers.Items)
             {
                 Leaf.Papers.Add(new PortfolioStructureLeafPaper
                 {
-                    Paper = lvi.Tag as AbstractPaper,
+                    Paper = (lvi.Tag as PortfolioStructureLeafPaper).Paper,
                     Volume = Convert.ToDecimal(lvi.SubItems[1].Text)
                 });
             }
@@ -96,7 +102,7 @@ namespace RfBondManagement.WinForm.Forms
                 }
 
                 Leaf.Papers.Add(f.SelectedLeafPaper);
-                DataBind();
+                DataBind(false);
             }
         }
 
@@ -116,7 +122,7 @@ namespace RfBondManagement.WinForm.Forms
                     return;
                 }
 
-                DataBind();
+                DataBind(false);
             }
         }
 
@@ -133,7 +139,7 @@ namespace RfBondManagement.WinForm.Forms
             }
 
             Leaf.Papers.Remove(SelectedPaper);
-            DataBind();
+            DataBind(false);
         }
     }
 }

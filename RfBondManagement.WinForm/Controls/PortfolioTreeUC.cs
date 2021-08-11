@@ -13,6 +13,9 @@ namespace RfBondManagement.WinForm.Controls
         public Portfolio Portfolio { get; set; }
 
         [Dependency]
+        public IPortfolioRepository PortfolioRepository { get; set; }
+
+        [Dependency]
         public IUnityContainer Container { get; set; }
 
         public PortfolioStructureLeaf SelectedLeaf
@@ -29,9 +32,24 @@ namespace RfBondManagement.WinForm.Controls
                 {
                     return leaf;
                 }
-                else if (selectedItem is PortfolioStructureLeafPaper paperLeaf)
+                
+                if (selectedItem is PortfolioStructureLeafPaper paperLeaf)
                 {
                     return tvPortfolio.SelectedNode.Parent?.Tag as PortfolioStructureLeaf;
+                }
+
+                return null;
+            }
+        }
+
+        public PortfolioStructureLeafPaper SelectedLeafPaper
+        {
+            get
+            {
+                var selectedItem = tvPortfolio.SelectedNode?.Tag;
+                if (selectedItem is PortfolioStructureLeafPaper paperLeaf)
+                {
+                    return tvPortfolio.SelectedNode.Tag as PortfolioStructureLeafPaper;
                 }
 
                 return null;
@@ -59,16 +77,12 @@ namespace RfBondManagement.WinForm.Controls
 
             tvPortfolio.Nodes.Clear();
 
-            var rootLeaf = Portfolio.RootLeaf;
-            var rootNode = BindNode(rootLeaf, tvPortfolio, selectedItem);
+            BindNode(tvPortfolio.Nodes, Portfolio.RootLeaf, tvPortfolio, selectedItem);
 
-            if (rootNode != null)
-            {
-                tvPortfolio.Nodes.Add(rootNode);
-            }
+            tvPortfolio.ExpandAll();
         }
 
-        protected TreeNode BindNode(PortfolioStructureLeaf leaf, TreeView tv, object selectedItem)
+        protected TreeNode BindNode(TreeNodeCollection nc, PortfolioStructureLeaf leaf, TreeView tv, object selectedItem)
         {
             if (null == leaf)
             {
@@ -83,10 +97,13 @@ namespace RfBondManagement.WinForm.Controls
                 Tag = leaf,
                 ImageKey = "group"
             };
+            nc.Add(node);
+
+            TreeNode selectedNode = null;
 
             if (selectedItem == leaf)
             {
-                tv.SelectedNode = node;
+                selectedNode = node;
             }
 
             if (leaf.Papers != null)
@@ -105,7 +122,7 @@ namespace RfBondManagement.WinForm.Controls
 
                     if (selectedItem == leafPaper)
                     {
-                        tv.SelectedNode = paperNode;
+                        selectedNode = paperNode;
                     }
                 }
             }
@@ -114,8 +131,13 @@ namespace RfBondManagement.WinForm.Controls
             {
                 foreach (var leafChild in leaf.Children)
                 {
-                    node.Nodes.Add(BindNode(leafChild, tv, selectedItem));
+                    BindNode(node.Nodes, leafChild, tv, selectedItem);
                 }
+            }
+
+            if (selectedNode != null)
+            {
+                tv.SelectedNode = selectedNode;
             }
 
             return node;
@@ -142,8 +164,11 @@ namespace RfBondManagement.WinForm.Controls
                 }
                 else
                 {
+                    f.Leaf.Parent = SelectedLeaf;
                     SelectedLeaf.Children.Add(f.Leaf);
                 }
+
+                PortfolioRepository.Update(Portfolio);
 
                 DataBind();
             }
@@ -159,13 +184,66 @@ namespace RfBondManagement.WinForm.Controls
                     return;
                 }
 
+                PortfolioRepository.Update(Portfolio);
+
                 DataBind();
             }
         }
 
+        private bool DeleteLeafOrPaper(PortfolioStructureLeaf leaf, PortfolioStructureLeaf leafToDelete, PortfolioStructureLeafPaper leafPaperToDelete)
+        {
+            if (leafPaperToDelete != null)
+            {
+                var paperItem = leaf.Papers?.FirstOrDefault(x => x == leafPaperToDelete);
+                if (paperItem != null)
+                {
+                    leaf.Papers.Remove(paperItem);
+                    return true;
+                }
+            }
+
+            var childLeaf = leaf.Children.FirstOrDefault(x => x == leafToDelete);
+            if (childLeaf != null)
+            {
+                leaf.Children.Remove(childLeaf);
+                return true;
+            }
+
+            foreach (var child in leaf.Children)
+            {
+                var isDeleted = DeleteLeafOrPaper(child, leafToDelete, leafPaperToDelete);
+                if (isDeleted)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void btnDelete_Click(object sender, EventArgs e)
         {
+            if (null == SelectedLeaf)
+            {
+                return;
+            }
 
+            if (MessageBox.Show("Подтвердите удаление записи.", "Удаление бумаги", MessageBoxButtons.OKCancel) != DialogResult.OK)
+            {
+                return;
+            }
+
+            if (Portfolio.RootLeaf == SelectedLeaf)
+            {
+                Portfolio.RootLeaf = null;
+            }
+            else if(SelectedLeafPaper != null)
+            {
+                DeleteLeafOrPaper(Portfolio.RootLeaf, SelectedLeaf, SelectedLeafPaper);
+            }
+
+            PortfolioRepository.Update(Portfolio);
+            DataBind();
         }
     }
 }

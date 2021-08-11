@@ -49,7 +49,6 @@ namespace RfBondManagement.WinForm.Forms
                     {
                         MessageBox.Show("Бумага с таким SecID уже есть в системе", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         continue;
-
                     }
 
                     _paperRepository.Insert(paper);

@@ -95,6 +95,8 @@ namespace RfBondManagement.WinForm.Controls
             // tvPortfolio
             // 
             this.tvPortfolio.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tvPortfolio.FullRowSelect = true;
+            this.tvPortfolio.HideSelection = false;
             this.tvPortfolio.ImageIndex = 0;
             this.tvPortfolio.ImageList = this.ilStructure;
             this.tvPortfolio.Location = new System.Drawing.Point(0, 0);

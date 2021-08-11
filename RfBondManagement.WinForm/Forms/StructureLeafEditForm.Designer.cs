@@ -47,6 +47,7 @@ namespace RfBondManagement.WinForm.Forms
             this.pnlActions = new System.Windows.Forms.Panel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
+            this.chVolume = new System.Windows.Forms.ColumnHeader();
             this.pnlLeaf.SuspendLayout();
             this.pnlPapers.SuspendLayout();
             this.pnlPaperActions.SuspendLayout();
@@ -112,6 +113,7 @@ namespace RfBondManagement.WinForm.Forms
             // 
             this.lvPapers.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.chPercent,
+            this.chVolume,
             this.chSecId,
             this.chShortName});
             this.lvPapers.FullRowSelect = true;
@@ -123,6 +125,7 @@ namespace RfBondManagement.WinForm.Forms
             this.lvPapers.Size = new System.Drawing.Size(271, 282);
             this.lvPapers.TabIndex = 7;
             this.lvPapers.UseCompatibleStateImageBehavior = false;
+            this.lvPapers.View = System.Windows.Forms.View.Details;
             // 
             // chPercent
             // 
@@ -217,6 +220,10 @@ namespace RfBondManagement.WinForm.Forms
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
+            // chVolume
+            // 
+            this.chVolume.Text = "Объём";
+            // 
             // StructureLeafEditForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -261,5 +268,6 @@ namespace RfBondManagement.WinForm.Forms
         private System.Windows.Forms.ColumnHeader chPercent;
         private System.Windows.Forms.ColumnHeader chSecId;
         private System.Windows.Forms.ColumnHeader chShortName;
+        private System.Windows.Forms.ColumnHeader chVolume;
     }
 }

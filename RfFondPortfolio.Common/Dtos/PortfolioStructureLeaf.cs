@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using LiteDB;
 
 namespace RfFondPortfolio.Common.Dtos
 {
@@ -10,6 +11,7 @@ namespace RfFondPortfolio.Common.Dtos
         /// <summary>
         /// Ссылка на корневой лист
         /// </summary>
+        [BsonIgnore]
         public PortfolioStructureLeaf Parent { get; set; }
 
         /// <summary>

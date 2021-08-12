@@ -93,9 +93,10 @@ namespace RfBondManagement.WinForm.Controls
 
             var node = new TreeNode
             {
-                Text = $"{leaf.Volume/totalVolume:P} ({leaf.Volume:N}), {leaf.Name}",
+                Text = $"{leaf.Volume / totalVolume:P} ({leaf.Volume:N}), {leaf.Name}",
                 Tag = leaf,
-                ImageKey = "group"
+                ImageKey = "group",
+                SelectedImageKey = "group"
             };
             nc.Add(node);
 
@@ -116,7 +117,8 @@ namespace RfBondManagement.WinForm.Controls
                     {
                         Text = $"{leafPaper.Volume/totalVolume:P} ({leafPaper.Volume:N}), {leafPaper.Paper.SecId} ({leafPaper.Paper.ShortName})",
                         Tag = leafPaper,
-                        ImageKey = "paper"
+                        ImageKey = "paper",
+                        SelectedImageKey = "paper"
                     };
                     node.Nodes.Add(paperNode);
 
@@ -153,6 +155,7 @@ namespace RfBondManagement.WinForm.Controls
                     return;
                 }
 
+                f.RootLeaf = Portfolio.RootLeaf;
                 if (f.ShowDialog() != DialogResult.OK)
                 {
                     return;
@@ -178,6 +181,7 @@ namespace RfBondManagement.WinForm.Controls
         {
             using (var f = Container.Resolve<StructureLeafEditForm>())
             {
+                f.RootLeaf = Portfolio.RootLeaf;
                 f.Leaf = SelectedLeaf;
                 if (f.ShowDialog() != DialogResult.OK)
                 {

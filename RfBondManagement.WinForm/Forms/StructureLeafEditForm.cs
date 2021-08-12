@@ -11,6 +11,7 @@ namespace RfBondManagement.WinForm.Forms
     {
         protected readonly IUnityContainer _container;
 
+        public PortfolioStructureLeaf RootLeaf { protected get; set; }
         public PortfolioStructureLeaf Leaf { get; set; }
 
         protected PortfolioStructureLeafPaper SelectedPaper =>
@@ -96,6 +97,9 @@ namespace RfBondManagement.WinForm.Forms
         {
             using (var f = _container.Resolve<StructureLeafPaperEditForm>())
             {
+                f.RootLeaf = RootLeaf;
+                f.CurrentLeaf = Leaf;
+
                 if (f.ShowDialog() != DialogResult.OK)
                 {
                     return;
@@ -115,6 +119,8 @@ namespace RfBondManagement.WinForm.Forms
 
             using (var f = _container.Resolve<StructureLeafPaperEditForm>())
             {
+                f.RootLeaf = RootLeaf;
+                f.CurrentLeaf = Leaf;
                 f.SelectedLeafPaper = SelectedPaper;
 
                 if (f.ShowDialog() != DialogResult.OK)

@@ -205,12 +205,14 @@ namespace RfBondManagement.WinForm.Controls
                     return true;
                 }
             }
-
-            var childLeaf = leaf.Children.FirstOrDefault(x => x == leafToDelete);
-            if (childLeaf != null)
+            else
             {
-                leaf.Children.Remove(childLeaf);
-                return true;
+                var childLeaf = leaf.Children.FirstOrDefault(x => x == leafToDelete);
+                if (childLeaf != null)
+                {
+                    leaf.Children.Remove(childLeaf);
+                    return true;
+                }
             }
 
             foreach (var child in leaf.Children)
@@ -241,7 +243,7 @@ namespace RfBondManagement.WinForm.Controls
             {
                 Portfolio.RootLeaf = null;
             }
-            else if(SelectedLeafPaper != null)
+            else if(SelectedLeaf != null || SelectedLeafPaper != null)
             {
                 DeleteLeafOrPaper(Portfolio.RootLeaf, SelectedLeaf, SelectedLeafPaper);
             }

@@ -3,7 +3,7 @@
     /// <summary>
     /// Данные по ETF
     /// </summary>
-    public class EtfPaper : AbstractPaper
+    public class EtfPaper : SharePaper
     {
     }
 }

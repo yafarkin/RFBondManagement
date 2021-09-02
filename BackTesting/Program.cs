@@ -33,18 +33,18 @@ namespace BackTesting
             decimal initialSum = 100_000;
             decimal monthlyIncome = 10_000;
 
-            var startDate = new DateTime(2019, 1, 1);
+            var startDate = new DateTime(2016, 1, 1);
             var endDate = new DateTime(2020, 12, 31);
 
             var portfolioPercent = new List<Tuple<string, decimal>>
             {
-                new Tuple<string, decimal>("SBERP", 100),
-                //new Tuple<string, decimal>("SBERP", 20),
-                //new Tuple<string, decimal>("MTSS", 20),
-                //new Tuple<string, decimal>("FXIT", 15),
-                //new Tuple<string, decimal>("FXUS", 20),
-                //new Tuple<string, decimal>("FXCN", 20),
-                //new Tuple<string, decimal>("FXRU", 5)
+                //new Tuple<string, decimal>("SBERP", 100),
+                new Tuple<string, decimal>("SBERP", 20),
+                new Tuple<string, decimal>("MTSS", 20),
+                new Tuple<string, decimal>("FXIT", 15),
+                new Tuple<string, decimal>("FXUS", 20),
+                new Tuple<string, decimal>("FXCN", 20),
+                new Tuple<string, decimal>("FXRU", 5)
             };
 
             var importEngine = container.Resolve<IExternalImport>();
@@ -71,6 +71,9 @@ namespace BackTesting
             var useVa = false;
             var strategy = container.Resolve<BuyAndHoldStrategy>();
             var portfolio = strategy.Configure(useVa, true, initialSum, monthlyIncome, portfolioPercent, 13, 0.061m);
+
+            var portfolioRepository = container.Resolve<IPortfolioRepository>();
+            portfolioRepository.Insert(portfolio);
 
             var backtest = container.Resolve<IBacktestEngine>(new ParameterOverride("portfolio", portfolio));
             backtest.Run(strategy, startDate, ref endDate);

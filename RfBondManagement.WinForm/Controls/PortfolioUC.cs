@@ -16,7 +16,10 @@ namespace RfBondManagement.WinForm.Controls
             Portfolio = portfolio;
 
             container.BuildUp(portfolioTree);
+            container.BuildUp(portfolioActions);
+
             portfolioTree.Portfolio = Portfolio;
+            portfolioActions.Portfolio = Portfolio;
         }
 
         private void PortfolioUC_Load(object sender, EventArgs e)

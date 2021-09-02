@@ -53,6 +53,8 @@ namespace BackTesting.Strategies
                 Tax = tax,
                 Commissions = commission,
                 LongTermBenefit = true,
+                Actual = true,
+                Name = $"BackTesting {DateTime.Now}"
             };
 
             var secIds = _historyRepository.Get().Select(x => x.SecId).Distinct().ToHashSet();
@@ -148,7 +150,7 @@ namespace BackTesting.Strategies
                 FindMaxDisbalance(date, portfolioCost, content, out secId, out needPercent);
 
                 var priceEntity = _historyRepository.GetHistoryPriceOnDate(secId, date);
-                var price = priceEntity.ClosePrice;
+                var price = priceEntity.LegalClosePrice;
 
                 var paper = _papers[secId];
                 if (paper.PaperType == PaperType.Bond)

@@ -30,6 +30,7 @@ namespace RfBondManagement.WinForm.Controls
         private void InitializeComponent()
         {
             this.pnlInfo = new System.Windows.Forms.Panel();
+            this.lblPortfolio = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.pnlData = new System.Windows.Forms.Panel();
             this.tcPortfolio = new System.Windows.Forms.TabControl();
@@ -37,11 +38,12 @@ namespace RfBondManagement.WinForm.Controls
             this.portfolioTree = new RfBondManagement.WinForm.Controls.PortfolioTreeUC();
             this.tpPapers = new System.Windows.Forms.TabPage();
             this.tpActions = new System.Windows.Forms.TabPage();
-            this.lblPortfolio = new System.Windows.Forms.Label();
+            this.portfolioActions = new RfBondManagement.WinForm.Controls.PortfolioActionsUC();
             this.pnlInfo.SuspendLayout();
             this.pnlData.SuspendLayout();
             this.tcPortfolio.SuspendLayout();
             this.tpStructure.SuspendLayout();
+            this.tpActions.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlInfo
@@ -53,6 +55,15 @@ namespace RfBondManagement.WinForm.Controls
             this.pnlInfo.Name = "pnlInfo";
             this.pnlInfo.Size = new System.Drawing.Size(804, 37);
             this.pnlInfo.TabIndex = 0;
+            // 
+            // lblPortfolio
+            // 
+            this.lblPortfolio.AutoSize = true;
+            this.lblPortfolio.Location = new System.Drawing.Point(79, 9);
+            this.lblPortfolio.Name = "lblPortfolio";
+            this.lblPortfolio.Size = new System.Drawing.Size(22, 15);
+            this.lblPortfolio.TabIndex = 1;
+            this.lblPortfolio.Text = "---";
             // 
             // label1
             // 
@@ -97,10 +108,12 @@ namespace RfBondManagement.WinForm.Controls
             // 
             // portfolioTree
             // 
+            this.portfolioTree.Container = null;
             this.portfolioTree.Dock = System.Windows.Forms.DockStyle.Fill;
             this.portfolioTree.Location = new System.Drawing.Point(3, 3);
             this.portfolioTree.Name = "portfolioTree";
             this.portfolioTree.Portfolio = null;
+            this.portfolioTree.PortfolioRepository = null;
             this.portfolioTree.Size = new System.Drawing.Size(790, 422);
             this.portfolioTree.TabIndex = 0;
             // 
@@ -109,28 +122,31 @@ namespace RfBondManagement.WinForm.Controls
             this.tpPapers.Location = new System.Drawing.Point(4, 24);
             this.tpPapers.Name = "tpPapers";
             this.tpPapers.Padding = new System.Windows.Forms.Padding(3);
-            this.tpPapers.Size = new System.Drawing.Size(796, 365);
+            this.tpPapers.Size = new System.Drawing.Size(796, 428);
             this.tpPapers.TabIndex = 1;
             this.tpPapers.Text = "Бумаги";
             this.tpPapers.UseVisualStyleBackColor = true;
             // 
             // tpActions
             // 
+            this.tpActions.Controls.Add(this.portfolioActions);
             this.tpActions.Location = new System.Drawing.Point(4, 24);
             this.tpActions.Name = "tpActions";
-            this.tpActions.Size = new System.Drawing.Size(796, 365);
+            this.tpActions.Size = new System.Drawing.Size(796, 428);
             this.tpActions.TabIndex = 2;
             this.tpActions.Text = "Действия";
             this.tpActions.UseVisualStyleBackColor = true;
             // 
-            // lblPortfolio
+            // portfolioActions
             // 
-            this.lblPortfolio.AutoSize = true;
-            this.lblPortfolio.Location = new System.Drawing.Point(79, 9);
-            this.lblPortfolio.Name = "lblPortfolio";
-            this.lblPortfolio.Size = new System.Drawing.Size(22, 15);
-            this.lblPortfolio.TabIndex = 1;
-            this.lblPortfolio.Text = "---";
+            this.portfolioActions.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.portfolioActions.Location = new System.Drawing.Point(0, 0);
+            this.portfolioActions.MoneyActionRepository = null;
+            this.portfolioActions.Name = "portfolioActions";
+            this.portfolioActions.PaperActionRepository = null;
+            this.portfolioActions.Portfolio = null;
+            this.portfolioActions.Size = new System.Drawing.Size(796, 428);
+            this.portfolioActions.TabIndex = 0;
             // 
             // PortfolioUC
             // 
@@ -146,6 +162,7 @@ namespace RfBondManagement.WinForm.Controls
             this.pnlData.ResumeLayout(false);
             this.tcPortfolio.ResumeLayout(false);
             this.tpStructure.ResumeLayout(false);
+            this.tpActions.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -161,5 +178,6 @@ namespace RfBondManagement.WinForm.Controls
         private System.Windows.Forms.TabPage tpActions;
         private PortfolioTreeUC portfolioTree;
         private System.Windows.Forms.Label lblPortfolio;
+        private PortfolioActionsUC portfolioActions;
     }
 }

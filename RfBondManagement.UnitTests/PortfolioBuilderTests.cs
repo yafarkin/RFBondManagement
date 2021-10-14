@@ -6,6 +6,7 @@ using Moq;
 using NLog;
 using NUnit.Framework;
 using RfBondManagement.Engine.Calculations;
+using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
@@ -24,6 +25,7 @@ namespace RfBondManagement.UnitTests
         public ISplitRepository SplitRepository;
         public Portfolio Portfolio;
         public IBondCalculator BondCalculator;
+        public IExternalImportFactory ImportFactory;
 
         public List<PortfolioAction> Actions;
         public List<PaperSplit> Splits;
@@ -101,9 +103,14 @@ namespace RfBondManagement.UnitTests
             MoneyActionRepository = moneyActionRepositoryMock.Object;
             SplitRepository = splitRepositoryMock.Object;
 
+            var importFactoryMock = new Mock<IExternalImportFactory>();
+            importFactoryMock.Setup(m => m.GetImpl(It.IsAny<ExternalImportType>())).Returns(() => Import);
+            ImportFactory = importFactoryMock.Object;
+
+
             var logger = new Mock<ILogger>().Object;
 
-            PortfolioEngine = new PortfolioEngine(Portfolio, Import, PaperRepository, MoneyActionRepository, PaperActionRepository, SplitRepository, BondCalculator, logger);
+            PortfolioEngine = new PortfolioEngine(Portfolio, ExternalImportType.Moex, ImportFactory, PaperRepository, MoneyActionRepository, PaperActionRepository, SplitRepository, BondCalculator, logger);
         }
 
         [Test]

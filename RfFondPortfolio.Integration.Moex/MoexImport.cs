@@ -100,7 +100,7 @@ namespace RfFondPortfolio.Integration.Moex
             return result;
         }
 
-        public async Task<IEnumerable<string>> ListPapers(ILogger logger)
+        public Task<IEnumerable<string>> ListPapers(ILogger logger)
         {
             throw new NotImplementedException();
         }

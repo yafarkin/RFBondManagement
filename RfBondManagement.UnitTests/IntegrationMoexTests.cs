@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Moq;
 using NLog;
 using NUnit.Framework;
 using RfBondManagement.Engine;
+using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Database;
+using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 using RfFondPortfolio.Integration.Moex;
@@ -17,12 +20,17 @@ namespace RfBondManagement.UnitTests
     {
         public IExternalImport Import;
         public ILogger Logger;
+        public IExternalImportFactory ImportFactory;
 
         [SetUp]
         public void Setup()
         {
             Import = new MoexImport();
             Logger = LogManager.GetCurrentClassLogger();
+
+            var importFactoryMock = new Mock<IExternalImportFactory>();
+            importFactoryMock.Setup(m => m.GetImpl(It.IsAny<ExternalImportType>())).Returns(() => Import);
+            ImportFactory = importFactoryMock.Object;
         }
 
         [Test]
@@ -72,7 +80,7 @@ namespace RfBondManagement.UnitTests
             using (var db = new DatabaseLayer())
             {
                 var historyRepository = new HistoryRepository(db);
-                var historyEngine = new HistoryEngine(historyRepository, Import, Logger);
+                var historyEngine = new HistoryEngine(historyRepository, ImportFactory, ExternalImportType.Moex, Logger);
                 //var lastDate = historyEngine.GetLastHistoryDate("SBERP");
 
                 await historyEngine.ImportHistory("SBERP");

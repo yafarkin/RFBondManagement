@@ -1,4 +1,5 @@
 ﻿using RfBondManagement.Engine.Calculations;
+using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Database;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Interfaces;
@@ -16,7 +17,8 @@ namespace RfBondManagement.Engine
             container
                 .RegisterType<IDatabaseLayer, DatabaseLayer>(TypeLifetime.Singleton)
                 .RegisterType<IBondCalculator, BondCalculator>()
-                .RegisterType<IExternalImport, MoexImport>()
+                .RegisterType<IExternalImport, MoexImport>(ExternalImportType.Moex.ToString())
+                .RegisterType<IExternalImportFactory, IExternalImportFactory>()
                 .RegisterType<IPaperRepository, PaperRepository>()
                 .RegisterType<IPortfolioRepository, PortfolioRepository>()
                 .RegisterType<IPortfolioMoneyActionRepository, PortfolioMoneyActionRepository>()

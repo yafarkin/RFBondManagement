@@ -10,7 +10,7 @@ namespace RfBondManagement.WinForm.Controls
     public partial class PaperSelectUC : UserControl
     {
         [Dependency]
-        public IUnityContainer Container { get; set; }
+        public IUnityContainer DiContainer { get; set; }
 
         [Browsable(true)]
         [Category("Action")]
@@ -36,7 +36,7 @@ namespace RfBondManagement.WinForm.Controls
 
         private void btnSearch_Click(object sender, EventArgs e)
         {
-            using (var f = Container.Resolve<PaperListForm>())
+            using (var f = DiContainer.Resolve<PaperListForm>())
             {
                 f.AllowSelectPaper = true;
                 if (f.ShowDialog() != DialogResult.OK)

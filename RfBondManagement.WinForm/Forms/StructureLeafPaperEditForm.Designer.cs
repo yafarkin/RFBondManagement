@@ -38,7 +38,7 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // paperSelect
             // 
-            this.paperSelect.Container = null;
+            this.paperSelect.DiContainer = null;
             this.paperSelect.Location = new System.Drawing.Point(12, 12);
             this.paperSelect.Name = "paperSelect";
             this.paperSelect.SelectedPaper = null;

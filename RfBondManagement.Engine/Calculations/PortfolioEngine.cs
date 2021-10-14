@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using NLog;
+using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
@@ -27,7 +28,8 @@ namespace RfBondManagement.Engine.Calculations
 
         public PortfolioEngine(
             Portfolio portfolio,
-            IExternalImport import,
+            ExternalImportType importType,
+            IExternalImportFactory importFactory,
             IPaperRepository paperRepository,
             IPortfolioMoneyActionRepository moneyActionRepository,
             IPortfolioPaperActionRepository paperActionRepository,
@@ -36,7 +38,7 @@ namespace RfBondManagement.Engine.Calculations
         {
             _logger = logger;
             _portfolio = portfolio;
-            _import = import;
+            _import = importFactory.GetImpl(importType);
             _paperRepository = paperRepository;
             _moneyActionRepository = moneyActionRepository;
             _paperActionRepository = paperActionRepository;

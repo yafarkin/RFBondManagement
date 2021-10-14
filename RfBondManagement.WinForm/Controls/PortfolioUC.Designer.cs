@@ -108,7 +108,7 @@ namespace RfBondManagement.WinForm.Controls
             // 
             // portfolioTree
             // 
-            this.portfolioTree.Container = null;
+            this.portfolioTree.DiContainer = null;
             this.portfolioTree.Dock = System.Windows.Forms.DockStyle.Fill;
             this.portfolioTree.Location = new System.Drawing.Point(3, 3);
             this.portfolioTree.Name = "portfolioTree";

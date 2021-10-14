@@ -16,7 +16,7 @@ namespace RfBondManagement.WinForm.Controls
         public IPortfolioRepository PortfolioRepository { get; set; }
 
         [Dependency]
-        public IUnityContainer Container { get; set; }
+        public IUnityContainer DiContainer { get; set; }
 
         public PortfolioStructureLeaf SelectedLeaf
         {
@@ -147,7 +147,7 @@ namespace RfBondManagement.WinForm.Controls
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            using (var f = Container.Resolve<StructureLeafEditForm>())
+            using (var f = DiContainer.Resolve<StructureLeafEditForm>())
             {
                 if (null == SelectedLeaf && tvPortfolio.HasChildren)
                 {
@@ -179,7 +179,7 @@ namespace RfBondManagement.WinForm.Controls
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            using (var f = Container.Resolve<StructureLeafEditForm>())
+            using (var f = DiContainer.Resolve<StructureLeafEditForm>())
             {
                 f.RootLeaf = Portfolio.RootLeaf;
                 f.Leaf = SelectedLeaf;

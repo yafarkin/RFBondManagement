@@ -153,7 +153,7 @@ namespace RfBondManagement.WinForm.Forms
             // 
             // watchList
             // 
-            this.watchList.Container = null;
+            this.watchList.DiContainer = null;
             this.watchList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.watchList.ExternalImport = null;
             this.watchList.HistoryEngine = null;

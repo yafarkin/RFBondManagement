@@ -18,7 +18,7 @@ namespace RfBondManagement.WinForm.Forms
         [Dependency]
         public IPortfolioRepository PortfolioRepository { get; set; }
 
-        public IUnityContainer Container { get; set; }
+        public IUnityContainer DiContainer { get; set; }
 
         public Portfolio SelectedPortfolio
         {
@@ -34,12 +34,12 @@ namespace RfBondManagement.WinForm.Forms
             }
         }
 
-        public MainForm(IUnityContainer container)
+        public MainForm(IUnityContainer diContainer)
         {
             InitializeComponent();
 
-            Container = container;
-            Container.BuildUp(watchList);
+            DiContainer = diContainer;
+            DiContainer.BuildUp(watchList);
         }
 
         private void menuItemExit_Click(object sender, EventArgs e)
@@ -62,7 +62,7 @@ namespace RfBondManagement.WinForm.Forms
             var portfolios = PortfolioRepository.Get().Where(x => x.Actual);
             foreach (var portfolio in portfolios)
             {
-                var p = Container.Resolve<PortfolioUC>(new ParameterOverride("portfolio", portfolio));
+                var p = DiContainer.Resolve<PortfolioUC>(new ParameterOverride("portfolio", portfolio));
                 p.Dock = DockStyle.Fill;
 
                 var tp = new TabPage(portfolio.Name);
@@ -85,7 +85,7 @@ namespace RfBondManagement.WinForm.Forms
 
         private void menuItemBondCalculator_Click(object sender, EventArgs e)
         {
-            using (var f = Container.Resolve<BondCalculatorForm>())
+            using (var f = DiContainer.Resolve<BondCalculatorForm>())
             {
                 f.ShowDialog();
             }
@@ -93,7 +93,7 @@ namespace RfBondManagement.WinForm.Forms
 
         private void menuItemPapers_Click(object sender, EventArgs e)
         {
-            using (var f = Container.Resolve<PaperListForm>())
+            using (var f = DiContainer.Resolve<PaperListForm>())
             {
                 f.ShowDialog();
                 watchList.DataBind();
@@ -102,7 +102,7 @@ namespace RfBondManagement.WinForm.Forms
 
         private void menuItemAddPortfolio_Click(object sender, EventArgs e)
         {
-            using (var f = Container.Resolve<SettingsForm>())
+            using (var f = DiContainer.Resolve<SettingsForm>())
             {
                 if (f.ShowDialog() != DialogResult.OK)
                 {
@@ -116,7 +116,7 @@ namespace RfBondManagement.WinForm.Forms
 
         private void menuItemEditPortfolio_Click(object sender, EventArgs e)
         {
-            using (var f = Container.Resolve<SettingsForm>())
+            using (var f = DiContainer.Resolve<SettingsForm>())
             {
                 f.Portfolio = SelectedPortfolio;
                 if (f.ShowDialog() != DialogResult.OK)

@@ -30,7 +30,7 @@ namespace RfBondManagement.WinForm.Controls
         public IExternalImport ExternalImport { get; set; }
 
         [Dependency]
-        public IUnityContainer Container { get; set; }
+        public IUnityContainer DiContainer { get; set; }
 
         public string SelectedPaper
         {
@@ -325,7 +325,7 @@ namespace RfBondManagement.WinForm.Controls
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            using (var f = Container.Resolve<PaperListForm>())
+            using (var f = DiContainer.Resolve<PaperListForm>())
             {
                 f.AllowSelectPaper = true;
 

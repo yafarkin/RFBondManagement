@@ -7,6 +7,7 @@ using BackTesting.Interfaces;
 using BackTesting.Strategies;
 using NLog;
 using RfBondManagement.Engine;
+using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
@@ -47,7 +48,8 @@ namespace BackTesting
                 new Tuple<string, decimal>("FXRU", 5)
             };
 
-            var importEngine = container.Resolve<IExternalImport>();
+            var importFactory = container.Resolve<IExternalImportFactory>();
+            var importEngine = importFactory.GetImpl(ExternalImportType.Moex);
             var historyEngine = container.Resolve<HistoryEngine>();
 
             foreach (var t in portfolioPercent)
@@ -75,7 +77,7 @@ namespace BackTesting
             var portfolioRepository = container.Resolve<IPortfolioRepository>();
             portfolioRepository.Insert(portfolio);
 
-            var backtest = container.Resolve<IBacktestEngine>(new ParameterOverride("portfolio", portfolio));
+            var backtest = container.Resolve<IBacktestEngine>(new ParameterOverride("portfolio", portfolio), new ParameterOverride("importType", ExternalImportType.Moex));
             backtest.Run(strategy, startDate, ref endDate);
 
             var nearEndDate = backtest.FindNearestDateWithPrices(strategy.Papers.ToList(), endDate);

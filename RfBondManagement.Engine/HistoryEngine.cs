@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NLog;
+using RfBondManagement.Engine.Common;
+using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 
@@ -14,10 +16,10 @@ namespace RfBondManagement.Engine
         protected readonly IExternalImport _import;
         protected readonly ILogger _logger;
 
-        public HistoryEngine(IHistoryRepository historyRepository, IExternalImport import, ILogger logger)
+        public HistoryEngine(IHistoryRepository historyRepository, IExternalImportFactory importFactory, ExternalImportType importType, ILogger logger)
         {
             _historyRepository = historyRepository;
-            _import = import;
+            _import = importFactory.GetImpl(importType);
             _logger = logger;
         }
 

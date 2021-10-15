@@ -16,10 +16,10 @@ namespace RfBondManagement.Engine
         protected readonly IExternalImport _import;
         protected readonly ILogger _logger;
 
-        public HistoryEngine(IHistoryRepository historyRepository, IExternalImportFactory importFactory, ExternalImportType importType, ILogger logger)
+        public HistoryEngine(IHistoryRepository historyRepository, IExternalImportFactory importFactory, ILogger logger)
         {
             _historyRepository = historyRepository;
-            _import = importFactory.GetImpl(importType);
+            _import = importFactory.GetDefaultImpl();
             _logger = logger;
         }
 

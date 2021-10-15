@@ -8,19 +8,9 @@ namespace RfFondPortfolio.Common.Dtos
     public class PaperPrice : BaseSecurityEntity
     {
         /// <summary>
-        /// Уникальный идентификатор
-        /// </summary>
-        public Guid Id { get; set; }
-        
-        /// <summary>
         /// Дата и время
         /// </summary>
         public DateTime When { get; set; }
-
-        /// <summary>
-        /// Код бумаги
-        /// </summary>
-        public string SecId { get; set; }
 
         /// <summary>
         /// Размер лота

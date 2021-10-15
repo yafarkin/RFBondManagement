@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Interfaces;
 using RfFondPortfolio.Integration.Moex;
@@ -7,7 +8,7 @@ using Unity;
 
 namespace RfBondManagement.Engine.Common
 {
-    internal class ExternalImportFactory : IExternalImportFactory
+    public class ExternalImportFactory : IExternalImportFactory
     {
         protected readonly Dictionary<ExternalImportType, Type> _impl = new Dictionary<ExternalImportType, Type>();
         protected readonly IUnityContainer _container;
@@ -25,6 +26,11 @@ namespace RfBondManagement.Engine.Common
             var importImpl = _container.Resolve(t, externalImport.ToString()) as IExternalImport;
 
             return new ExternalImport(importImpl);
+        }
+
+        public IExternalImport GetDefaultImpl()
+        {
+            return GetImpl(_impl.First().Key);
         }
     }
 }

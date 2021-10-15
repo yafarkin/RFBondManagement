@@ -10,6 +10,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using NLog;
 using RfBondManagement.Engine.Calculations;
+using RfBondManagement.Engine.Common;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 
@@ -28,6 +29,8 @@ namespace BackTesting
         public BacktestEngine(
             ILogger logger,
             PortfolioEngine portfolioEngine,
+            Portfolio portfolio,
+            ExternalImportType importType,
             IHistoryRepository historyRepository,
             IPortfolioPaperActionRepository paperActionRepository,
             IPortfolioMoneyActionRepository moneyActionRepository)
@@ -35,6 +38,8 @@ namespace BackTesting
             _logger = logger;
             _portfolioEngine = portfolioEngine;
             _historyRepository = historyRepository;
+
+            _portfolioEngine.Configure(portfolio, importType);
 
             _paperActionRepository = paperActionRepository;
             _moneyActionRepository = moneyActionRepository;

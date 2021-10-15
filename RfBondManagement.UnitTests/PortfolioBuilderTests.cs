@@ -110,7 +110,8 @@ namespace RfBondManagement.UnitTests
 
             var logger = new Mock<ILogger>().Object;
 
-            PortfolioEngine = new PortfolioEngine(Portfolio, ExternalImportType.Moex, ImportFactory, PaperRepository, MoneyActionRepository, PaperActionRepository, SplitRepository, BondCalculator, logger);
+            PortfolioEngine = new PortfolioEngine(ImportFactory, PaperRepository, MoneyActionRepository, PaperActionRepository, SplitRepository, BondCalculator, logger);
+            PortfolioEngine.Configure(Portfolio, ExternalImportType.Moex);
         }
 
         [Test]

@@ -13,22 +13,22 @@ namespace RfBondManagement.Engine.Calculations
 {
     public class PortfolioEngine
     {
-        protected readonly Portfolio _portfolio;
         protected readonly IPaperRepository _paperRepository;
         protected readonly IPortfolioPaperActionRepository _paperActionRepository;
         protected readonly IPortfolioMoneyActionRepository _moneyActionRepository;
         protected readonly ISplitRepository _splitRepository;
 
-        protected readonly IExternalImport _import;
+        protected readonly IExternalImportFactory _importFactory;
         protected readonly IBondCalculator _bondCalculator;
 
+        protected Portfolio _portfolio;
         protected readonly ILogger _logger;
+
+        protected IExternalImport _import;
 
         public Portfolio Portfolio => _portfolio;
 
         public PortfolioEngine(
-            Portfolio portfolio,
-            ExternalImportType importType,
             IExternalImportFactory importFactory,
             IPaperRepository paperRepository,
             IPortfolioMoneyActionRepository moneyActionRepository,
@@ -37,8 +37,7 @@ namespace RfBondManagement.Engine.Calculations
             IBondCalculator bondCalculator, ILogger logger)
         {
             _logger = logger;
-            _portfolio = portfolio;
-            _import = importFactory.GetImpl(importType);
+            _importFactory = importFactory;
             _paperRepository = paperRepository;
             _moneyActionRepository = moneyActionRepository;
             _paperActionRepository = paperActionRepository;
@@ -47,6 +46,20 @@ namespace RfBondManagement.Engine.Calculations
 
             _paperActionRepository.Setup(_portfolio.Id);
             _moneyActionRepository.Setup(_portfolio.Id);
+        }
+
+        public void Configure(Portfolio portfolio, ExternalImportType importType)
+        {
+            _portfolio = portfolio;
+            _import = _importFactory.GetImpl(importType);
+        }
+
+        protected void CheckIsConfigured()
+        {
+            if (null == _portfolio || null == _import)
+            {
+                throw new Exception("Portfolio engine is not configured");
+            }
         }
 
         protected void PerformFifoSplit(decimal multiplier, IList<FifoAction> fifo)
@@ -88,6 +101,8 @@ namespace RfBondManagement.Engine.Calculations
         /// <returns>Информация по бумаге</returns>
         public IPaperInPortfolio<AbstractPaper> BuildPaperInPortfolio(AbstractPaper paper, IEnumerable<PortfolioPaperAction> allPaperActions, DateTime? onDate = null)
         {
+            CheckIsConfigured();
+
             long count;
 
             IPaperInPortfolio<AbstractPaper> paperInPortfolio;
@@ -181,6 +196,8 @@ namespace RfBondManagement.Engine.Calculations
 
         public async Task FillPrice(PortfolioAggregatedContent portfolioAggregatedContent, DateTime? onDate = null)
         {
+            CheckIsConfigured();
+
             foreach (var paper in portfolioAggregatedContent.Papers)
             {
                 decimal marketPrice;
@@ -201,6 +218,8 @@ namespace RfBondManagement.Engine.Calculations
 
         public PortfolioAggregatedContent Build(DateTime? onDate = null)
         {
+            CheckIsConfigured();
+
             var sums = new Dictionary<MoneyActionType, decimal>();
             var moneyPortfolioActions = _moneyActionRepository.Get();
             if (onDate.HasValue)
@@ -247,6 +266,8 @@ namespace RfBondManagement.Engine.Calculations
 
         public IEnumerable<PortfolioMoneyAction> PayTaxByDraftProfit(decimal draftSum, string comment = null, DateTime when = default(DateTime))
         {
+            CheckIsConfigured();
+
             if (draftSum <= 0)
             {
                 yield break;
@@ -293,6 +314,8 @@ namespace RfBondManagement.Engine.Calculations
 
         public PortfolioPaperAction BuyPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime))
         {
+            CheckIsConfigured();
+
             if (when == default(DateTime))
             {
                 when = DateTime.UtcNow;
@@ -346,6 +369,8 @@ namespace RfBondManagement.Engine.Calculations
 
         public PortfolioPaperAction SellPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime))
         {
+            CheckIsConfigured();
+
             return SellPaper(paper, count, price, when, PaperActionType.Sell);
         }
 
@@ -484,6 +509,8 @@ namespace RfBondManagement.Engine.Calculations
 
         public IEnumerable<PortfolioPaperAction> AutomateSplit(DateTime onDate, IList<string> paperSecIds)
         {
+            CheckIsConfigured();
+
             var splits = _splitRepository.Get().Where(s => s.Date.Date == onDate.Date).ToList();
             if (!splits.Any())
             {
@@ -517,6 +544,8 @@ namespace RfBondManagement.Engine.Calculations
 
         public IEnumerable<PortfolioAction> AutomateDividend(DateTime onDate, IList<string> paperSecIds)
         {
+            CheckIsConfigured();
+
             var papers = _paperRepository.Get()
                 .Where(p => paperSecIds.Contains(p.SecId) && p.PaperType == PaperType.Share)
                 .OfType<SharePaper>()
@@ -559,6 +588,8 @@ namespace RfBondManagement.Engine.Calculations
 
         public IEnumerable<PortfolioAction> AutomateCoupons(DateTime onDate, IList<string> paperSecIds)
         {
+            CheckIsConfigured();
+
             var papers = _paperRepository.Get()
                 .Where(p => paperSecIds.Contains(p.SecId) && p.PaperType == PaperType.Bond)
                 .OfType<BondPaper>()
@@ -601,6 +632,8 @@ namespace RfBondManagement.Engine.Calculations
 
         public IEnumerable<PortfolioAction> AutomateBondCloseDate(DateTime onDate, IList<string> paperSecIds)
         {
+            CheckIsConfigured();
+
             var papers = _paperRepository.Get()
                 .Where(p => paperSecIds.Contains(p.SecId) && p.PaperType == PaperType.Bond)
                 .OfType<BondPaper>()

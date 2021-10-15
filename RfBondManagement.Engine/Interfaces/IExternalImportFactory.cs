@@ -6,5 +6,7 @@ namespace RfBondManagement.Engine.Interfaces
     public interface IExternalImportFactory
     {
         IExternalImport GetImpl(ExternalImportType externalImport);
+
+        IExternalImport GetDefaultImpl();
     }
 }

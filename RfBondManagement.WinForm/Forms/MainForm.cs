@@ -4,6 +4,7 @@ using RfFondPortfolio.Common.Interfaces;
 using System;
 using System.Linq;
 using System.Windows.Forms;
+using RfBondManagement.Engine.Interfaces;
 using RfBondManagement.WinForm.Controls;
 using Unity;
 using Unity.Resolution;

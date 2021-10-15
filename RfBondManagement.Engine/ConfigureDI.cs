@@ -17,14 +17,14 @@ namespace RfBondManagement.Engine
             container
                 .RegisterType<IDatabaseLayer, DatabaseLayer>(TypeLifetime.Singleton)
                 .RegisterType<IBondCalculator, BondCalculator>()
-                .RegisterType<IExternalImport, MoexImport>(ExternalImportType.Moex.ToString())
-                .RegisterType<IExternalImportFactory, IExternalImportFactory>()
                 .RegisterType<IPaperRepository, PaperRepository>()
                 .RegisterType<IPortfolioRepository, PortfolioRepository>()
                 .RegisterType<IPortfolioMoneyActionRepository, PortfolioMoneyActionRepository>()
                 .RegisterType<IPortfolioPaperActionRepository, PortfolioPaperActionRepository>()
                 .RegisterType<IHistoryRepository, HistoryRepository>()
                 .RegisterType<ISplitRepository, SplitRepository>()
+                .RegisterType<IExternalImportFactory, ExternalImportFactory>(TypeLifetime.Singleton)
+                .RegisterType<IExternalImport, MoexImport>(ExternalImportType.Moex.ToString())
                 ;
 
             container.AddNewExtension<NLogExtension>();

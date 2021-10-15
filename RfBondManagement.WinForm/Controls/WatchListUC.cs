@@ -10,6 +10,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using RfBondManagement.Engine.Interfaces;
 using Unity;
 using ZedGraph;
 
@@ -27,10 +28,12 @@ namespace RfBondManagement.WinForm.Controls
         public ILogger Logger { get; set; }
 
         [Dependency]
-        public IExternalImport ExternalImport { get; set; }
+        public IExternalImportFactory ExternalImportFactory { get; set; }
 
         [Dependency]
         public IUnityContainer DiContainer { get; set; }
+
+        protected IExternalImport _externalImport;
 
         public string SelectedPaper
         {
@@ -109,7 +112,7 @@ namespace RfBondManagement.WinForm.Controls
 
         public async Task UpdateListPrice(AbstractPaper paper)
         {
-            var paperPrice = await ExternalImport.LastPrice(Logger, paper);
+            var paperPrice = await _externalImport.LastPrice(Logger, paper);
             if (null == paperPrice)
             {
                 return;
@@ -369,6 +372,8 @@ namespace RfBondManagement.WinForm.Controls
 
         private void WatchListUC_Load(object sender, EventArgs e)
         {
+            _externalImport = ExternalImportFactory.GetDefaultImpl();
+
             DataBind();
         }
 

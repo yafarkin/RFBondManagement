@@ -80,7 +80,7 @@ namespace RfBondManagement.UnitTests
             using (var db = new DatabaseLayer())
             {
                 var historyRepository = new HistoryRepository(db);
-                var historyEngine = new HistoryEngine(historyRepository, ImportFactory, ExternalImportType.Moex, Logger);
+                var historyEngine = new HistoryEngine(historyRepository, ImportFactory, Logger);
                 //var lastDate = historyEngine.GetLastHistoryDate("SBERP");
 
                 await historyEngine.ImportHistory("SBERP");

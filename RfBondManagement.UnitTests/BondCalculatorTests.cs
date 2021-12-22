@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RfBondManagement.Engine.Calculations;
 using RfBondManagement.Engine.Common;
 using RfFondPortfolio.Common.Dtos;
@@ -8,14 +8,14 @@ using System.Collections.Generic;
 
 namespace RfBondManagement.UnitTests
 {
-    [TestFixture]
+    [TestClass]
     public class BondCalculatorTests
     {
         public BondCalculator Calculator;
         public BondPaper BondPaper;
         public Portfolio Portfolio;
 
-        [SetUp]
+        [TestInitialize]
         public void Setup()
         {
             Portfolio = new Portfolio
@@ -44,7 +44,7 @@ namespace RfBondManagement.UnitTests
             };
         }
 
-        [Test]
+        [TestMethod]
         public void Duration_NoCoupons_Test()
         {
             var today = new DateTime(2021, 1, 1);
@@ -63,7 +63,7 @@ namespace RfBondManagement.UnitTests
             duration.ShouldBe(365);
         }
 
-        [Test]
+        [TestMethod]
         public void Duration_TwoCoupons_Test()
         {
             var today = new DateTime(2021, 1, 1);
@@ -88,7 +88,7 @@ namespace RfBondManagement.UnitTests
             duration.ShouldBe(357);
         }
 
-        [Test]
+        [TestMethod]
         public void Duration_AnotherSample_Test()
         {
             var today = new DateTime(2021, 1, 1);
@@ -113,7 +113,7 @@ namespace RfBondManagement.UnitTests
             duration.ShouldBe(1273);
         }
 
-        [Test]
+        [TestMethod]
         public void CouponOnCurrentDate_Test()
         {
             var today = DateTime.UtcNow.Date;
@@ -135,7 +135,7 @@ namespace RfBondManagement.UnitTests
             aci.ShouldBe(0);
         }
 
-        [Test]
+        [TestMethod]
         public void TenPercents_Clear_Test()
         {
             var buyAction = new PortfolioPaperAction
@@ -164,7 +164,7 @@ namespace RfBondManagement.UnitTests
             Assert.AreEqual(10.03m, Math.Round(bondIncomeInfo.RealIncomePercent, 2));
         }
 
-        [Test]
+        [TestMethod]
         public void TenPercents_withSettings()
         {
             var buyAction = new PortfolioPaperAction
@@ -193,7 +193,7 @@ namespace RfBondManagement.UnitTests
             Assert.AreEqual(8.7m, Math.Round(bondIncomeInfo.RealIncomePercent, 2));
         }
 
-        [Test]
+        [TestMethod]
         public void CalculateAci_NoCoupons()
         {
             var paper = new BondPaper
@@ -208,7 +208,7 @@ namespace RfBondManagement.UnitTests
             aci.ShouldBe(0);
         }
 
-        [Test]
+        [TestMethod]
         public void CalculateAci_AskDate_BeforeIssueDate()
         {
             var paper = new BondPaper
@@ -224,7 +224,7 @@ namespace RfBondManagement.UnitTests
             aci.ShouldBe(0);
         }
 
-        [Test]
+        [TestMethod]
         public void CalculateAci_AskDate_AfterMatDate()
         {
             var paper = new BondPaper
@@ -239,7 +239,7 @@ namespace RfBondManagement.UnitTests
             aci.ShouldBe(0);
         }
 
-        [Test]
+        [TestMethod]
         public void RealBondPaper()
         {
             var realPaper = new BondPaper

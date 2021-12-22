@@ -43,15 +43,15 @@ namespace RfBondManagement.Engine.Calculations
             _paperActionRepository = paperActionRepository;
             _splitRepository = splitRepository;
             _bondCalculator = bondCalculator;
-
-            _paperActionRepository.Setup(_portfolio.Id);
-            _moneyActionRepository.Setup(_portfolio.Id);
         }
 
         public void Configure(Portfolio portfolio, ExternalImportType importType)
         {
             _portfolio = portfolio;
             _import = _importFactory.GetImpl(importType);
+
+            _paperActionRepository.Setup(_portfolio.Id);
+            _moneyActionRepository.Setup(_portfolio.Id);
         }
 
         protected void CheckIsConfigured()

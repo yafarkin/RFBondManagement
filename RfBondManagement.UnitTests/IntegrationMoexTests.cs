@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using NLog;
-using NUnit.Framework;
 using RfBondManagement.Engine;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Database;
@@ -15,14 +15,14 @@ using Shouldly;
 
 namespace RfBondManagement.UnitTests
 {
-    [TestFixture]
+    [TestClass]
     public class IntegrationMoexTests
     {
         public IExternalImport Import;
         public ILogger Logger;
         public IExternalImportFactory ImportFactory;
 
-        [SetUp]
+        [TestInitialize]
         public void Setup()
         {
             Import = new MoexImport();
@@ -33,7 +33,7 @@ namespace RfBondManagement.UnitTests
             ImportFactory = importFactoryMock.Object;
         }
 
-        [Test]
+        [TestMethod]
         public async Task ShareImportTest()
         {
             var paper = (await Import.ImportPaper(Logger, "SBERP")) as SharePaper;
@@ -53,7 +53,7 @@ namespace RfBondManagement.UnitTests
             firstDividend.RegistryCloseDate.ShouldBe(new DateTime(2019, 6, 13));
         }
 
-        [Test]
+        [TestMethod]
         public async Task BondImportTest()
         {
             // https://smart-lab.ru/q/bonds/SU26227RMFS7/, ОФЗ 26227
@@ -74,7 +74,7 @@ namespace RfBondManagement.UnitTests
             firstCoupon.CouponDate.ShouldBe(new DateTime(2019, 7, 24));
         }
 
-        [Test]
+        [TestMethod]
         public async Task HistoryTest()
         {
             using (var db = new DatabaseLayer())
@@ -87,7 +87,7 @@ namespace RfBondManagement.UnitTests
             }
         }
 
-        [Test]
+        [TestMethod]
         public async Task GetLastPriceTest()
         {
             // share
@@ -108,7 +108,7 @@ namespace RfBondManagement.UnitTests
             // http://iss.moex.com/iss/history/engines/stock/markets/shares/boards/TQBR/securities/SBER.json?iss.json=extended&from=2000-01-01
         }
 
-        [Test]
+        [TestMethod]
         public async Task GetHistoryTest()
         {
             var paper = await Import.ImportPaper(Logger, "SU26208RMFS7");

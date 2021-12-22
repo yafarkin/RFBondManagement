@@ -33,16 +33,33 @@ namespace RfBondManagement.Engine.Calculations
                 }
             }
 
+            // количество бумаг к изменению
+            var paperToChange = new Dictionary<string, long>();
+
             throw new NotImplementedException();
 
-            //var content = engine.Build();
-            //await engine.FillPrice(content, onDate);
+            var content = engine.Build();
 
-            //while (availSum > 0)
-            //{
-            //    var maxDisablanced = FindMaxDisablancedPaper(portfolio, content, rootLeaf);
+            while (availSum > 0)
+            {
+                // secId, price, объём в портфеле с учётом цены, текущее количество, количество к покупке
+                var papersList = new List<Tuple<string, decimal, decimal, long, long>>();
 
-            //}
+                foreach (var paperValue in flattenPapers)
+                {
+                    var secId = paperValue.Paper.SecId;
+                    var price = paperPrices[secId];
+
+                    var countInPortfolio = content.Papers.FirstOrDefault(x => x.Paper.SecId == secId)?.Count ?? 0;
+                    var changeCount = paperToChange.ContainsKey(secId) ? paperToChange[secId] : 0;
+
+
+                    papersList.Add(new Tuple<string, decimal, decimal, long, long>());
+                }
+
+                var maxDisablanced = FindMaxDisablancedPaper(portfolio, content, rootLeaf);
+
+            }
 
             return result;
         }

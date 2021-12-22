@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using NLog;
-using NUnit.Framework;
 using RfBondManagement.Engine.Calculations;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
@@ -14,7 +14,7 @@ using Shouldly;
 
 namespace RfBondManagement.UnitTests
 {
-    [TestFixture]
+    [TestClass]
     public class PortfolioBuilderTests
     {
         public PortfolioEngine PortfolioEngine;
@@ -35,7 +35,7 @@ namespace RfBondManagement.UnitTests
         public SharePaper ShareSample;
         public BondPaper BondSample;
 
-        [SetUp]
+        [TestInitialize]
         public void Setup()
         {
             var today = DateTime.UtcNow.Date;
@@ -114,7 +114,7 @@ namespace RfBondManagement.UnitTests
             PortfolioEngine.Configure(Portfolio, ExternalImportType.Moex);
         }
 
-        [Test]
+        [TestMethod]
         public async Task PortfolioEngine_Bond_SmokeTest()
         {
             LastPrice = 105;
@@ -148,7 +148,7 @@ namespace RfBondManagement.UnitTests
         }
 
 
-        [Test]
+        [TestMethod]
         public void PayTaxByDraftProfit_Test()
         {
             LastPrice = 105;
@@ -184,7 +184,7 @@ namespace RfBondManagement.UnitTests
             content.Sums[MoneyActionType.OutcomeTax].ShouldBe(16.9m);
         }
 
-        [Test]
+        [TestMethod]
         public void PortfolioEngine_AutomateDividends_Test()
         {
             var onDate = DateTime.UtcNow.Date;
@@ -222,7 +222,7 @@ namespace RfBondManagement.UnitTests
             (p[2] as PortfolioMoneyAction).Sum.ShouldBe(1);
         }
 
-        [Test]
+        [TestMethod]
         public void PortfolioEngine_AutomateCoupons_Test()
         {
             var onDate = DateTime.UtcNow.Date;
@@ -260,7 +260,7 @@ namespace RfBondManagement.UnitTests
             (p[2] as PortfolioMoneyAction).Sum.ShouldBe(1);
         }
 
-        [Test]
+        [TestMethod]
         public void PortfolioEngine_AutomateBondClose_Test()
         {
             var onDate = DateTime.UtcNow;
@@ -305,7 +305,7 @@ namespace RfBondManagement.UnitTests
             m[3].Sum.ShouldBe(50);
         }
 
-        [Test]
+        [TestMethod]
         public void PortfolioEngine_AutomateSplit_Test()
         {
             var onDate = DateTime.UtcNow.Date;
@@ -324,7 +324,7 @@ namespace RfBondManagement.UnitTests
             p.Count().ShouldBe(1);
         }
 
-        [Test]
+        [TestMethod]
         public void PortfolioEngine_Split_SmokeTest()
         {
             var onDate = DateTime.UtcNow.Date;
@@ -385,7 +385,7 @@ namespace RfBondManagement.UnitTests
             p.AveragePrice.ShouldBe(2.58m);
         }
 
-        [Test]
+        [TestMethod]
         public async Task PortfolioEngine_Share_SmokeTest()
         {
             LastPrice = 300;
@@ -440,7 +440,7 @@ namespace RfBondManagement.UnitTests
             fifo[1].Item3.ShouldBe(1);
         }
 
-        [Test]
+        [TestMethod]
         public void BuildPaperFifo_SmokeTest()
         {
             Actions.Add(new PortfolioPaperAction {PaperAction = PaperActionType.Buy, Count = 1, SecId = "S1", Sum = 100, Value = 100});
@@ -467,7 +467,7 @@ namespace RfBondManagement.UnitTests
             fifo[1].Item3.ShouldBe(1);
         }
 
-        [Test]
+        [TestMethod]
         public void BuildFifio_SmokeTest2()
         {
             // основано на примере 1 из https://journal.open-broker.ru/taxes/chto-takoe-fifo/

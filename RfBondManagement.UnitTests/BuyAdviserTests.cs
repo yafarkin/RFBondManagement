@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RfBondManagement.Engine.Calculations;
 using RfFondPortfolio.Common.Dtos;
 using Shouldly;
 
 namespace RfBondManagement.UnitTests
 {
-    [TestFixture]
+    [TestClass]
     public class BuyAdviserTests
     {
-        [Test]
+        [TestMethod]
         public void FlattenStructure_CorrectPercentCalc_Test()
         {
             var portfolio = new Portfolio
@@ -99,7 +99,6 @@ namespace RfBondManagement.UnitTests
 
             flattenList[5].Paper.SecId.ShouldBe("Paper6");
             flattenList[5].Volume.ShouldBe(0.0833m, 0.0001m);
-
         }
     }
 }

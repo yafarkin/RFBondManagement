@@ -1,7 +1,12 @@
 ﻿using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+using NLog;
 using RfBondManagement.Engine.Calculations;
+using RfBondManagement.Engine.Common;
+using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
+using RfFondPortfolio.Common.Interfaces;
 using Shouldly;
 
 namespace RfBondManagement.UnitTests
@@ -9,8 +14,12 @@ namespace RfBondManagement.UnitTests
     [TestClass]
     public class BuyAdviserTests
     {
-        [TestMethod]
-        public void FlattenStructure_CorrectPercentCalc_Test()
+        public void BuyPaper(Portfolio portfolio, string secId, long count, decimal price)
+        {
+            //portfolio.
+        }
+
+        public Portfolio BuildSamplePortfolio()
         {
             var portfolio = new Portfolio
             {
@@ -79,7 +88,13 @@ namespace RfBondManagement.UnitTests
                 }
             };
 
-            var flattenList = BuyAdviser.FlattenPaperStructure(portfolio.RootLeaf, 1);
+            return portfolio;
+        }
+
+        [TestMethod]
+        public void FlattenStructure_CorrectPercentCalc_Test()
+        {
+            var flattenList = BuyAdviser.FlattenPaperStructure(BuildSamplePortfolio().RootLeaf, 1);
             flattenList.Count.ShouldBe(6);
 
             flattenList[0].Paper.SecId.ShouldBe("Paper1");
@@ -99,6 +114,29 @@ namespace RfBondManagement.UnitTests
 
             flattenList[5].Paper.SecId.ShouldBe("Paper6");
             flattenList[5].Volume.ShouldBe(0.0833m, 0.0001m);
+        }
+
+        [TestMethod]
+        public void Advice_BuyOnly_Test()
+        {
+            var portfolio = BuildSamplePortfolio();
+
+            var logger = new Mock<ILogger>().Object;
+            var import = new Mock<IExternalImport>().Object;
+
+            var importFactoryMock = new Mock<IExternalImportFactory>();
+            importFactoryMock.Setup(m => m.GetDefaultImpl()).Returns(() => import);
+
+            var paperRepository = new Mock<IPaperRepository>().Object;
+            var moneyActionRepository = new Mock<IPortfolioMoneyActionRepository>().Object;
+            var paperActionRepository = new Mock<IPortfolioPaperActionRepository>().Object;
+            var splitRepository = new Mock<ISplitRepository>().Object;
+            var bondCalculator = new Mock<IBondCalculator>().Object;
+
+            var engine = new PortfolioEngine(importFactoryMock.Object, paperRepository, moneyActionRepository, paperActionRepository, splitRepository, bondCalculator, logger);
+            engine.Configure(portfolio, ExternalImportType.Moex);
+
+            var advice = BuyAdviser.Advise(logger, engine, 100000, false, false,null, import, null);
         }
     }
 }

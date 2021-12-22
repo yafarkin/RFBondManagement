@@ -34,7 +34,8 @@ namespace RfBondManagement.Engine.Calculations
             IPortfolioMoneyActionRepository moneyActionRepository,
             IPortfolioPaperActionRepository paperActionRepository,
             ISplitRepository splitRepository,
-            IBondCalculator bondCalculator, ILogger logger)
+            IBondCalculator bondCalculator,
+            ILogger logger)
         {
             _logger = logger;
             _importFactory = importFactory;
@@ -52,6 +53,30 @@ namespace RfBondManagement.Engine.Calculations
 
             _paperActionRepository.Setup(_portfolio.Id);
             _moneyActionRepository.Setup(_portfolio.Id);
+        }
+
+        public void ApplyActions(PortfolioAction action)
+        {
+            if (action is PortfolioMoneyAction moneyAction)
+            {
+                _moneyActionRepository.Insert(moneyAction);
+            }
+            else if (action is PortfolioPaperAction paperAction)
+            {
+                _paperActionRepository.Insert(paperAction);
+            }
+            else
+            {
+                throw new NotSupportedException($"Не известный тип действия: {action.GetType()}");
+            }
+        }
+
+        public void ApplyActions(IEnumerable<PortfolioAction> actions)
+        {
+            foreach (var action in actions)
+            {
+                ApplyActions(action);
+            }
         }
 
         protected void CheckIsConfigured()
@@ -264,7 +289,7 @@ namespace RfBondManagement.Engine.Calculations
             return content;
         }
 
-        public IEnumerable<PortfolioMoneyAction> PayTaxByDraftProfit(decimal draftSum, string comment = null, DateTime when = default(DateTime))
+        public IEnumerable<PortfolioAction> PayTaxByDraftProfit(decimal draftSum, string comment = null, DateTime when = default(DateTime))
         {
             CheckIsConfigured();
 
@@ -283,15 +308,24 @@ namespace RfBondManagement.Engine.Calculations
 
             comment ??= $"Оплата налога с суммы {draftSum:N4}, ставка {tax}%, сумма налога: {taxSum:N4}";
 
-            yield return MoveMoney(taxSum, MoneyActionType.OutcomeTax, comment, null, when);
-            yield return MoveMoney(-draftSum, MoneyActionType.DraftProfit, "Уменьшение налогооблагаемой суммы, т.к. налог по ней выплачен", null, when);
+            var actions = MoveMoney(taxSum, MoneyActionType.OutcomeTax, comment, null, when);
+            foreach (var action in actions)
+            {
+                yield return action;
+            }
+
+            actions = MoveMoney(-draftSum, MoneyActionType.DraftProfit, "Уменьшение налогооблагаемой суммы, т.к. налог по ней выплачен", null, when);
+            foreach (var action in actions)
+            {
+                yield return action;
+            }
         }
 
-        public PortfolioMoneyAction MoveMoney(decimal sum, MoneyActionType moneyActionType, string comment, string secId = null, DateTime when = default(DateTime))
+        public IEnumerable<PortfolioAction> MoveMoney(decimal sum, MoneyActionType moneyActionType, string comment, string secId = null, DateTime when = default(DateTime))
         {
             if (0 == sum)
             {
-                return null;
+                yield break;
             }
 
             if (when == default(DateTime))
@@ -308,11 +342,11 @@ namespace RfBondManagement.Engine.Calculations
                 Sum = sum,
                 Comment = comment
             };
-            _moneyActionRepository.Insert(moneyAction);
-            return moneyAction;
+
+            yield return moneyAction;
         }
 
-        public PortfolioPaperAction BuyPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime))
+        public IEnumerable<PortfolioAction> BuyPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime))
         {
             CheckIsConfigured();
 
@@ -323,7 +357,11 @@ namespace RfBondManagement.Engine.Calculations
 
             var sum = paper.PaperType == PaperType.Bond ? price / 100 * paper.FaceValue * count : price * count;
 
-            MoveMoney(sum, MoneyActionType.OutcomeBuyOnMarket, $"Покупка бумаги {paper.SecId}, количество {count}, цена {price}", paper.SecId, when);
+            var actions = MoveMoney(sum, MoneyActionType.OutcomeBuyOnMarket, $"Покупка бумаги {paper.SecId}, количество {count}, цена {price}", paper.SecId, when);
+            foreach (var action in actions)
+            {
+                yield return action;
+            }
 
             if (paper.PaperType == PaperType.Bond)
             {
@@ -331,11 +369,19 @@ namespace RfBondManagement.Engine.Calculations
                 var aciSum = aci * count;
                 sum += aciSum;
 
-                MoveMoney(aciSum, MoneyActionType.OutcomeAci, $"НКД {aci}, сумма НКД {aciSum}", paper.SecId, when);
+                actions = MoveMoney(aciSum, MoneyActionType.OutcomeAci, $"НКД {aci}, сумма НКД {aciSum}", paper.SecId, when);
+                foreach (var action in actions)
+                {
+                    yield return action;
+                }
             }
 
             var commission = sum * _portfolio.Commissions / 100;
-            MoveMoney(commission, MoneyActionType.OutcomeCommission, $"Списание комиссии, ставка {_portfolio.Commissions/100:P}", paper.SecId, when);
+            actions = MoveMoney(commission, MoneyActionType.OutcomeCommission, $"Списание комиссии, ставка {_portfolio.Commissions/100:P}", paper.SecId, when);
+            foreach (var action in actions)
+            {
+                yield return action;
+            }
 
             var paperAction = new PortfolioPaperAction
             {
@@ -347,8 +393,8 @@ namespace RfBondManagement.Engine.Calculations
                 Value = price,
                 When = when
             };
-            _paperActionRepository.Insert(paperAction);
-            return paperAction;
+            
+            yield return paperAction;
         }
 
         protected static int CalcFullYears(DateTime dt1, DateTime dt2)
@@ -367,14 +413,14 @@ namespace RfBondManagement.Engine.Calculations
             return n;
         }
 
-        public PortfolioPaperAction SellPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime))
+        public IEnumerable<PortfolioAction> SellPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime))
         {
             CheckIsConfigured();
 
             return SellPaper(paper, count, price, when, PaperActionType.Sell);
         }
 
-        protected PortfolioPaperAction SellPaper(AbstractPaper paper, long count, decimal price, DateTime when, PaperActionType sellActionType)
+        protected IEnumerable<PortfolioAction> SellPaper(AbstractPaper paper, long count, decimal price, DateTime when, PaperActionType sellActionType)
         {
             if (when == default(DateTime))
             {
@@ -396,7 +442,11 @@ namespace RfBondManagement.Engine.Calculations
 
             var sum = paper.PaperType == PaperType.Bond ? price / 100 * paper.FaceValue * count : price * count;
 
-            MoveMoney(sum, MoneyActionType.IncomeSellOnMarket, $"Продажа бумаги {paper.SecId}, количество {count}, цена {price}", paper.SecId, when);
+            var actions = MoveMoney(sum, MoneyActionType.IncomeSellOnMarket, $"Продажа бумаги {paper.SecId}, количество {count}, цена {price}", paper.SecId, when);
+            foreach (var action in actions)
+            {
+                yield return action;
+            }
 
             if (paper.PaperType == PaperType.Bond)
             {
@@ -405,11 +455,19 @@ namespace RfBondManagement.Engine.Calculations
 
                 sum += aciSum;
 
-                MoveMoney(aciSum, MoneyActionType.IncomeAci, $"НКД {aci}, сумма НКД {aciSum}", paper.SecId, when);
+                actions = MoveMoney(aciSum, MoneyActionType.IncomeAci, $"НКД {aci}, сумма НКД {aciSum}", paper.SecId, when);
+                foreach (var action in actions)
+                {
+                    yield return action;
+                }
             }
 
             var commission = sum * _portfolio.Commissions / 100;
-            MoveMoney(commission, MoneyActionType.OutcomeCommission, $"Списание комиссии, ставка {_portfolio.Commissions/100:P}", paper.SecId, when);
+            actions = MoveMoney(commission, MoneyActionType.OutcomeCommission, $"Списание комиссии, ставка {_portfolio.Commissions/100:P}", paper.SecId, when);
+            foreach (var action in actions)
+            {
+                yield return action;
+            }
 
             var today = DateTime.UtcNow.Date;
             var threeYears = new DateTime(2014, 1, 1);
@@ -478,20 +536,23 @@ namespace RfBondManagement.Engine.Calculations
                 profit = profit / 100 * paper.FaceValue;
             }
 
-            MoveMoney(profit, MoneyActionType.DraftProfit, $"Прибыль/убыток по сделке", paper.SecId, when);
+            actions = MoveMoney(profit, MoneyActionType.DraftProfit, "Прибыль/убыток по сделке", paper.SecId, when);
+            foreach (var action in actions)
+            {
+                yield return action;
+            }
 
             var paperAction = new PortfolioPaperAction
-                {
-                    Count = count,
-                    PaperAction = sellActionType,
-                    PortfolioId = _portfolio.Id,
-                    SecId = paper.SecId,
-                    Value = price,
-                    When = when
-                };
-                _paperActionRepository.Insert(paperAction);
+            {
+                Count = count,
+                PaperAction = sellActionType,
+                PortfolioId = _portfolio.Id,
+                SecId = paper.SecId,
+                Value = price,
+                When = when
+            };
 
-            return paperAction;
+            yield return paperAction;
         }
 
         public IEnumerable<PortfolioAction> Automate(DateTime onDate)
@@ -581,8 +642,17 @@ namespace RfBondManagement.Engine.Calculations
 
                 yield return paperAction;
 
-                yield return MoveMoney(totalSum, MoneyActionType.IncomeDividend, $"Дивиденды по {sharePaper.SecId}, дивиденд: {dividendSum:N4}, налог: {taxSum:N2}, итого на бумагу: {(dividendSum - taxSum):N2}");
-                yield return MoveMoney(totalTaxSum, MoneyActionType.OutcomeTax, $"Итого налог по дивидендам");
+                var actions = MoveMoney(totalSum, MoneyActionType.IncomeDividend, $"Дивиденды по {sharePaper.SecId}, дивиденд: {dividendSum:N4}, налог: {taxSum:N2}, итого на бумагу: {(dividendSum - taxSum):N2}");
+                foreach (var action in actions)
+                {
+                    yield return action;
+                }
+
+                actions = MoveMoney(totalTaxSum, MoneyActionType.OutcomeTax, $"Итого налог по дивидендам");
+                foreach (var action in actions)
+                {
+                    yield return action;
+                }
             }
         }
 
@@ -625,8 +695,17 @@ namespace RfBondManagement.Engine.Calculations
 
                 yield return paperAction;
 
-                yield return MoveMoney(totalSum, MoneyActionType.IncomeDividend, $"Купоны по {bondPaper.SecId}, размер: {couponSum:N4}, налог: {taxSum:N2}, итого на бумагу: {(couponSum - taxSum):N2}");
-                yield return MoveMoney(totalTaxSum, MoneyActionType.OutcomeTax, $"Итого налог по купонам");
+                var actions = MoveMoney(totalSum, MoneyActionType.IncomeDividend, $"Купоны по {bondPaper.SecId}, размер: {couponSum:N4}, налог: {taxSum:N2}, итого на бумагу: {(couponSum - taxSum):N2}");
+                foreach (var action in actions)
+                {
+                    yield return action;
+                }
+
+                actions = MoveMoney(totalTaxSum, MoneyActionType.OutcomeTax, $"Итого налог по купонам");
+                foreach (var action in actions)
+                {
+                    yield return action;
+                }
             }
         }
 
@@ -642,7 +721,11 @@ namespace RfBondManagement.Engine.Calculations
 
             foreach (var bondPaper in papers)
             {
-                yield return SellPaper(bondPaper, -1, 100, onDate, PaperActionType.Close);
+                var actions = SellPaper(bondPaper, -1, 100, onDate, PaperActionType.Close);
+                foreach (var action in actions)
+                {
+                    yield return action;
+                }
             }
         }
     }

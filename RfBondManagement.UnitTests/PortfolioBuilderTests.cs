@@ -124,12 +124,12 @@ namespace RfBondManagement.UnitTests
             var when = DateTime.UtcNow.AddDays(-91);
 
             var paper = BondSample;
-            PortfolioEngine.MoveMoney(2500, MoneyActionType.IncomeExternal, "пополнение счёта", null, when);
-            PortfolioEngine.BuyPaper(paper, 1, 95, when);
-            PortfolioEngine.BuyPaper(paper, 1, 98, when);
+            PortfolioEngine.ApplyActions(PortfolioEngine.MoveMoney(2500, MoneyActionType.IncomeExternal, "пополнение счёта", null, when));
+            PortfolioEngine.ApplyActions(PortfolioEngine.BuyPaper(paper, 1, 95, when));
+            PortfolioEngine.ApplyActions(PortfolioEngine.BuyPaper(paper, 1, 98, when));
 
             when = DateTime.UtcNow;
-            PortfolioEngine.SellPaper(paper, 1, 108, when);
+            PortfolioEngine.ApplyActions(PortfolioEngine.SellPaper(paper, 1, 108, when));
 
             var content = PortfolioEngine.Build();
             await PortfolioEngine.FillPrice(content);
@@ -158,11 +158,11 @@ namespace RfBondManagement.UnitTests
             var when = DateTime.UtcNow.AddDays(-91);
 
             var paper = BondSample;
-            PortfolioEngine.MoveMoney(2500, MoneyActionType.IncomeExternal, "пополнение счёта", null, when);
-            PortfolioEngine.BuyPaper(paper, 1, 95, when);
+            PortfolioEngine.ApplyActions(PortfolioEngine.MoveMoney(2500, MoneyActionType.IncomeExternal, "пополнение счёта", null, when));
+            PortfolioEngine.ApplyActions(PortfolioEngine.BuyPaper(paper, 1, 95, when));
 
             when = DateTime.UtcNow;
-            PortfolioEngine.SellPaper(paper, 1, 108, when);
+            PortfolioEngine.ApplyActions(PortfolioEngine.SellPaper(paper, 1, 108, when));
 
             var content = PortfolioEngine.Build();
 
@@ -170,7 +170,8 @@ namespace RfBondManagement.UnitTests
             content.Sums[MoneyActionType.DraftProfit].ShouldBe(130);
             content.Sums.ContainsKey(MoneyActionType.OutcomeTax).ShouldBeFalse();
 
-            var moneyActions = PortfolioEngine.PayTaxByDraftProfit(130).ToList();
+            var moneyActions = PortfolioEngine.PayTaxByDraftProfit(130).OfType<PortfolioMoneyAction>().ToList();
+            PortfolioEngine.ApplyActions(moneyActions);
             moneyActions.Count.ShouldBe(2);
             moneyActions[0].MoneyAction.ShouldBe(MoneyActionType.OutcomeTax);
             moneyActions[0].Sum.ShouldBe(16.9m);
@@ -205,12 +206,14 @@ namespace RfBondManagement.UnitTests
 
             Portfolio.Tax = 10;
 
-            PortfolioEngine.BuyPaper(ShareSample, 1, 100, onDate);
+            PortfolioEngine.ApplyActions(PortfolioEngine.BuyPaper(ShareSample, 1, 100, onDate));
 
             var p = PortfolioEngine.AutomateDividend(onDate, new[] {ShareSample.SecId}).ToList();
+            PortfolioEngine.ApplyActions(p);
             p.ShouldBeEmpty();
 
             p = PortfolioEngine.AutomateDividend(onDate.AddDays(1), new[] {ShareSample.SecId}).ToList();
+            PortfolioEngine.ApplyActions(p);
             p.Count.ShouldBe(3);
             p[0].ShouldBeOfType<PortfolioPaperAction>();
             (p[0] as PortfolioPaperAction).Value.ShouldBe(10);
@@ -243,12 +246,14 @@ namespace RfBondManagement.UnitTests
 
             Portfolio.Tax = 10;
 
-            PortfolioEngine.BuyPaper(BondSample, 1, 100, onDate);
+            PortfolioEngine.ApplyActions(PortfolioEngine.BuyPaper(BondSample, 1, 100, onDate));
 
             var p = PortfolioEngine.AutomateCoupons(onDate, new[] {BondSample.SecId}).ToList();
+            PortfolioEngine.ApplyActions(p);
             p.ShouldBeEmpty();
 
             p = PortfolioEngine.AutomateCoupons(onDate.AddDays(1), new[] {BondSample.SecId}).ToList();
+            PortfolioEngine.ApplyActions(p);
             p.Count.ShouldBe(3);
             p[0].ShouldBeOfType<PortfolioPaperAction>();
             (p[0] as PortfolioPaperAction).Value.ShouldBe(10);
@@ -281,17 +286,18 @@ namespace RfBondManagement.UnitTests
 
             Portfolio.Tax = 10;
 
-            PortfolioEngine.BuyPaper(BondSample, 1, 95, onDate);
+            PortfolioEngine.ApplyActions(PortfolioEngine.BuyPaper(BondSample, 1, 95, onDate));
 
             var p = PortfolioEngine.AutomateBondCloseDate(onDate, new[] {BondSample.SecId}).ToList();
             p.ShouldBeEmpty();
 
             p = PortfolioEngine.AutomateBondCloseDate(onDate.AddDays(1), new[] {BondSample.SecId}).ToList();
-            p.Count.ShouldBe(1);
-            p[0].ShouldBeOfType<PortfolioPaperAction>();
-            (p[0] as PortfolioPaperAction).PaperAction.ShouldBe(PaperActionType.Close);
-            (p[0] as PortfolioPaperAction).Count.ShouldBe(1);
-            (p[0] as PortfolioPaperAction).Value.ShouldBe(100);
+            PortfolioEngine.ApplyActions(p);
+            p.Count.ShouldBe(3);
+            p[2].ShouldBeOfType<PortfolioPaperAction>();
+            (p[2] as PortfolioPaperAction).PaperAction.ShouldBe(PaperActionType.Close);
+            (p[2] as PortfolioPaperAction).Count.ShouldBe(1);
+            (p[2] as PortfolioPaperAction).Value.ShouldBe(100);
 
             var m = Actions.OfType<PortfolioMoneyAction>().ToList();
             m.Count.ShouldBe(4);
@@ -336,18 +342,15 @@ namespace RfBondManagement.UnitTests
                 SecId = ShareSample.SecId
             });
 
-            PortfolioEngine.BuyPaper(ShareSample, 5, 25, onDate.AddDays(-3));
-            PortfolioEngine.SellPaper(ShareSample, 1, 30, onDate.AddDays(-2));
+            PortfolioEngine.ApplyActions(PortfolioEngine.BuyPaper(ShareSample, 5, 25, onDate.AddDays(-3)));
+            PortfolioEngine.ApplyActions(PortfolioEngine.SellPaper(ShareSample, 1, 30, onDate.AddDays(-2)));
 
             var automate = PortfolioEngine.AutomateSplit(onDate.AddDays(-1), new[] {ShareSample.SecId});
             automate.ShouldNotBeEmpty();
-            foreach (var action in automate)
-            {
-                PaperActionRepository.Insert(action);
-            }
+            PortfolioEngine.ApplyActions(automate);
 
-            PortfolioEngine.BuyPaper(ShareSample, 50, 2.6m, onDate.AddDays(-1));
-            PortfolioEngine.SellPaper(ShareSample, 25, 3.3m, onDate);
+            PortfolioEngine.ApplyActions(PortfolioEngine.BuyPaper(ShareSample, 50, 2.6m, onDate.AddDays(-1)));
+            PortfolioEngine.ApplyActions(PortfolioEngine.SellPaper(ShareSample, 25, 3.3m, onDate));
 
             var actions = Actions.OfType<PortfolioPaperAction>().ToList();
 
@@ -393,10 +396,10 @@ namespace RfBondManagement.UnitTests
             Portfolio.Tax = 13m;
 
             var paper = PaperRepository.Get().First();
-            PortfolioEngine.MoveMoney(1000, MoneyActionType.IncomeExternal, "пополнение счёта");
-            PortfolioEngine.BuyPaper(paper, 1, 100);
-            PortfolioEngine.BuyPaper(paper, 1, 200);
-            PortfolioEngine.SellPaper(paper, 1, 250);
+            PortfolioEngine.ApplyActions(PortfolioEngine.MoveMoney(1000, MoneyActionType.IncomeExternal, "пополнение счёта"));
+            PortfolioEngine.ApplyActions(PortfolioEngine.BuyPaper(paper, 1, 100));
+            PortfolioEngine.ApplyActions(PortfolioEngine.BuyPaper(paper, 1, 200));
+            PortfolioEngine.ApplyActions(PortfolioEngine.SellPaper(paper, 1, 250));
 
             var content = PortfolioEngine.Build();
             await PortfolioEngine.FillPrice(content);

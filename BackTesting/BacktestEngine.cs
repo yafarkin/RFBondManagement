@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -305,7 +304,8 @@ namespace BackTesting
                 throw new ApplicationException($"Нет цены для {paper.SecId} на {date}");
             }
 
-            _portfolioEngine.BuyPaper(paper, count, price, date);
+            var actions = _portfolioEngine.BuyPaper(paper, count, price, date);
+            _portfolioEngine.ApplyActions(actions);
         }
 
         public void SellPaper(DateTime date, AbstractPaper paper, long count)
@@ -317,7 +317,8 @@ namespace BackTesting
                 throw new ApplicationException($"Нет цены для {paper.SecId} на {date}");
             }
 
-            _portfolioEngine.SellPaper(paper, count, price, date);
+            var actions = _portfolioEngine.SellPaper(paper, count, price, date);
+            _portfolioEngine.ApplyActions(actions);
         }
 
         public virtual DateTime FindNearestDateWithPrices(IList<string> codes, DateTime date)

@@ -73,7 +73,7 @@ namespace BackTesting.Strategies
             _portfolio = portfolio;
             _nextMonthlyIncome = date.AddMonths(1);
 
-            _backtestEngine.PortfolioEngine.MoveMoney(_initialSum, MoneyActionType.IncomeExternal, "Начальная сумма", null, date);
+            _backtestEngine.PortfolioEngine.ApplyActions(_backtestEngine.PortfolioEngine.MoveMoney(_initialSum, MoneyActionType.IncomeExternal, "Начальная сумма", null, date));
         }
 
         public override bool Process(DateTime date)
@@ -82,7 +82,7 @@ namespace BackTesting.Strategies
             {
                 _nextMonthlyIncome = _nextMonthlyIncome.AddMonths(1);
 
-                _backtestEngine.PortfolioEngine.MoveMoney(_monthlyIncome, MoneyActionType.IncomeExternal, "Ежемесячное пополнение", null, date);
+                _backtestEngine.PortfolioEngine.ApplyActions(_backtestEngine.PortfolioEngine.MoveMoney(_monthlyIncome, MoneyActionType.IncomeExternal, "Ежемесячное пополнение", null, date));
                 _logger.Info($"Monthly income, {_monthlyIncome:C}");
             }
 

@@ -29,7 +29,8 @@ namespace RfBondManagement.UnitTests
             Logger = LogManager.GetCurrentClassLogger();
 
             var importFactoryMock = new Mock<IExternalImportFactory>();
-            importFactoryMock.Setup(m => m.GetImpl(It.IsAny<ExternalImportType>())).Returns(() => Import);
+            //importFactoryMock.Setup(m => m.GetImpl(It.IsAny<ExternalImportType>())).Returns(() => Import);
+            importFactoryMock.Setup(m => m.GetDefaultImpl()).Returns(() => Import);
             ImportFactory = importFactoryMock.Object;
         }
 

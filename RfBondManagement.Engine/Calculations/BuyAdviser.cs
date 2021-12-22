@@ -54,7 +54,7 @@ namespace RfBondManagement.Engine.Calculations
                     var changeCount = paperToChange.ContainsKey(secId) ? paperToChange[secId] : 0;
 
 
-                    papersList.Add(new Tuple<string, decimal, decimal, long, long>());
+                    //papersList.Add(new Tuple<string, decimal, decimal, long, long>());
                 }
 
                 var maxDisablanced = FindMaxDisablancedPaper(portfolio, content, rootLeaf);

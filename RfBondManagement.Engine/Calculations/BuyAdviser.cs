@@ -3,20 +3,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NLog;
+using RfBondManagement.Engine.Common;
+using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
-using RfFondPortfolio.Common.Interfaces;
 
 namespace RfBondManagement.Engine.Calculations
 {
-    public static class BuyAdviser
+    public class BuyAdviser : BaseAdviser
     {
-        public static async Task<IEnumerable<PortfolioAction>> Advise(ILogger logger, PortfolioEngine engine, decimal availSum, bool allowSell, bool useVa, DateTime? onDate, IExternalImport import, IHistoryRepository historyRepository)
+        public BuyAdviser(ILogger logger, IDictionary<string, string> p, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioLogic portfolioLogic)
+            : base(logger, p, portfolioBuilder, portfolioCalculator, portfolioLogic)
         {
+        }
+
+        public override async Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio)
+        {
+            var availSum = GetAsDecimal(Constants.Adviser.P_AvailSum, 0);
+            var allowSell = GetAsBool(Constants.Adviser.P_AllowSell, false);
+            var onDate = GetAsDateTime(Constants.Adviser.P_OnDate);
+
             var result = new List<PortfolioAction>();
 
-            var content = engine.Build();
+            var content = _portfolioBuilder.Build(portfolio.Id);
 
-            var portfolio = engine.Portfolio;
             var rootLeaf = portfolio.RootLeaf;
             var flattenPapers = FlattenPaperStructure(rootLeaf, 1);
             var portfolioPapers = content.Papers.ToDictionary(x => x.Paper.SecId);
@@ -24,16 +33,8 @@ namespace RfBondManagement.Engine.Calculations
 
             foreach (var paper in flattenPapers)
             {
-                if (null == onDate)
-                {
-                    var price = await import.LastPrice(logger, paper.Paper);
-                    paperPrices.Add(paper.Paper.SecId, price.Price);
-                }
-                else
-                {
-                    var historyPrice = historyRepository.GetNearHistoryPriceOnDate(paper.Paper.SecId, onDate.Value);
-                    paperPrices.Add(paper.Paper.SecId, historyPrice.LegalClosePrice);
-                }
+                var price = await _portfolioLogic.GetPrice(paper.Paper, onDate);
+                paperPrices.Add(paper.Paper.SecId, price);
             }
 
             foreach (var kv in portfolioPapers)
@@ -43,16 +44,8 @@ namespace RfBondManagement.Engine.Calculations
                     continue;
                 }
 
-                if (null == onDate)
-                {
-                    var price = await import.LastPrice(logger, kv.Value.Paper);
-                    paperPrices.Add(kv.Key, price.Price);
-                }
-                else
-                {
-                    var historyPrice = historyRepository.GetNearHistoryPriceOnDate(kv.Key, onDate.Value);
-                    paperPrices.Add(kv.Key, historyPrice.LegalClosePrice);
-                }
+                var price = await _portfolioLogic.GetPrice(kv.Value.Paper, onDate);
+                paperPrices.Add(kv.Key, price);
             }
 
             // количество бумаг к изменению
@@ -104,7 +97,7 @@ namespace RfBondManagement.Engine.Calculations
                     balance.Add(secId, new Tuple<decimal, decimal, decimal, decimal>(price, volume, needVolume, needVolume - volume));
                 }
 
-                if (allowSell)
+                if (allowSell == true)
                 {
                     // выбираем бумаги, от которых надо избавится, и сумма больше чем цена за одну бумагу
                     var sellPapers = balance.Where(x => x.Value.Item4 < 0 && Math.Abs(x.Value.Item4) >= x.Value.Item1);

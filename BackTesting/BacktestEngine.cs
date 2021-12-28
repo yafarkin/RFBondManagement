@@ -8,8 +8,8 @@ using BackTesting.Interfaces;
 using CsvHelper;
 using CsvHelper.Configuration;
 using NLog;
-using RfBondManagement.Engine.Calculations;
 using RfBondManagement.Engine.Common;
+using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 
@@ -19,32 +19,37 @@ namespace BackTesting
     {
         protected ILogger _logger;
 
-        protected PortfolioEngine _portfolioEngine;
+        protected readonly IPortfolioLogic _portfolioLogic;
+        protected readonly IPortfolioCalculator _portfolioCalculator;
+        protected readonly IPortfolioBuilder _portfolioBuilder;
+        protected readonly IPortfolioActions _portfolioActions;
 
         protected IHistoryRepository _historyRepository;
-        protected IPortfolioPaperActionRepository _paperActionRepository;
-        protected IPortfolioMoneyActionRepository _moneyActionRepository;
+
+        protected Portfolio _portfolio;
 
         public BacktestEngine(
             ILogger logger,
-            PortfolioEngine portfolioEngine,
             Portfolio portfolio,
+            IPortfolioLogic portfolioLogic,
+            IPortfolioCalculator portfolioCalculator,
+            IPortfolioBuilder portfolioBuilder,
+            IPortfolioActions portfolioActions,
             ExternalImportType importType,
-            IHistoryRepository historyRepository,
-            IPortfolioPaperActionRepository paperActionRepository,
-            IPortfolioMoneyActionRepository moneyActionRepository)
+            IHistoryRepository historyRepository
+            )
         {
             _logger = logger;
-            _portfolioEngine = portfolioEngine;
+            _portfolio = portfolio;
+
+            _portfolioLogic = portfolioLogic;
+            _portfolioCalculator = portfolioCalculator;
+            _portfolioBuilder = portfolioBuilder;
+            _portfolioActions = portfolioActions;
+
             _historyRepository = historyRepository;
 
-            _portfolioEngine.Configure(portfolio, importType);
-
-            _paperActionRepository = paperActionRepository;
-            _moneyActionRepository = moneyActionRepository;
-
-            _paperActionRepository.Setup(portfolioEngine.Portfolio.Id);
-            _moneyActionRepository.Setup(portfolioEngine.Portfolio.Id);
+            _portfolioLogic.Configure(portfolio, importType);
         }
 
         public Statistic FillStatistic(DateTime date)
@@ -53,7 +58,7 @@ namespace BackTesting
 
             var statistic = new Statistic {Date = date};
 
-            var content = _portfolioEngine.Build();
+            var content = _portfolioBuilder.Build(_portfolio.Id);
 
             var papers = new List<Tuple<string, long, decimal, decimal>>();
             statistic.Sum = new Dictionary<MoneyActionType, decimal>(content.Sums);
@@ -69,8 +74,6 @@ namespace BackTesting
 
             return statistic;
         }
-
-        public PortfolioEngine PortfolioEngine => _portfolioEngine;
 
         public void ExportToCsv(IList<Statistic> statistic)
         {
@@ -171,8 +174,8 @@ namespace BackTesting
             }
 
             var actions = new List<PortfolioAction>();
-            actions.AddRange(_moneyActionRepository.Get());
-            actions.AddRange(_paperActionRepository.Get());
+            actions.AddRange(_portfolioActions.MoneyActions(_portfolio.Id));
+            actions.AddRange(_portfolioActions.PaperActions(_portfolio.Id));
             actions = actions.OrderBy(a => a.When).ToList();
             filename = $"{date:yyyy_MM_dd}__{date:HH_mm_ss}_actions.csv";
             _logger.Info($"Export actions ({actions.Count} record(s)) to {filename} file");
@@ -226,7 +229,7 @@ namespace BackTesting
                 _logger.Warn($"Shifted start date {fromDate} to nearest date with prices {date}");
             }
 
-            strategy.Init(this, _portfolioEngine.Portfolio, date);
+            strategy.Init(this, _portfolio, date);
 
             if (date != fromDate)
             {
@@ -251,22 +254,8 @@ namespace BackTesting
 
                 do
                 {
-                    var actions = _portfolioEngine.Automate(date);
-                    foreach (var action in actions)
-                    {
-                        if (action is PortfolioPaperAction p)
-                        {
-                            _paperActionRepository.Insert(p);
-                        }
-                        else if (action is PortfolioMoneyAction m)
-                        {
-                            _moneyActionRepository.Insert(m);
-                        }
-                        else
-                        {
-                            throw new ApplicationException($"Неизвестный тип действия: {action.GetType()}");
-                        }
-                    }
+                    var actions = _portfolioCalculator.Automate(date);
+                    _portfolioLogic.ApplyActions(actions);
 
                     if (date != nextProcessDate)
                     {
@@ -304,8 +293,8 @@ namespace BackTesting
                 throw new ApplicationException($"Нет цены для {paper.SecId} на {date}");
             }
 
-            var actions = _portfolioEngine.BuyPaper(paper, count, price, date);
-            _portfolioEngine.ApplyActions(actions);
+            var actions = _portfolioCalculator.BuyPaper(paper, count, price, date);
+            _portfolioLogic.ApplyActions(actions);
         }
 
         public void SellPaper(DateTime date, AbstractPaper paper, long count)
@@ -317,8 +306,8 @@ namespace BackTesting
                 throw new ApplicationException($"Нет цены для {paper.SecId} на {date}");
             }
 
-            var actions = _portfolioEngine.SellPaper(paper, count, price, date);
-            _portfolioEngine.ApplyActions(actions);
+            var actions = _portfolioCalculator.SellPaper(paper, count, price, date);
+            _portfolioLogic.ApplyActions(actions);
         }
 
         public virtual DateTime FindNearestDateWithPrices(IList<string> codes, DateTime date)

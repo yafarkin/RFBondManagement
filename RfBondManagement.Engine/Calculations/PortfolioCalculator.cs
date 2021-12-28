@@ -1,292 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading.Tasks;
 using NLog;
-using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 
 namespace RfBondManagement.Engine.Calculations
 {
-    public class PortfolioEngine
+    public class PortfolioCalculator : IPortfolioCalculator
     {
         protected readonly IPaperRepository _paperRepository;
-        protected readonly IPortfolioPaperActionRepository _paperActionRepository;
-        protected readonly IPortfolioMoneyActionRepository _moneyActionRepository;
         protected readonly ISplitRepository _splitRepository;
-
-        protected readonly IExternalImportFactory _importFactory;
         protected readonly IBondCalculator _bondCalculator;
+        protected readonly IPortfolioBuilder _portfolioBuilder;
+        protected readonly IPortfolioActions _portfolioActions;
 
-        protected Portfolio _portfolio;
         protected readonly ILogger _logger;
 
-        protected IExternalImport _import;
-
+        protected Portfolio _portfolio;
         public Portfolio Portfolio => _portfolio;
 
-        public PortfolioEngine(
-            IExternalImportFactory importFactory,
+        public PortfolioCalculator(
+            IPortfolioBuilder portfolioBuilder,
+            IPortfolioActions portfolioActions,
             IPaperRepository paperRepository,
-            IPortfolioMoneyActionRepository moneyActionRepository,
-            IPortfolioPaperActionRepository paperActionRepository,
             ISplitRepository splitRepository,
             IBondCalculator bondCalculator,
             ILogger logger)
         {
             _logger = logger;
-            _importFactory = importFactory;
+            _portfolioBuilder = portfolioBuilder;
+            _portfolioActions = portfolioActions;
             _paperRepository = paperRepository;
-            _moneyActionRepository = moneyActionRepository;
-            _paperActionRepository = paperActionRepository;
             _splitRepository = splitRepository;
             _bondCalculator = bondCalculator;
         }
 
-        public void Configure(Portfolio portfolio, ExternalImportType importType)
+        public void Configure(Portfolio portfolio)
         {
             _portfolio = portfolio;
-            _import = _importFactory.GetImpl(importType);
-
-            _paperActionRepository.Setup(_portfolio.Id);
-            _moneyActionRepository.Setup(_portfolio.Id);
-        }
-
-        public void ApplyActions(PortfolioAction action)
-        {
-            if (action is PortfolioMoneyAction moneyAction)
-            {
-                _moneyActionRepository.Insert(moneyAction);
-            }
-            else if (action is PortfolioPaperAction paperAction)
-            {
-                _paperActionRepository.Insert(paperAction);
-            }
-            else
-            {
-                throw new NotSupportedException($"Не известный тип действия: {action.GetType()}");
-            }
-        }
-
-        public void ApplyActions(IEnumerable<PortfolioAction> actions)
-        {
-            foreach (var action in actions)
-            {
-                ApplyActions(action);
-            }
         }
 
         protected void CheckIsConfigured()
         {
-            if (null == _portfolio || null == _import)
+            if (null == _portfolio)
             {
-                throw new Exception("Portfolio engine is not configured");
+                throw new Exception("Portfolio calculator is not configured");
             }
-        }
-
-        protected void PerformFifoSplit(decimal multiplier, IList<FifoAction> fifo)
-        {
-            if (1 == multiplier || 0 == fifo.Count)
-            {
-                return;
-            }
-
-            var lastFifo = fifo.Last();
-
-            var buyPaperAction = new PortfolioPaperAction
-            {
-                Comment = lastFifo.BuyAction.Comment,
-                Id = Guid.Empty,
-                PaperAction = lastFifo.BuyAction.PaperAction,
-                PortfolioId = lastFifo.BuyAction.PortfolioId,
-                SecId = lastFifo.BuyAction.SecId,
-
-                Count = Convert.ToInt64(Math.Floor(lastFifo.BuyAction.Count * multiplier)),
-                Value = lastFifo.BuyAction.Value / multiplier,
-
-                When = lastFifo.BuyAction.When
-            };
-
-            var newCount = Convert.ToInt64(Math.Floor(lastFifo.Count * multiplier));
-
-            var updatedFifo = new FifoAction(buyPaperAction, lastFifo.SellAction, newCount);
-            fifo.Remove(lastFifo);
-            fifo.Add(updatedFifo);
-        }
-
-        /// <summary>
-        /// Возвращает информацию о бумаге в портфеле
-        /// </summary>
-        /// <param name="paper">Бумага</param>
-        /// <param name="allPaperActions">Все действия с бумагами в портфеле</param>
-        /// <param name="onDate">Дата, на которую надо построить информацию, null - на текущий момент</param>
-        /// <returns>Информация по бумаге</returns>
-        public IPaperInPortfolio<AbstractPaper> BuildPaperInPortfolio(AbstractPaper paper, IEnumerable<PortfolioPaperAction> allPaperActions, DateTime? onDate = null)
-        {
-            CheckIsConfigured();
-
-            long count;
-
-            IPaperInPortfolio<AbstractPaper> paperInPortfolio;
-            if (paper.PaperType == PaperType.Bond)
-            {
-                var bondInPortfolio = new BondInPortfolio(paper as BondPaper);
-                bondInPortfolio.Aci = _bondCalculator.CalculateAci(bondInPortfolio.Paper, onDate ?? DateTime.UtcNow.Date);
-                paperInPortfolio = bondInPortfolio;
-            }
-            else
-            {
-                paperInPortfolio = new ShareInPortfolio(paper as SharePaper);
-            }
-
-            paperInPortfolio.OnDate = onDate;
-
-            var fifo = new List<FifoAction>();
-
-            var paperActions = allPaperActions.Where(a => a.SecId == paper.SecId);
-            if (onDate.HasValue)
-            {
-                paperActions = paperActions.Where(a => a.When <= onDate);
-            }
-
-            paperInPortfolio.Actions = paperActions.ToList();
-            foreach (var paperAction in paperInPortfolio.Actions)
-            {
-                if (paperAction.PaperAction == PaperActionType.Split)
-                {
-                    PerformFifoSplit(paperAction.Value, fifo);
-                    continue;
-                }
-
-                if (paperAction.PaperAction == PaperActionType.Coupon ||
-                    paperAction.PaperAction == PaperActionType.Dividend)
-                {
-                    continue;
-                }
-
-                var isBuy = paperAction.PaperAction == PaperActionType.Buy;
-                count = paperAction.Count;
-
-                if (isBuy)
-                {
-                    fifo.Add(new FifoAction(paperAction, null, paperAction.Count));
-                }
-                else
-                {
-                    for (var i = 0; i < fifo.Count; i++)
-                    {
-                        var t = fifo[i];
-                        if (0 == t.Count)
-                        {
-                            // all already sold, skip
-                            continue;
-                        }
-
-                        if (t.Count >= count)
-                        {
-                            t = new FifoAction(t.BuyAction, paperAction, t.Count - count);
-                            fifo[i] = t;
-                            break;
-                        }
-
-                        count -= t.Count;
-                        t = new FifoAction(t.BuyAction, paperAction, 0);
-                        fifo[i] = t;
-                    }
-                }
-            }
-
-            var sum = 0m;
-            count = 0;
-            foreach (var t in fifo)
-            {
-                if (0 == t.Count)
-                {
-                    continue;
-                }
-
-                count += t.Count;
-                sum += t.Count * t.BuyAction.Value;
-            }
-
-            paperInPortfolio.FifoActions = fifo;
-            paperInPortfolio.Count = count;
-            paperInPortfolio.AveragePrice = 0 == count ? 0 : Math.Round(sum / count, 2);
-
-            return paperInPortfolio;
-        }
-
-        public async Task FillPrice(PortfolioAggregatedContent portfolioAggregatedContent, DateTime? onDate = null)
-        {
-            CheckIsConfigured();
-
-            foreach (var paper in portfolioAggregatedContent.Papers)
-            {
-                decimal marketPrice;
-                if (onDate.HasValue)
-                {
-                    var historyPrice = await _import.HistoryPrice(_logger, paper.Paper, onDate, onDate);
-                    marketPrice = historyPrice.FirstOrDefault()?.LegalClosePrice ?? 0;
-                }
-                else
-                {
-                    var lastPrice = await _import.LastPrice(_logger, paper.Paper);
-                    marketPrice = lastPrice.Price;
-                }
-
-                paper.MarketPrice = marketPrice;
-            }
-        }
-
-        public PortfolioAggregatedContent Build(DateTime? onDate = null)
-        {
-            CheckIsConfigured();
-
-            var sums = new Dictionary<MoneyActionType, decimal>();
-            var moneyPortfolioActions = _moneyActionRepository.Get();
-            if (onDate.HasValue)
-            {
-                moneyPortfolioActions = moneyPortfolioActions.Where(a => a.When <= onDate);
-            }
-
-            foreach (var moneyAction in moneyPortfolioActions)
-            {
-                if (!sums.ContainsKey(moneyAction.MoneyAction))
-                {
-                    sums.Add(moneyAction.MoneyAction, moneyAction.Sum);
-                }
-                else
-                {
-                    sums[moneyAction.MoneyAction] += moneyAction.Sum;
-                }
-            }
-
-            var paperPortfolioActions = _paperActionRepository.Get().ToList();
-            if (onDate.HasValue)
-            {
-                paperPortfolioActions = paperPortfolioActions.Where(a => a.When <= onDate).ToList();
-            }
-
-            var papers = new Dictionary<string, IPaperInPortfolio<AbstractPaper>>();
-            var uniqueSecIds = paperPortfolioActions.Select(a => a.SecId).Distinct();
-            foreach (var secId in uniqueSecIds)
-            {
-                var paperDefinition = _paperRepository.Get().Single(p => p.SecId == secId);
-                var paperInPortfolio = BuildPaperInPortfolio(paperDefinition, paperPortfolioActions, onDate);
-
-                papers.Add(secId, paperInPortfolio);
-            }
-
-            var content = new PortfolioAggregatedContent
-            {
-                Papers = new ReadOnlyCollection<IPaperInPortfolio<AbstractPaper>>(papers.Select(x => x.Value).ToList()),
-                Sums = new ReadOnlyDictionary<MoneyActionType, decimal>(sums)
-            };
-
-            return content;
         }
 
         public IEnumerable<PortfolioAction> PayTaxByDraftProfit(decimal draftSum, string comment = null, DateTime when = default(DateTime))
@@ -427,7 +188,7 @@ namespace RfBondManagement.Engine.Calculations
                 when = DateTime.UtcNow;
             }
 
-            var paperInPortfolio = BuildPaperInPortfolio(paper, _paperActionRepository.Get(), when);
+            var paperInPortfolio = _portfolioBuilder.BuildPaperInPortfolio(paper, _portfolioActions.PaperActions(_portfolio.Id), when);
 
             if (-1 == count)
             {
@@ -559,7 +320,10 @@ namespace RfBondManagement.Engine.Calculations
         {
             var result = new List<PortfolioAction>();
 
-            var paperSecIds = _paperActionRepository.Get().Select(p => p.SecId).Distinct().ToList();
+            var paperActionSecIds = _portfolioActions.PaperActions(_portfolio.Id).Select(p => p.SecId);
+            var moneyActionSecIds = _portfolioActions.MoneyActions(_portfolio.Id).Select(p => p.SecId);
+            var paperSecIds = paperActionSecIds.Concat(moneyActionSecIds).Distinct().ToList();
+
             result.AddRange(AutomateSplit(onDate, paperSecIds));
             result.AddRange(AutomateDividend(onDate, paperSecIds));
             result.AddRange(AutomateCoupons(onDate, paperSecIds));
@@ -613,13 +377,13 @@ namespace RfBondManagement.Engine.Calculations
                 .Where(p => p.Dividends?.Count > 0 && p.Dividends.Any(d => d.RegistryCloseDate == onDate))
                 .ToList();
 
-            var paperActions = new Lazy<List<PortfolioPaperAction>>(() => _paperActionRepository.Get().ToList());
+            var paperActions = new Lazy<List<PortfolioPaperAction>>(() => _portfolioActions.PaperActions(_portfolio.Id).ToList());
 
             foreach (var sharePaper in papers)
             {
                 var dividendRecord = sharePaper.Dividends.Single(d => d.RegistryCloseDate.Date == onDate.Date);
 
-                var paperInPortfolio = BuildPaperInPortfolio(sharePaper, paperActions.Value, onDate);
+                var paperInPortfolio = _portfolioBuilder.BuildPaperInPortfolio(sharePaper, paperActions.Value, onDate);
 
                 var dividendSum = dividendRecord.Value;
                 var taxSum = dividendSum * _portfolio.Tax / 100;
@@ -666,11 +430,11 @@ namespace RfBondManagement.Engine.Calculations
                 .Where(p => p.Coupons?.Count > 0 && p.Coupons.Any(c => c.CouponDate.Date == onDate.Date))
                 .ToList();
 
-            var paperActions = new Lazy<List<PortfolioPaperAction>>(() => _paperActionRepository.Get().ToList());
+            var paperActions = new Lazy<List<PortfolioPaperAction>>(() => _portfolioActions.PaperActions(_portfolio.Id).ToList());
 
             foreach (var bondPaper in papers)
             {
-                var paperInPortfolio = BuildPaperInPortfolio(bondPaper, paperActions.Value, onDate);
+                var paperInPortfolio = _portfolioBuilder.BuildPaperInPortfolio(bondPaper, paperActions.Value, onDate);
                 var couponRecord = bondPaper.Coupons.Single(c => c.CouponDate == onDate);
 
                 var couponSum = couponRecord.Value;

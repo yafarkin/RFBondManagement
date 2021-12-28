@@ -30,13 +30,24 @@ namespace BackTesting.Strategies
         protected IBacktestEngine _backtestEngine;
         protected IPaperRepository _paperRepository;
 
+        protected IPortfolioLogic _portfolioLogic;
+        protected IPortfolioCalculator _portfolioCalculator;
+        protected IPortfolioBuilder _portfolioBuilder;
+
         public BuyAndHoldStrategy(ILogger logger,
             IHistoryRepository historyRepository,
             IBondCalculator bondCalculator,
+            IPortfolioLogic portfolioLogic,
+            IPortfolioCalculator portfolioCalculator,
+            IPortfolioBuilder portfolioBuilder,
             IPaperRepository paperRepository)
             : base(logger, historyRepository, bondCalculator)
         {
             _paperRepository = paperRepository;
+            
+            _portfolioLogic = portfolioLogic;
+            _portfolioCalculator = portfolioCalculator;
+            _portfolioBuilder = portfolioBuilder;
         }
 
         public Portfolio Configure(bool useVaMethod, bool reinvestIncome, decimal initialSum, decimal monthlyIncome, IEnumerable<Tuple<string, decimal>> portfolioPercent, decimal tax, decimal commission)
@@ -47,7 +58,7 @@ namespace BackTesting.Strategies
             _initialSum = initialSum;
             _monthlyIncome = monthlyIncome;
 
-            var portfolio = new Portfolio
+            _portfolio = new Portfolio
             {
                 Id = Guid.NewGuid(),
                 Tax = tax,
@@ -60,7 +71,7 @@ namespace BackTesting.Strategies
             var secIds = _historyRepository.Get().Select(x => x.SecId).Distinct().ToHashSet();
             _papers = _paperRepository.Get().Where(p => secIds.Contains(p.SecId)).ToDictionary(p => p.SecId);
 
-            return portfolio;
+            return _portfolio;
         }
 
         public override IEnumerable<string> Papers => _portfolioPercent.Select(x => x.Item1);
@@ -73,7 +84,7 @@ namespace BackTesting.Strategies
             _portfolio = portfolio;
             _nextMonthlyIncome = date.AddMonths(1);
 
-            _backtestEngine.PortfolioEngine.ApplyActions(_backtestEngine.PortfolioEngine.MoveMoney(_initialSum, MoneyActionType.IncomeExternal, "Начальная сумма", null, date));
+            _portfolioLogic.ApplyActions(_portfolioCalculator.MoveMoney(_initialSum, MoneyActionType.IncomeExternal, "Начальная сумма", null, date));
         }
 
         public override bool Process(DateTime date)
@@ -82,11 +93,11 @@ namespace BackTesting.Strategies
             {
                 _nextMonthlyIncome = _nextMonthlyIncome.AddMonths(1);
 
-                _backtestEngine.PortfolioEngine.ApplyActions(_backtestEngine.PortfolioEngine.MoveMoney(_monthlyIncome, MoneyActionType.IncomeExternal, "Ежемесячное пополнение", null, date));
+                _portfolioLogic.ApplyActions(_portfolioCalculator.MoveMoney(_monthlyIncome, MoneyActionType.IncomeExternal, "Ежемесячное пополнение", null, date));
                 _logger.Info($"Monthly income, {_monthlyIncome:C}");
             }
 
-            var content = _backtestEngine.PortfolioEngine.Build(date);
+            var content = _portfolioBuilder.Build(_portfolio.Id, date);
 
             if (_reinvestIncome || 0 == content.Papers.Count)
             {
@@ -143,7 +154,7 @@ namespace BackTesting.Strategies
                 string secId;
                 decimal needPercent;
 
-                var content = _backtestEngine.PortfolioEngine.Build(date);
+                var content = _portfolioBuilder.Build(_portfolio.Id, date);
                 var statistic = _backtestEngine.FillStatistic(date);
                 var portfolioCost = statistic.PortfolioCost;
 

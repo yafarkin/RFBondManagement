@@ -83,8 +83,10 @@ namespace BackTesting
             var nearEndDate = backtest.FindNearestDateWithPrices(strategy.Papers.ToList(), endDate);
             //var usdRubCourse = history.GetNearUsdRubCourse(nearEndDate);
 
+            var portfolioBuilder = container.Resolve<IPortfolioBuilder>();
+
             var statistic = backtest.FillStatistic(nearEndDate);
-            var content = backtest.PortfolioEngine.Build(nearEndDate);
+            var content = portfolioBuilder.Build(portfolio.Id, nearEndDate);
 
             logger.Info($"Portfolio cost on {nearEndDate} is {statistic.PortfolioCost:C}");
             logger.Info($"Unused sum: {content.AvailSum:C}");

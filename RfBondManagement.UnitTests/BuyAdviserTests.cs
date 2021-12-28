@@ -1,12 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
-using NLog;
 using RfBondManagement.Engine.Calculations;
 using RfBondManagement.Engine.Common;
-using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
-using RfFondPortfolio.Common.Interfaces;
 using Shouldly;
 
 namespace RfBondManagement.UnitTests
@@ -14,6 +11,12 @@ namespace RfBondManagement.UnitTests
     [TestClass]
     public class BuyAdviserTests
     {
+        [TestInitialize]
+        public void Setup()
+        {
+            TestsHelper.Reset();
+        }
+
         public void BuyPaper(Portfolio portfolio, string secId, long count, decimal price)
         {
             //portfolio.
@@ -117,26 +120,17 @@ namespace RfBondManagement.UnitTests
         }
 
         [TestMethod]
-        public void Advice_BuyOnly_Test()
+        public async Task Advice_BuyOnly_Test()
         {
             var portfolio = BuildSamplePortfolio();
 
-            var logger = new Mock<ILogger>().Object;
-            var import = new Mock<IExternalImport>().Object;
+            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
+            {
+                { Constants.Adviser.P_AvailSum, "100000" }
+            }, TestsHelper.CreateBuilder(), TestsHelper.CreateCalculator(portfolio), TestsHelper.CreateLogic(portfolio));
 
-            var importFactoryMock = new Mock<IExternalImportFactory>();
-            importFactoryMock.Setup(m => m.GetDefaultImpl()).Returns(() => import);
-
-            var paperRepository = new Mock<IPaperRepository>().Object;
-            var moneyActionRepository = new Mock<IPortfolioMoneyActionRepository>().Object;
-            var paperActionRepository = new Mock<IPortfolioPaperActionRepository>().Object;
-            var splitRepository = new Mock<ISplitRepository>().Object;
-            var bondCalculator = new Mock<IBondCalculator>().Object;
-
-            var engine = new PortfolioEngine(importFactoryMock.Object, paperRepository, moneyActionRepository, paperActionRepository, splitRepository, bondCalculator, logger);
-            engine.Configure(portfolio, ExternalImportType.Moex);
-
-            var advice = BuyAdviser.Advise(logger, engine, 100000, false, false,null, import, null);
+            var result = await adviser.Advise(portfolio);
+            Assert.Fail("тест только начат");
         }
     }
 }

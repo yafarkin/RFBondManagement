@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RfFondPortfolio.Common.Dtos
+﻿namespace RfFondPortfolio.Common.Dtos
 {
     /// <summary>
     /// Параметры портфеля

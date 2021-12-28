@@ -26,5 +26,10 @@ namespace RfFondPortfolio.Common.Dtos
         /// Текстовое примечание
         /// </summary>
         public string Comment { get; set; }
+
+        public override string ToString()
+        {
+            return $"{When}: {Sum:C}, {Comment}";
+        }
     }
 }

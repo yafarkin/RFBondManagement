@@ -25,6 +25,11 @@ namespace RfBondManagement.Engine
                 .RegisterType<ISplitRepository, SplitRepository>()
                 .RegisterType<IExternalImportFactory, ExternalImportFactory>(TypeLifetime.Singleton)
                 .RegisterType<IExternalImport, MoexImport>(ExternalImportType.Moex.ToString())
+                .RegisterType<IPortfolioActions, PortfolioActions>()
+                .RegisterType<IPortfolioCalculator, PortfolioCalculator>()
+                .RegisterType<IPortfolioBuilder, PortfolioBuilder>()
+                .RegisterType<IPortfolioLogic, PortfolioLogic>()
+                .RegisterType<IAdviser, BuyAdviser>(Constants.Adviser.BuyAndHold)
                 ;
 
             container.AddNewExtension<NLogExtension>();

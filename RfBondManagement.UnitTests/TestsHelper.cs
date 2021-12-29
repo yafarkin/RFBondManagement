@@ -196,9 +196,9 @@ namespace RfBondManagement.UnitTests
             return calc;
         }
 
-        public static IPortfolioLogic CreateLogic(Portfolio portfolio)
+        public static IPortfolioService CreateService(Portfolio portfolio)
         {
-            var logic = new PortfolioLogic(CreateLogger(), CreateExternalImportFactory(), CreateMoneyActionRepository(), CreatePaperActionRepository(), CreateHistoryRepository());
+            var logic = new PortfolioService(CreateLogger(), CreateExternalImportFactory(), CreateMoneyActionRepository(), CreatePaperActionRepository(), CreateHistoryRepository());
             logic.Configure(portfolio, ExternalImportType.Moex);
             return logic;
         }

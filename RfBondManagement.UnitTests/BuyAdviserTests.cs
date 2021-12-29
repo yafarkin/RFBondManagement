@@ -127,7 +127,7 @@ namespace RfBondManagement.UnitTests
             var adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
             {
                 { Constants.Adviser.P_AvailSum, "100000" }
-            }, TestsHelper.CreateBuilder(), TestsHelper.CreateCalculator(portfolio), TestsHelper.CreateLogic(portfolio));
+            }, TestsHelper.CreateBuilder(), TestsHelper.CreateCalculator(portfolio), TestsHelper.CreateService(portfolio));
 
             var result = await adviser.Advise(portfolio);
             Assert.Fail("тест только начат");

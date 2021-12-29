@@ -30,14 +30,14 @@ namespace BackTesting.Strategies
         protected IBacktestEngine _backtestEngine;
         protected IPaperRepository _paperRepository;
 
-        protected IPortfolioLogic _portfolioLogic;
+        protected IPortfolioService PortfolioService;
         protected IPortfolioCalculator _portfolioCalculator;
         protected IPortfolioBuilder _portfolioBuilder;
 
         public BuyAndHoldStrategy(ILogger logger,
             IHistoryRepository historyRepository,
             IBondCalculator bondCalculator,
-            IPortfolioLogic portfolioLogic,
+            IPortfolioService portfolioService,
             IPortfolioCalculator portfolioCalculator,
             IPortfolioBuilder portfolioBuilder,
             IPaperRepository paperRepository)
@@ -45,7 +45,7 @@ namespace BackTesting.Strategies
         {
             _paperRepository = paperRepository;
             
-            _portfolioLogic = portfolioLogic;
+            PortfolioService = portfolioService;
             _portfolioCalculator = portfolioCalculator;
             _portfolioBuilder = portfolioBuilder;
         }
@@ -84,7 +84,7 @@ namespace BackTesting.Strategies
             _portfolio = portfolio;
             _nextMonthlyIncome = date.AddMonths(1);
 
-            _portfolioLogic.ApplyActions(_portfolioCalculator.MoveMoney(_initialSum, MoneyActionType.IncomeExternal, "Начальная сумма", null, date));
+            PortfolioService.ApplyActions(_portfolioCalculator.MoveMoney(_initialSum, MoneyActionType.IncomeExternal, "Начальная сумма", null, date));
         }
 
         public override bool Process(DateTime date)
@@ -93,7 +93,7 @@ namespace BackTesting.Strategies
             {
                 _nextMonthlyIncome = _nextMonthlyIncome.AddMonths(1);
 
-                _portfolioLogic.ApplyActions(_portfolioCalculator.MoveMoney(_monthlyIncome, MoneyActionType.IncomeExternal, "Ежемесячное пополнение", null, date));
+                PortfolioService.ApplyActions(_portfolioCalculator.MoveMoney(_monthlyIncome, MoneyActionType.IncomeExternal, "Ежемесячное пополнение", null, date));
                 _logger.Info($"Monthly income, {_monthlyIncome:C}");
             }
 

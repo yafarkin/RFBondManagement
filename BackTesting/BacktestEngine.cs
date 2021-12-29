@@ -19,7 +19,7 @@ namespace BackTesting
     {
         protected ILogger _logger;
 
-        protected readonly IPortfolioLogic _portfolioLogic;
+        protected readonly IPortfolioService PortfolioService;
         protected readonly IPortfolioCalculator _portfolioCalculator;
         protected readonly IPortfolioBuilder _portfolioBuilder;
         protected readonly IPortfolioActions _portfolioActions;
@@ -31,7 +31,7 @@ namespace BackTesting
         public BacktestEngine(
             ILogger logger,
             Portfolio portfolio,
-            IPortfolioLogic portfolioLogic,
+            IPortfolioService portfolioService,
             IPortfolioCalculator portfolioCalculator,
             IPortfolioBuilder portfolioBuilder,
             IPortfolioActions portfolioActions,
@@ -42,14 +42,14 @@ namespace BackTesting
             _logger = logger;
             _portfolio = portfolio;
 
-            _portfolioLogic = portfolioLogic;
+            PortfolioService = portfolioService;
             _portfolioCalculator = portfolioCalculator;
             _portfolioBuilder = portfolioBuilder;
             _portfolioActions = portfolioActions;
 
             _historyRepository = historyRepository;
 
-            _portfolioLogic.Configure(portfolio, importType);
+            PortfolioService.Configure(portfolio, importType);
         }
 
         public Statistic FillStatistic(DateTime date)
@@ -255,7 +255,7 @@ namespace BackTesting
                 do
                 {
                     var actions = _portfolioCalculator.Automate(date);
-                    _portfolioLogic.ApplyActions(actions);
+                    PortfolioService.ApplyActions(actions);
 
                     if (date != nextProcessDate)
                     {
@@ -294,7 +294,7 @@ namespace BackTesting
             }
 
             var actions = _portfolioCalculator.BuyPaper(paper, count, price, date);
-            _portfolioLogic.ApplyActions(actions);
+            PortfolioService.ApplyActions(actions);
         }
 
         public void SellPaper(DateTime date, AbstractPaper paper, long count)
@@ -307,7 +307,7 @@ namespace BackTesting
             }
 
             var actions = _portfolioCalculator.SellPaper(paper, count, price, date);
-            _portfolioLogic.ApplyActions(actions);
+            PortfolioService.ApplyActions(actions);
         }
 
         public virtual DateTime FindNearestDateWithPrices(IList<string> codes, DateTime date)

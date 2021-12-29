@@ -13,17 +13,17 @@ namespace RfBondManagement.Engine.Calculations
 
         protected readonly ILogger _logger;
         protected readonly IPortfolioBuilder _portfolioBuilder;
-        protected readonly IPortfolioLogic _portfolioLogic;
+        protected readonly IPortfolioService PortfolioService;
         protected readonly IPortfolioCalculator _portfolioCalculator;
 
-        protected BaseAdviser(ILogger logger, IDictionary<string, string> p, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioLogic portfolioLogic)
+        protected BaseAdviser(ILogger logger, IDictionary<string, string> p, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService)
         {
             _logger = logger;
             _p = p;
 
             _portfolioBuilder = portfolioBuilder;
             _portfolioCalculator = portfolioCalculator;
-            _portfolioLogic = portfolioLogic;
+            PortfolioService = portfolioService;
         }
 
         protected decimal? GetAsDecimal(string key, decimal? defaultValue = null)

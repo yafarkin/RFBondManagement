@@ -9,7 +9,7 @@ using RfFondPortfolio.Common.Interfaces;
 
 namespace RfBondManagement.Engine.Calculations
 {
-    public class PortfolioLogic : IPortfolioLogic
+    public class PortfolioService : IPortfolioService
     {
         protected readonly IPortfolioPaperActionRepository _paperActionRepository;
         protected readonly IPortfolioMoneyActionRepository _moneyActionRepository;
@@ -19,7 +19,7 @@ namespace RfBondManagement.Engine.Calculations
 
         protected IExternalImport _import;
 
-        public PortfolioLogic(
+        public PortfolioService(
             ILogger logger,
             IExternalImportFactory importFactory,
             IPortfolioMoneyActionRepository moneyActionRepository,

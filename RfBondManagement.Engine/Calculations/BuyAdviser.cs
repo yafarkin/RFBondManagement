@@ -11,8 +11,8 @@ namespace RfBondManagement.Engine.Calculations
 {
     public class BuyAdviser : BaseAdviser
     {
-        public BuyAdviser(ILogger logger, IDictionary<string, string> p, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioLogic portfolioLogic)
-            : base(logger, p, portfolioBuilder, portfolioCalculator, portfolioLogic)
+        public BuyAdviser(ILogger logger, IDictionary<string, string> p, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService)
+            : base(logger, p, portfolioBuilder, portfolioCalculator, portfolioService)
         {
         }
 
@@ -33,7 +33,7 @@ namespace RfBondManagement.Engine.Calculations
 
             foreach (var paper in flattenPapers)
             {
-                var price = await _portfolioLogic.GetPrice(paper.Paper, onDate);
+                var price = await PortfolioService.GetPrice(paper.Paper, onDate);
                 paperPrices.Add(paper.Paper.SecId, price);
             }
 
@@ -44,7 +44,7 @@ namespace RfBondManagement.Engine.Calculations
                     continue;
                 }
 
-                var price = await _portfolioLogic.GetPrice(kv.Value.Paper, onDate);
+                var price = await PortfolioService.GetPrice(kv.Value.Paper, onDate);
                 paperPrices.Add(kv.Key, price);
             }
 

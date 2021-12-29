@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NLog;
 using RfBondManagement.Engine.Common;
@@ -81,10 +82,17 @@ namespace RfBondManagement.Engine.Calculations
 
             if (onDate.HasValue)
             {
-                //var historyPrice = await _import.HistoryPrice(_logger, paper, onDate, onDate);
-                //result = historyPrice.FirstOrDefault()?.LegalClosePrice ?? 0;
                 var historyPrice = _historyRepository.GetNearHistoryPriceOnDate(paper.SecId, onDate.Value);
-                result = historyPrice.LegalClosePrice;
+
+                if (null == historyPrice)
+                {
+                    var importHistoryPrice = await _import.HistoryPrice(_logger, paper, onDate, onDate);
+                    result = importHistoryPrice.FirstOrDefault()?.LegalClosePrice ?? 0;
+                }
+                else
+                {
+                    result = historyPrice.LegalClosePrice;
+                }
             }
             else
             {

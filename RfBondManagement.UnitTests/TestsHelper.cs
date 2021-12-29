@@ -21,6 +21,8 @@ namespace RfBondManagement.UnitTests
         public static IExternalImport Import;
 
         public static decimal LastPrice;
+        public static Dictionary<string, decimal> LastPrices = new Dictionary<string, decimal>();
+
         public static HistoryPrice LastHistoryPrice;
 
         public static ILogger Logger;
@@ -37,11 +39,7 @@ namespace RfBondManagement.UnitTests
             Actions = new List<PortfolioAction>();
             Papers = new List<AbstractPaper>();
             Splits = new List<PaperSplit>();
-
-            //Logger = null;
-            //BondCalculator = null;
-            //PaperRepository = null;
-            //PortfolioActions = null;
+            LastPrices = new Dictionary<string, decimal>();
         }
 
         public static IPaperRepository CreatePaperRepository()
@@ -164,7 +162,16 @@ namespace RfBondManagement.UnitTests
             var mock = new Mock<IExternalImport>();
             mock
                 .Setup(m => m.LastPrice(It.IsAny<ILogger>(), It.IsAny<AbstractPaper>()))
-                .Returns(() => Task.FromResult(new PaperPrice { Price = LastPrice }));
+                .Returns((ILogger l, AbstractPaper p) =>
+                {
+                    var price = LastPrice;
+                    if (LastPrices.ContainsKey(p.SecId))
+                    {
+                        price = LastPrices[p.SecId];
+                    }
+
+                    return Task.FromResult(new PaperPrice { SecId = p.SecId, Price = price });
+                });
 
             if (setAsDefault)
             {
@@ -176,6 +183,11 @@ namespace RfBondManagement.UnitTests
 
         public static IExternalImportFactory CreateExternalImportFactory()
         {
+            if (null == Import)
+            {
+                CreateExternalImport(true);
+            }
+
             var mock = new Mock<IExternalImportFactory>();
             mock.Setup(m => m.GetImpl(It.IsAny<ExternalImportType>())).Returns(() => Import);
             mock.Setup(m => m.GetDefaultImpl()).Returns(() => Import);

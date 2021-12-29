@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RfBondManagement.Engine.Calculations;
@@ -17,15 +18,20 @@ namespace RfBondManagement.UnitTests
             TestsHelper.Reset();
         }
 
-        public void BuyPaper(Portfolio portfolio, string secId, long count, decimal price)
+        public void AddPaperToPortfolio(Portfolio portfolio, string secId, long count, decimal price)
         {
-            //portfolio.
+            if (TestsHelper.Papers.All(x => x.SecId == secId))
+            {
+                TestsHelper.Papers.Add(new SharePaper { SecId = secId });
+            }
         }
 
         public Portfolio BuildSamplePortfolio()
         {
             var portfolio = new Portfolio
             {
+                Commissions = 1,
+
                 RootLeaf = new PortfolioStructureLeaf
                 {
                     Children = new List<PortfolioStructureLeaf>
@@ -124,13 +130,34 @@ namespace RfBondManagement.UnitTests
         {
             var portfolio = BuildSamplePortfolio();
 
+            for (var i = 0; i < 6; i++)
+            {
+                TestsHelper.Papers.Add(new SharePaper { SecId = $"Paper{i + 1}" });
+            }
+
+            TestsHelper.LastPrices.Add("Paper1", 100);
+            TestsHelper.LastPrices.Add("Paper2", 200);
+            TestsHelper.LastPrices.Add("Paper3", 30);
+            TestsHelper.LastPrices.Add("Paper4", 20);
+            TestsHelper.LastPrices.Add("Paper5", 100);
+            TestsHelper.LastPrices.Add("Paper6", 50);
+
+            var builder = TestsHelper.CreateBuilder();
+            var calculator = TestsHelper.CreateCalculator(portfolio);
+            var service = TestsHelper.CreateService(portfolio);
+
             var adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
             {
                 { Constants.Adviser.P_AvailSum, "100000" }
-            }, TestsHelper.CreateBuilder(), TestsHelper.CreateCalculator(portfolio), TestsHelper.CreateService(portfolio));
+            }, builder, calculator, service);
 
-            var result = await adviser.Advise(portfolio);
-            Assert.Fail("тест только начат");
+            var actions = await adviser.Advise(portfolio);
+            actions.ShouldNotBeEmpty();
+
+            service.ApplyActions(actions);
+
+            var content = builder.Build(portfolio.Id);
+            content.Papers.Count.ShouldBe(6);
         }
     }
 }

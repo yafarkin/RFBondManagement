@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -17,19 +18,12 @@ namespace RfBondManagement.UnitTests
         {
             TestsHelper.Reset();
         }
-
-        public void AddPaperToPortfolio(Portfolio portfolio, string secId, long count, decimal price)
-        {
-            if (TestsHelper.Papers.All(x => x.SecId == secId))
-            {
-                TestsHelper.Papers.Add(new SharePaper { SecId = secId });
-            }
-        }
-
+        
         public Portfolio BuildSamplePortfolio()
         {
             var portfolio = new Portfolio
             {
+                Id = Guid.NewGuid(),
                 Commissions = 1,
 
                 RootLeaf = new PortfolioStructureLeaf
@@ -173,5 +167,128 @@ namespace RfBondManagement.UnitTests
             (papers["Paper5"].Count * TestsHelper.LastPrices["Paper5"] / availSum).ShouldBe(0.165m, 0.01m);
             (papers["Paper6"].Count * TestsHelper.LastPrices["Paper6"] / availSum).ShouldBe(0.083m, 0.01m);
         }
+
+        [TestMethod]
+        public async Task BuyNoSell_Test()
+        {
+            var portfolio = new Portfolio
+            {
+                Id = Guid.NewGuid(),
+                Commissions = 0,
+                RootLeaf = new PortfolioStructureLeaf
+                {
+                    Papers = new List<PortfolioStructureLeafPaper>
+                    {
+                        new PortfolioStructureLeafPaper
+                        {
+                            Paper = new SharePaper {SecId = "Paper1"},
+                            Volume = 1
+                        }
+                    }
+                }
+            };
+            
+            for (var i = 0; i < 2; i++)
+            {
+                TestsHelper.Papers.Add(new SharePaper { SecId = $"Paper{i + 1}" });
+            }
+
+            TestsHelper.LastPrices.Add("Paper1", 100);
+            TestsHelper.LastPrices.Add("Paper2", 100);
+            
+            var builder = TestsHelper.CreateBuilder();
+            var calculator = TestsHelper.CreateCalculator(portfolio);
+            var service = TestsHelper.CreateService(portfolio);
+
+            service.ApplyActions(calculator.BuyPaper(new SharePaper {SecId = "Paper2"}, 1000, 100));
+            
+            var content = builder.Build(portfolio.Id);
+            content.Papers.Count.ShouldBe(1);
+            content.Papers[0].Count.ShouldBe(1000);
+
+            var availSum = 100000m;
+
+            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
+            {
+                { Constants.Adviser.P_AvailSum, availSum.ToString() }
+            }, builder, calculator, service);
+
+            var actions = await adviser.Advise(portfolio);
+            actions.ShouldNotBeEmpty();
+            service.ApplyActions(actions);
+
+            var sum = actions.OfType<PortfolioMoneyAction>().Sum(x => x.Sum);
+            sum.ShouldBe(100000);
+
+            content = builder.Build(portfolio.Id);
+            content.Papers.Count.ShouldBe(2);
+            content.Papers[0].Paper.SecId.ShouldBe("Paper2");
+            content.Papers[0].Count.ShouldBe(1000);
+            content.Papers[1].Paper.SecId.ShouldBe("Paper1");
+            content.Papers[1].Count.ShouldBe(1000);
+        }
+        
+        [TestMethod]
+        public async Task BuyAllowSell_Test()
+        {
+            var portfolio = new Portfolio
+            {
+                Id = Guid.NewGuid(),
+                Commissions = 0,
+                RootLeaf = new PortfolioStructureLeaf
+                {
+                    Papers = new List<PortfolioStructureLeafPaper>
+                    {
+                        new PortfolioStructureLeafPaper
+                        {
+                            Paper = new SharePaper {SecId = "Paper1"},
+                            Volume = 1
+                        }
+                    }
+                }
+            };
+            
+            for (var i = 0; i < 2; i++)
+            {
+                TestsHelper.Papers.Add(new SharePaper { SecId = $"Paper{i + 1}" });
+            }
+
+            TestsHelper.LastPrices.Add("Paper1", 100);
+            TestsHelper.LastPrices.Add("Paper2", 100);
+            
+            var builder = TestsHelper.CreateBuilder();
+            var calculator = TestsHelper.CreateCalculator(portfolio);
+            var service = TestsHelper.CreateService(portfolio);
+
+            service.ApplyActions(calculator.BuyPaper(new SharePaper {SecId = "Paper2"}, 1000, 100));
+            
+            var content = builder.Build(portfolio.Id);
+            content.Papers.Count.ShouldBe(1);
+            content.Papers[0].Count.ShouldBe(1000);
+
+            var availSum = 100000m;
+
+            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
+            {
+                {Constants.Adviser.P_AvailSum, availSum.ToString()},
+                {Constants.Adviser.P_AllowSell, "true"}
+            }, builder, calculator, service);
+
+            var actions = await adviser.Advise(portfolio);
+            actions.ShouldNotBeEmpty();
+            service.ApplyActions(actions);
+
+            var sum = actions.OfType<PortfolioMoneyAction>().Where(x => x.MoneyAction == MoneyActionType.IncomeSellOnMarket).Sum(x => x.Sum);
+            
+            sum.ShouldBe(100000);
+            sum = actions.OfType<PortfolioMoneyAction>().Where(x => x.MoneyAction == MoneyActionType.OutcomeBuyOnMarket).Sum(x => x.Sum);
+            sum.ShouldBe(200000);
+
+            content = builder.Build(portfolio.Id);
+            content.Papers.Count.ShouldBe(1);
+            content.Papers[0].Paper.SecId.ShouldBe("Paper1");
+            content.Papers[0].Count.ShouldBe(2000);
+        }
+
     }
 }

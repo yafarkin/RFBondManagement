@@ -190,7 +190,7 @@ namespace RfBondManagement.Engine.Calculations
 
             var content = new PortfolioAggregatedContent
             {
-                Papers = new ReadOnlyCollection<IPaperInPortfolio<AbstractPaper>>(papers.Select(x => x.Value).ToList()),
+                Papers = new ReadOnlyCollection<IPaperInPortfolio<AbstractPaper>>(papers.Where(x => x.Value.Count > 0).Select(x => x.Value).ToList()),
                 Sums = new ReadOnlyDictionary<MoneyActionType, decimal>(sums)
             };
 

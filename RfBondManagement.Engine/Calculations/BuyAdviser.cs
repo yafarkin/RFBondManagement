@@ -18,23 +18,28 @@ namespace RfBondManagement.Engine.Calculations
 
         public override async Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio)
         {
-            var availSum = GetAsDecimal(Constants.Adviser.P_AvailSum, 0);
+            var availSum = GetAsDecimal(Constants.Adviser.P_AvailSum) ?? 0;
             var allowSell = GetAsBool(Constants.Adviser.P_AllowSell, false);
             var onDate = GetAsDateTime(Constants.Adviser.P_OnDate);
 
             var result = new List<PortfolioAction>();
 
+            if (0 == availSum)
+            {
+                return result;
+            }
+
             var content = _portfolioBuilder.Build(portfolio.Id);
 
             var rootLeaf = portfolio.RootLeaf;
-            var flattenPapers = FlattenPaperStructure(rootLeaf, 1);
+            var flattenPapers = FlattenPaperStructure(rootLeaf, 1).ToDictionary(x => x.Paper.SecId);
             var portfolioPapers = content.Papers.ToDictionary(x => x.Paper.SecId);
             var paperPrices = new Dictionary<string, decimal>(flattenPapers.Count);
 
             foreach (var paper in flattenPapers)
             {
-                var price = await PortfolioService.GetPrice(paper.Paper, onDate);
-                paperPrices.Add(paper.Paper.SecId, price);
+                var price = await PortfolioService.GetPrice(paper.Value.Paper, onDate);
+                paperPrices.Add(paper.Key, price);
             }
 
             foreach (var kv in portfolioPapers)
@@ -53,10 +58,16 @@ namespace RfBondManagement.Engine.Calculations
 
             while (availSum > 0)
             {
-                var totalVolume = 0m;
+                var totalVolume = availSum;
                 foreach (var paperInPortfolio in content.Papers)
                 {
                     totalVolume += paperInPortfolio.Count * paperPrices[paperInPortfolio.Paper.SecId];
+                }
+
+                foreach (var kv in paperToChange)
+                {
+                    var price = paperPrices[kv.Key];
+                    totalVolume += price * kv.Value;
                 }
 
                 // K: secId, V: price, объём в портфеле с учётом цены, необходимый объём, разница в объёмах
@@ -64,7 +75,7 @@ namespace RfBondManagement.Engine.Calculations
 
                 foreach (var paper in flattenPapers)
                 {
-                    var secId = paper.Paper.SecId;
+                    var secId = paper.Key;
                     var price = paperPrices[secId];
 
                     var countInPortfolio = portfolioPapers.ContainsKey(secId) ? portfolioPapers[secId].Count : 0;
@@ -72,7 +83,7 @@ namespace RfBondManagement.Engine.Calculations
                     var count = countInPortfolio + changeCount;
 
                     var volume = count * price / totalVolume;
-                    var needVolume = paper.Volume;
+                    var needVolume = paper.Value.Volume;
 
                     balance.Add(secId, new Tuple<decimal, decimal, decimal, decimal>(price, volume, needVolume, needVolume - volume));
                 }
@@ -103,8 +114,22 @@ namespace RfBondManagement.Engine.Calculations
                     var sellPapers = balance.Where(x => x.Value.Item4 < 0 && Math.Abs(x.Value.Item4) >= x.Value.Item1);
                     foreach (var kv in sellPapers)
                     {
-                        // TODO: переделать движок, что бы он не писал в репозиторий. тогда и буду возвращать здесь список
                         var countToSell = Convert.ToInt64(kv.Value.Item4 / kv.Value.Item1);
+
+                        var foundPaper = flattenPapers.ContainsKey(kv.Key) ? flattenPapers[kv.Key].Paper : portfolioPapers[kv.Key].Paper;
+
+                        var sellActions = _portfolioCalculator.SellPaper(
+                            foundPaper,
+                            countToSell,
+                            paperPrices[kv.Key],
+                            onDate ?? DateTime.Now)
+                            .OfType<PortfolioMoneyAction>();
+
+                        foreach (var action in sellActions)
+                        {
+                            availSum -= action.Sum;
+                        }
+
                         if (!paperToChange.ContainsKey(kv.Key))
                         {
                             paperToChange.Add(kv.Key, countToSell);
@@ -113,14 +138,12 @@ namespace RfBondManagement.Engine.Calculations
                         {
                             paperToChange[kv.Key] += countToSell;
                         }
-
-                        availSum += countToSell * kv.Value.Item1;
                     }
                 }
 
                 // берем саму разбаланисированную бумагу и пытаемся купить
                 var buyPaper = balance
-                    .Where(x => x.Value.Item4 > 0 && x.Value.Item4 >= x.Value.Item1 && x.Value.Item1 <= availSum)
+                    .Where(x => x.Value.Item4 > 0 && x.Value.Item1 <= availSum)
                     .OrderByDescending(x => x.Value.Item4)
                     .FirstOrDefault();
 
@@ -130,9 +153,19 @@ namespace RfBondManagement.Engine.Calculations
                     break;
                 }
 
-                var countToBuy = buyPaper.Value.Item4 > availSum
-                    ? Convert.ToInt64(availSum / buyPaper.Value.Item1)
-                    : Convert.ToInt64(buyPaper.Value.Item4 / buyPaper.Value.Item1);
+                var countToBuy = 1;
+
+                var buyActions = _portfolioCalculator.BuyPaper(
+                    flattenPapers[buyPaper.Key].Paper,
+                    countToBuy,
+                    paperPrices[buyPaper.Key],
+                    onDate ?? DateTime.Now)
+                    .OfType<PortfolioMoneyAction>();
+
+                foreach(var action in buyActions)
+                {
+                    availSum -= action.Sum;
+                }
 
                 if (!paperToChange.ContainsKey(buyPaper.Key))
                 {
@@ -142,8 +175,22 @@ namespace RfBondManagement.Engine.Calculations
                 {
                     paperToChange[buyPaper.Key] += countToBuy;
                 }
+            }
 
-                availSum -= countToBuy * buyPaper.Value.Item1;
+            foreach(var kv in paperToChange)
+            {
+                var paper = flattenPapers.ContainsKey(kv.Key) ? flattenPapers[kv.Key].Paper : portfolioPapers[kv.Key].Paper;
+                var price = paperPrices[kv.Key];
+                var count = Math.Abs(kv.Value);
+
+                if(kv.Value > 0)
+                {
+                    result.AddRange(_portfolioCalculator.BuyPaper(paper, count, price));
+                }
+                else
+                {
+                    result.AddRange(_portfolioCalculator.SellPaper(paper, count, price));
+                }
             }
 
             return result;

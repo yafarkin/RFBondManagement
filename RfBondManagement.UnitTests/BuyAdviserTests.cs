@@ -146,9 +146,11 @@ namespace RfBondManagement.UnitTests
             var calculator = TestsHelper.CreateCalculator(portfolio);
             var service = TestsHelper.CreateService(portfolio);
 
+            var availSum = 100000m;
+
             var adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
             {
-                { Constants.Adviser.P_AvailSum, "100000" }
+                { Constants.Adviser.P_AvailSum, availSum.ToString() }
             }, builder, calculator, service);
 
             var actions = await adviser.Advise(portfolio);
@@ -156,8 +158,20 @@ namespace RfBondManagement.UnitTests
 
             service.ApplyActions(actions);
 
+            var sum = actions.OfType<PortfolioMoneyAction>().Sum(x => x.Sum);
+            sum.ShouldBe(99990);
+
             var content = builder.Build(portfolio.Id);
             content.Papers.Count.ShouldBe(6);
+
+            var papers = content.Papers.ToDictionary(x => x.Paper.SecId);
+
+            (papers["Paper1"].Count * TestsHelper.LastPrices["Paper1"] / availSum).ShouldBe(0.16m, 0.01m);
+            (papers["Paper2"].Count * TestsHelper.LastPrices["Paper2"] / availSum).ShouldBe(0.33m, 0.01m);
+            (papers["Paper3"].Count * TestsHelper.LastPrices["Paper3"] / availSum).ShouldBe(0.15m, 0.01m);
+            (papers["Paper4"].Count * TestsHelper.LastPrices["Paper4"] / availSum).ShouldBe(0.1m, 0.01m);
+            (papers["Paper5"].Count * TestsHelper.LastPrices["Paper5"] / availSum).ShouldBe(0.165m, 0.01m);
+            (papers["Paper6"].Count * TestsHelper.LastPrices["Paper6"] / availSum).ShouldBe(0.083m, 0.01m);
         }
     }
 }

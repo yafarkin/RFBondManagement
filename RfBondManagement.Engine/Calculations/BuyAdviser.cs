@@ -111,23 +111,23 @@ namespace RfBondManagement.Engine.Calculations
                 if (allowSell == true)
                 {
                     // выбираем бумаги, от которых надо избавится, и сумма больше чем цена за одну бумагу
-                    var sellPapers = balance.Where(x => x.Value.Item4 < 0 && Math.Abs(x.Value.Item4) >= x.Value.Item1);
+                    var sellPapers = balance.Where(x => x.Value.Item4 < 0);
                     foreach (var kv in sellPapers)
                     {
-                        var countToSell = Convert.ToInt64(kv.Value.Item4 / kv.Value.Item1);
+                        var countToSell = Convert.ToInt64(kv.Value.Item4 * totalVolume / kv.Value.Item1);
 
                         var foundPaper = flattenPapers.ContainsKey(kv.Key) ? flattenPapers[kv.Key].Paper : portfolioPapers[kv.Key].Paper;
 
                         var sellActions = _portfolioCalculator.SellPaper(
                             foundPaper,
-                            countToSell,
+                            -countToSell,
                             paperPrices[kv.Key],
                             onDate ?? DateTime.Now)
                             .OfType<PortfolioMoneyAction>();
 
                         foreach (var action in sellActions)
                         {
-                            availSum -= action.Sum;
+                            availSum += action.Sum;
                         }
 
                         if (!paperToChange.ContainsKey(kv.Key))

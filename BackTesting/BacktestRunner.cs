@@ -66,7 +66,7 @@ namespace BackTesting
                 _logger.Info($"Start date shifted from {fromDate} to {date}");
             }
 
-            statistics.Add( _portfolioBuilder.FillStatistic(_portfolio.Id, date));
+            statistics.Add(_portfolioBuilder.FillStatistic(_portfolio.Id, date));
 
             while (date <= toDate)
             {

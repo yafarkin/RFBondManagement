@@ -35,43 +35,71 @@ namespace BackTesting
 
             var startDate = new DateTime(2015, 1, 1);
             var endDate = new DateTime(2021, 12, 31);
-
-            var portfolioPercent = new List<Tuple<string, decimal>>
+            
+            var rootLeaf = new PortfolioStructureLeaf
             {
-                //new Tuple<string, decimal>("SBERP", 100),
-                new Tuple<string, decimal>("SBERP", 20),
-                new Tuple<string, decimal>("MTSS", 20),
-                new Tuple<string, decimal>("FXIT", 15),
-                new Tuple<string, decimal>("FXUS", 20),
-                new Tuple<string, decimal>("FXCN", 20),
-                new Tuple<string, decimal>("FXRU", 5)
+                Papers = new List<PortfolioStructureLeafPaper>
+                {
+                    new PortfolioStructureLeafPaper
+                    {
+                        Paper = new SharePaper {SecId = "SBERP"},
+                        Volume = 20
+                    },
+                    new PortfolioStructureLeafPaper
+                    {
+                        Paper = new SharePaper {SecId = "MTSS"},
+                        Volume = 20
+                    },
+                    new PortfolioStructureLeafPaper
+                    {
+                        Paper = new SharePaper {SecId = "FXIT"},
+                        Volume = 15
+                    },
+                    new PortfolioStructureLeafPaper
+                    {
+                        Paper = new SharePaper {SecId = "FXUS"},
+                        Volume = 20
+                    },
+                    new PortfolioStructureLeafPaper
+                    {
+                        Paper = new SharePaper {SecId = "FXCN"},
+                        Volume = 20
+                    },
+                    new PortfolioStructureLeafPaper
+                    {
+                        Paper = new SharePaper {SecId = "FXRL"},
+                        Volume = 5
+                    },
+                }
             };
 
             var importFactory = container.Resolve<IExternalImportFactory>();
             var importEngine = importFactory.GetImpl(ExternalImportType.Moex);
             var historyEngine = container.Resolve<HistoryEngine>();
 
-            foreach (var t in portfolioPercent)
+            foreach (var t in rootLeaf.Papers)
             {
-                var p = paperRepository.Get().SingleOrDefault(x => x.SecId == t.Item1);
+                var secId = t.Paper.SecId;
+                
+                var p = paperRepository.Get().SingleOrDefault(x => x.SecId == secId);
                 if (null == p)
                 {
-                    logger.Info($"Importing {t.Item1} definition");
-                    var pd = await importEngine.ImportPaper(logger, t.Item1);
+                    logger.Info($"Importing {secId} definition");
+                    var pd = await importEngine.ImportPaper(logger, secId);
                     paperRepository.Insert(pd);
                 }
 
-                var h = history.Get().FirstOrDefault(x => x.SecId == t.Item1);
+                var h = history.Get().FirstOrDefault(x => x.SecId == secId);
                 if (null == h || h.When > startDate)
                 {
-                    logger.Info($"Importing {t.Item1} history prices");
-                    await historyEngine.ImportHistory(t.Item1);
+                    logger.Info($"Importing {secId} history prices");
+                    await historyEngine.ImportHistory(secId);
                 }
             }
 
             var useVa = false;
             var strategy = container.Resolve<BuyAndHoldStrategy>();
-            var portfolio = strategy.Configure(useVa, true, initialSum, monthlyIncome, portfolioPercent, 13, 0.061m);
+            var portfolio = strategy.Configure(useVa, true, initialSum, monthlyIncome, 13, 0.061m, rootLeaf);
 
             var portfolioRepository = container.Resolve<IPortfolioRepository>();
             portfolioRepository.Insert(portfolio);

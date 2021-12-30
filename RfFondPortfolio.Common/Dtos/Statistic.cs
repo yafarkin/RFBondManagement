@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using RfFondPortfolio.Common.Dtos;
 
-namespace BackTesting
+namespace RfFondPortfolio.Common.Dtos
 {
     /// <summary>
     /// Статистика бэктестинга

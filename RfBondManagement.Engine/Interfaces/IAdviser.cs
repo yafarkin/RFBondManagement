@@ -6,6 +6,6 @@ namespace RfBondManagement.Engine.Interfaces
 {
     public interface IAdviser
     {
-        Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio);
+        Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio, IDictionary<string, string> p);
     }
 }

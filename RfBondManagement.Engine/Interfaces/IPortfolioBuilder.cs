@@ -10,5 +10,9 @@ namespace RfBondManagement.Engine.Interfaces
         IPaperInPortfolio<AbstractPaper> BuildPaperInPortfolio(AbstractPaper paper, IEnumerable<PortfolioPaperAction> allPaperActions, DateTime? onDate = null);
 
         PortfolioAggregatedContent Build(Guid portfolioId, DateTime? onDate = null);
+
+        Statistic FillStatistic(Guid portfolioId, DateTime date);
+
+        void ExportToCsv(Guid portfolioId, IList<Statistic> statistic);
     }
 }

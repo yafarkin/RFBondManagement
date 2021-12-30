@@ -22,7 +22,6 @@ namespace BackTesting
         {
             var container = ConfigureDI.Configure();
             container.RegisterInstance(container);
-            container.RegisterType<IBacktestEngine, BacktestEngine>();
 
             var logger = container.Resolve<ILogger>();
 
@@ -31,11 +30,11 @@ namespace BackTesting
             var paperRepository = container.Resolve<IPaperRepository>();
             var history = container.Resolve<IHistoryRepository>();
 
-            decimal initialSum = 100_000;
-            decimal monthlyIncome = 10_000;
+            var initialSum = 100_000m;
+            var monthlyIncome = 10_000m;
 
-            var startDate = new DateTime(2016, 1, 1);
-            var endDate = new DateTime(2020, 12, 31);
+            var startDate = new DateTime(2015, 1, 1);
+            var endDate = new DateTime(2021, 12, 31);
 
             var portfolioPercent = new List<Tuple<string, decimal>>
             {
@@ -77,7 +76,8 @@ namespace BackTesting
             var portfolioRepository = container.Resolve<IPortfolioRepository>();
             portfolioRepository.Insert(portfolio);
 
-            var backtest = container.Resolve<IBacktestEngine>(new ParameterOverride("portfolio", portfolio), new ParameterOverride("importType", ExternalImportType.Moex));
+            var backtest = container.Resolve<BacktestEngine>(new ParameterOverride("portfolio", portfolio), new ParameterOverride("importType", ExternalImportType.Moex));
+            backtest.Configure(portfolio, ExternalImportType.Moex);
             backtest.Run(strategy, startDate, ref endDate);
 
             var nearEndDate = backtest.FindNearestDateWithPrices(strategy.Papers.ToList(), endDate);
@@ -85,7 +85,7 @@ namespace BackTesting
 
             var portfolioBuilder = container.Resolve<IPortfolioBuilder>();
 
-            var statistic = backtest.FillStatistic(nearEndDate);
+            var statistic = portfolioBuilder.FillStatistic(portfolio.Id, nearEndDate);
             var content = portfolioBuilder.Build(portfolio.Id, nearEndDate);
 
             logger.Info($"Portfolio cost on {nearEndDate} is {statistic.PortfolioCost:C}");

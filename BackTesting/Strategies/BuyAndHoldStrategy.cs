@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using BackTesting.Interfaces;
 using NLog;
+using RfBondManagement.Engine.Calculations;
+using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
+using Unity;
 
 namespace BackTesting.Strategies
 {
@@ -27,27 +30,32 @@ namespace BackTesting.Strategies
 
         protected Dictionary<string, AbstractPaper> _papers;
 
-        protected IBacktestEngine _backtestEngine;
-        protected IPaperRepository _paperRepository;
+        protected readonly IPaperRepository _paperRepository;
 
-        protected IPortfolioService PortfolioService;
-        protected IPortfolioCalculator _portfolioCalculator;
-        protected IPortfolioBuilder _portfolioBuilder;
+        protected readonly IPortfolioService _portfolioService;
+        protected readonly IPortfolioCalculator _portfolioCalculator;
+        protected readonly IPortfolioBuilder _portfolioBuilder;
+        protected readonly IAdviser _adviser;
 
-        public BuyAndHoldStrategy(ILogger logger,
+        public BuyAndHoldStrategy(
+            ILogger logger,
             IHistoryRepository historyRepository,
             IBondCalculator bondCalculator,
             IPortfolioService portfolioService,
             IPortfolioCalculator portfolioCalculator,
             IPortfolioBuilder portfolioBuilder,
-            IPaperRepository paperRepository)
+            IPaperRepository paperRepository,
+            IAdviserFactory adviserFactory
+            )
             : base(logger, historyRepository, bondCalculator)
         {
             _paperRepository = paperRepository;
             
-            PortfolioService = portfolioService;
+            _portfolioService = portfolioService;
             _portfolioCalculator = portfolioCalculator;
             _portfolioBuilder = portfolioBuilder;
+            
+            _adviser = adviserFactory.GetAdviser(Constants.Adviser.BuyAndHold);
         }
 
         public Portfolio Configure(bool useVaMethod, bool reinvestIncome, decimal initialSum, decimal monthlyIncome, IEnumerable<Tuple<string, decimal>> portfolioPercent, decimal tax, decimal commission)
@@ -67,7 +75,7 @@ namespace BackTesting.Strategies
                 Actual = true,
                 Name = $"BackTesting {DateTime.Now}"
             };
-
+            
             var secIds = _historyRepository.Get().Select(x => x.SecId).Distinct().ToHashSet();
             _papers = _paperRepository.Get().Where(p => secIds.Contains(p.SecId)).ToDictionary(p => p.SecId);
 
@@ -78,13 +86,12 @@ namespace BackTesting.Strategies
 
         public override string Description => "Buy and hold" + (_reinvestIncome ? " (with reinvest)" : string.Empty);
 
-        public override void Init(IBacktestEngine backtestEngine, Portfolio portfolio, DateTime date)
+        public override void Init(Portfolio portfolio, DateTime date)
         {
-            _backtestEngine = backtestEngine;
             _portfolio = portfolio;
             _nextMonthlyIncome = date.AddMonths(1);
 
-            PortfolioService.ApplyActions(_portfolioCalculator.MoveMoney(_initialSum, MoneyActionType.IncomeExternal, "Начальная сумма", null, date));
+            _portfolioService.ApplyActions(_portfolioCalculator.MoveMoney(_initialSum, MoneyActionType.IncomeExternal, "Начальная сумма", null, date));
         }
 
         public override bool Process(DateTime date)
@@ -93,7 +100,7 @@ namespace BackTesting.Strategies
             {
                 _nextMonthlyIncome = _nextMonthlyIncome.AddMonths(1);
 
-                PortfolioService.ApplyActions(_portfolioCalculator.MoveMoney(_monthlyIncome, MoneyActionType.IncomeExternal, "Ежемесячное пополнение", null, date));
+                _portfolioService.ApplyActions(_portfolioCalculator.MoveMoney(_monthlyIncome, MoneyActionType.IncomeExternal, "Ежемесячное пополнение", null, date));
                 _logger.Info($"Monthly income, {_monthlyIncome:C}");
             }
 
@@ -104,7 +111,7 @@ namespace BackTesting.Strategies
                 BalancePortfolio(date);
             }
 
-            var statistic = _backtestEngine.FillStatistic(date);
+            var statistic = _portfolioBuilder.FillStatistic(_portfolio.Id, date);
             var portfolioCost = statistic.PortfolioCost;
             _logger.Info($"Portfolio cost on {date} is {portfolioCost:C}; free sum: {content.AvailSum:C}");
 
@@ -155,7 +162,7 @@ namespace BackTesting.Strategies
                 decimal needPercent;
 
                 var content = _portfolioBuilder.Build(_portfolio.Id, date);
-                var statistic = _backtestEngine.FillStatistic(date);
+                var statistic = _portfolioBuilder.FillStatistic(_portfolio.Id, date);
                 var portfolioCost = statistic.PortfolioCost;
 
                 FindMaxDisbalance(date, portfolioCost, content, out secId, out needPercent);
@@ -212,7 +219,8 @@ namespace BackTesting.Strategies
                     }
 
                     _logger.Info($"Buy {secId}, price {price:C}, count: {paperCount:N0}, total sum: {totalSum:C}; free sum: {content.AvailSum:C}");
-                    _backtestEngine.BuyPaper(date, paper, paperCount);
+                    var actions = _portfolioCalculator.BuyPaper(paper, paperCount, price, date);
+                    _portfolioService.ApplyActions(actions);
                 }
                 else
                 {

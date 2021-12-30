@@ -9,53 +9,50 @@ namespace RfBondManagement.Engine.Calculations
 {
     public abstract class BaseAdviser : IAdviser
     {
-        protected readonly IDictionary<string, string> _p;
-
         protected readonly ILogger _logger;
         protected readonly IPortfolioBuilder _portfolioBuilder;
-        protected readonly IPortfolioService PortfolioService;
+        protected readonly IPortfolioService _portfolioService;
         protected readonly IPortfolioCalculator _portfolioCalculator;
 
-        protected BaseAdviser(ILogger logger, IDictionary<string, string> p, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService)
+        protected BaseAdviser(ILogger logger, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService)
         {
             _logger = logger;
-            _p = p;
 
             _portfolioBuilder = portfolioBuilder;
             _portfolioCalculator = portfolioCalculator;
-            PortfolioService = portfolioService;
+            _portfolioService = portfolioService;
         }
 
-        protected decimal? GetAsDecimal(string key, decimal? defaultValue = null)
+        protected decimal? GetAsDecimal(IDictionary<string, string> p, string key, decimal? defaultValue = null)
         {
-            if (!_p.ContainsKey(key))
+            if (!p.ContainsKey(key))
             {
                 return defaultValue;
             }
 
-            return Convert.ToDecimal(_p[key]);
+            return Convert.ToDecimal(p[key]);
         }
 
-        protected bool? GetAsBool(string key, bool? defaultValue = null)
+        protected bool? GetAsBool(IDictionary<string, string> p, string key, bool? defaultValue = null)
         {
-            if (!_p.ContainsKey(key))
+            if (!p.ContainsKey(key))
             {
                 return defaultValue;
             }
 
-            return Convert.ToBoolean(_p[key]);
+            return Convert.ToBoolean(p[key]);
         }
 
-        protected DateTime? GetAsDateTime(string key, DateTime? defaultValue = null)
+        protected DateTime? GetAsDateTime(IDictionary<string, string> p, string key, DateTime? defaultValue = null)
         {
-            if (!_p.ContainsKey(key))
+            if (!p.ContainsKey(key))
             {
                 return defaultValue;
             }
 
-            return Convert.ToDateTime(_p[key]);
+            return Convert.ToDateTime(p[key]);
         }
 
-        public abstract Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio);
+        public abstract Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio, IDictionary<string, string> p);
     }
 }

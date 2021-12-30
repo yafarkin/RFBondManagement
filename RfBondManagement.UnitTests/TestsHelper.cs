@@ -197,7 +197,12 @@ namespace RfBondManagement.UnitTests
 
         public static IPortfolioBuilder CreateBuilder()
         {
-            var builder = new PortfolioBuilder(GetBondCalculator(), CreatePortfolioActions(), CreatePaperRepository());
+            var builder = new PortfolioBuilder(
+                CreateLogger(),
+                GetBondCalculator(),
+                CreatePortfolioActions(),
+                CreatePaperRepository(),
+                CreateHistoryRepository());
             return builder;
         }
 

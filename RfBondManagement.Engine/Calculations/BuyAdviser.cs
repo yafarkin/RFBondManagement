@@ -11,16 +11,16 @@ namespace RfBondManagement.Engine.Calculations
 {
     public class BuyAdviser : BaseAdviser
     {
-        public BuyAdviser(ILogger logger, IDictionary<string, string> p, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService)
-            : base(logger, p, portfolioBuilder, portfolioCalculator, portfolioService)
+        public BuyAdviser(ILogger logger, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService)
+            : base(logger, portfolioBuilder, portfolioCalculator, portfolioService)
         {
         }
 
-        public override async Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio)
+        public override async Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio, IDictionary<string, string> p)
         {
-            var availSum = GetAsDecimal(Constants.Adviser.P_AvailSum) ?? 0;
-            var allowSell = GetAsBool(Constants.Adviser.P_AllowSell, false);
-            var onDate = GetAsDateTime(Constants.Adviser.P_OnDate);
+            var availSum = GetAsDecimal(p, Constants.Adviser.P_AvailSum) ?? 0;
+            var allowSell = GetAsBool(p, Constants.Adviser.P_AllowSell, false);
+            var onDate = GetAsDateTime(p, Constants.Adviser.P_OnDate);
 
             var result = new List<PortfolioAction>();
 
@@ -38,7 +38,7 @@ namespace RfBondManagement.Engine.Calculations
 
             foreach (var paper in flattenPapers)
             {
-                var price = await PortfolioService.GetPrice(paper.Value.Paper, onDate);
+                var price = await _portfolioService.GetPrice(paper.Value.Paper, onDate);
                 paperPrices.Add(paper.Key, price);
             }
 
@@ -49,7 +49,7 @@ namespace RfBondManagement.Engine.Calculations
                     continue;
                 }
 
-                var price = await PortfolioService.GetPrice(kv.Value.Paper, onDate);
+                var price = await _portfolioService.GetPrice(kv.Value.Paper, onDate);
                 paperPrices.Add(kv.Key, price);
             }
 

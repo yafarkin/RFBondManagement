@@ -29,6 +29,7 @@ namespace RfBondManagement.Engine
                 .RegisterType<IPortfolioCalculator, PortfolioCalculator>()
                 .RegisterType<IPortfolioBuilder, PortfolioBuilder>()
                 .RegisterType<IPortfolioService, PortfolioService>()
+                .RegisterSingleton<IAdviserFactory, AdviserFactory>()
                 .RegisterType<IAdviser, BuyAdviser>(Constants.Adviser.BuyAndHold)
                 ;
 

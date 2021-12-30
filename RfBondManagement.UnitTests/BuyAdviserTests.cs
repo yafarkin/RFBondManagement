@@ -144,12 +144,12 @@ namespace RfBondManagement.UnitTests
 
             var availSum = 100000m;
 
-            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
-            {
-                { Constants.Adviser.P_AvailSum, availSum.ToString() }
-            }, builder, calculator, service);
+            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
 
-            var actions = await adviser.Advise(portfolio);
+            var actions = await adviser.Advise(portfolio, new Dictionary<string, string>
+            {
+                {Constants.Adviser.P_AvailSum, availSum.ToString()}
+            });
             actions.ShouldNotBeEmpty();
 
             service.ApplyActions(actions);
@@ -215,12 +215,12 @@ namespace RfBondManagement.UnitTests
 
             var availSum = 100000m;
 
-            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
-            {
-                { Constants.Adviser.P_AvailSum, availSum.ToString() }
-            }, builder, calculator, service);
+            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
 
-            var actions = await adviser.Advise(portfolio);
+            var actions = await adviser.Advise(portfolio, new Dictionary<string, string>
+            {
+                {Constants.Adviser.P_AvailSum, availSum.ToString()}
+            });
             actions.ShouldNotBeEmpty();
             service.ApplyActions(actions);
 
@@ -278,13 +278,13 @@ namespace RfBondManagement.UnitTests
 
             var availSum = 100000m;
 
-            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
+            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
+
+            var actions = await adviser.Advise(portfolio, new Dictionary<string, string>
             {
                 {Constants.Adviser.P_AvailSum, availSum.ToString()},
                 {Constants.Adviser.P_AllowSell, "true"}
-            }, builder, calculator, service);
-
-            var actions = await adviser.Advise(portfolio);
+            });
             actions.ShouldNotBeEmpty();
             service.ApplyActions(actions);
 
@@ -361,12 +361,12 @@ namespace RfBondManagement.UnitTests
 
             var availSum = 100000m;
 
-            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
+            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
+
+            actions = (await adviser.Advise(portfolio, new Dictionary<string, string>
             {
                 {Constants.Adviser.P_AvailSum, availSum.ToString()},
-            }, builder, calculator, service);
-
-            actions = (await adviser.Advise(portfolio)).ToList();
+            })).ToList();
             service.ApplyActions(actions);
 
             sum = actions.OfType<PortfolioMoneyAction>().Sum(x => x.Sum);
@@ -444,13 +444,13 @@ namespace RfBondManagement.UnitTests
 
             var availSum = 8000m;
 
-            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
+            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
+
+            actions = (await adviser.Advise(portfolio, new Dictionary<string, string>
             {
                 {Constants.Adviser.P_AvailSum, availSum.ToString()},
                 {Constants.Adviser.P_AllowSell, "true"}
-            }, builder, calculator, service);
-
-            actions = (await adviser.Advise(portfolio)).ToList();
+            })).ToList();
             service.ApplyActions(actions);
 
             actions.OfType<PortfolioPaperAction>().Any(x => x.SecId == "Paper1" && x.PaperAction == PaperActionType.Buy).ShouldBeTrue();
@@ -472,13 +472,13 @@ namespace RfBondManagement.UnitTests
 
             var availSum2 = 100000m;
 
-            adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
+            adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
+
+            actions = (await adviser.Advise(portfolio, new Dictionary<string, string>
             {
                 {Constants.Adviser.P_AvailSum, availSum2.ToString()},
                 {Constants.Adviser.P_AllowSell, "true"}
-            }, builder, calculator, service);
-
-            actions = (await adviser.Advise(portfolio)).ToList();
+            })).ToList();
             service.ApplyActions(actions);
 
             actions.OfType<PortfolioPaperAction>().Any(x => x.SecId == "Paper1" && x.PaperAction == PaperActionType.Buy).ShouldBeTrue();

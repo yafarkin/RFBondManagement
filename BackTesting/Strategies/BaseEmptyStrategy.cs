@@ -6,7 +6,7 @@ using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
 
-namespace BackTesting
+namespace BackTesting.Strategies
 {
     public abstract class BaseEmptyStrategy : IStrategy
     {
@@ -18,7 +18,7 @@ namespace BackTesting
 
         public abstract IEnumerable<string> Papers { get; }
         public abstract string Description { get; }
-        public abstract void Init(IBacktestEngine backtestEngine, Portfolio portfolio, DateTime date);
+        public abstract void Init(Portfolio portfolio, DateTime date);
         public abstract bool Process(DateTime date);
 
         protected BaseEmptyStrategy(ILogger logger, IHistoryRepository historyRepository, IBondCalculator bondCalculator)

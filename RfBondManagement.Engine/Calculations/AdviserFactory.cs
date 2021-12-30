@@ -1,15 +1,23 @@
 ﻿using System.Collections.Generic;
+using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using Unity;
 using Unity.Resolution;
 
 namespace RfBondManagement.Engine.Calculations
 {
-    public static class AdviserFactory
+    public class AdviserFactory : IAdviserFactory
     {
-        public static IAdviser GetAdviser(IUnityContainer container, string adviserType, IDictionary<string, string> p)
+        protected readonly IUnityContainer _container;
+        
+        public AdviserFactory(IUnityContainer container)
         {
-            return container.Resolve<IAdviser>(adviserType, new ParameterOverride("p", p));
+            _container = container;
+        }
+        
+        public IAdviser GetAdviser(string adviserType)
+        {
+            return _container.Resolve<IAdviser>(adviserType);
         }
     }
 }

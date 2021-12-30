@@ -76,7 +76,11 @@ namespace BackTesting
             var portfolioRepository = container.Resolve<IPortfolioRepository>();
             portfolioRepository.Insert(portfolio);
 
+<<<<<<< HEAD
             var backtest = container.Resolve<BacktestRunner>(new ParameterOverride("portfolio", portfolio), new ParameterOverride("importType", ExternalImportType.Moex));
+=======
+            var backtest = container.Resolve<BacktestEngine>(new ParameterOverride("portfolio", portfolio), new ParameterOverride("importType", ExternalImportType.Moex));
+>>>>>>> 800c56c5fb81ba95c72db44262f96c6929f7683a
             backtest.Configure(portfolio, ExternalImportType.Moex);
             backtest.Run(strategy, startDate, ref endDate);
 

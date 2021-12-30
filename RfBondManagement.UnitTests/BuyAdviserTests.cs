@@ -97,6 +97,7 @@ namespace RfBondManagement.UnitTests
         [TestMethod]
         public void FlattenStructure_CorrectPercentCalc_Test()
         {
+            // проверяем, что структура схлопнется, и правильно рассчитаются необходимые веса по каждой бумаге
             var flattenList = BuyAdviser.FlattenPaperStructure(BuildSamplePortfolio().RootLeaf, 1);
             flattenList.Count.ShouldBe(6);
 
@@ -122,6 +123,7 @@ namespace RfBondManagement.UnitTests
         [TestMethod]
         public async Task Advice_BuyOnly_Test()
         {
+            // проверяем, что пустой портфель правильно заполнится - в зависимости от веса бумаги в структуре и её цены
             var portfolio = BuildSamplePortfolio();
 
             for (var i = 0; i < 6; i++)
@@ -157,9 +159,11 @@ namespace RfBondManagement.UnitTests
 
             var content = builder.Build(portfolio.Id);
             content.Papers.Count.ShouldBe(6);
-
+            
+            // т.к. при покупке ещё списывается комиссия, да и у бумаг разная цена, то в целом мы ожидаем
+            // что вес бумаг в денежном выражении по отношению к общей сумме в целом будет соответствовать
+            // тому весу, который мы видели в предыдущем тесте
             var papers = content.Papers.ToDictionary(x => x.Paper.SecId);
-
             (papers["Paper1"].Count * TestsHelper.LastPrices["Paper1"] / availSum).ShouldBe(0.16m, 0.01m);
             (papers["Paper2"].Count * TestsHelper.LastPrices["Paper2"] / availSum).ShouldBe(0.33m, 0.01m);
             (papers["Paper3"].Count * TestsHelper.LastPrices["Paper3"] / availSum).ShouldBe(0.15m, 0.01m);
@@ -169,8 +173,11 @@ namespace RfBondManagement.UnitTests
         }
 
         [TestMethod]
-        public async Task BuyNoSell_Test()
+        public async Task Buy_NoSell_Test()
         {
+            // в портфеле заведен баланс на одну бумагу, что она занимает весь портфель
+            // но мы уже до этого успели купить другую бумагу. тест проверяет, что 
+            // мы на всю переданную сумму купим указанную в структуре бумагу, не продавая ранее купленную.
             var portfolio = new Portfolio
             {
                 Id = Guid.NewGuid(),
@@ -229,8 +236,11 @@ namespace RfBondManagement.UnitTests
         }
         
         [TestMethod]
-        public async Task BuyAllowSell_Test()
+        public async Task Buy_AllowSell_Test()
         {
+            // аналогично предыдущему тесту, но здесь мы разрешаем продавать бумаги
+            // поэтому по результатам ожидаем что будут проданы бумаги, которых нет в структуре
+            // а на полученные деньги и на внесенную сумму мы докупим бумагу, которая есть в портфеле в нужном объёме
             var portfolio = new Portfolio
             {
                 Id = Guid.NewGuid(),
@@ -290,5 +300,203 @@ namespace RfBondManagement.UnitTests
             content.Papers[0].Count.ShouldBe(2000);
         }
 
+        [TestMethod]
+        public async Task Rebalance_NoSell_Test()
+        {
+            // есть несколько бумаг в портфеле, но в пропорациях, не соответствующих заданному
+            // ожидаем что после выполнения, будет докуплено столько будмаг, что бы их вес в портфеле
+            // стал соответствовать заданному
+            var portfolio = new Portfolio
+            {
+                Id = Guid.NewGuid(),
+                Commissions = 0,
+                RootLeaf = new PortfolioStructureLeaf
+                {
+                    Papers = new List<PortfolioStructureLeafPaper>
+                    {
+                        new PortfolioStructureLeafPaper
+                        {
+                            Paper = new SharePaper {SecId = "Paper1"},
+                            Volume = 0.8m
+                        },
+                        new PortfolioStructureLeafPaper
+                        {
+                            Paper = new SharePaper {SecId = "Paper2"},
+                            Volume = 0.2m
+                        },
+                    }
+                }
+            };
+            
+            for (var i = 0; i < 2; i++)
+            {
+                TestsHelper.Papers.Add(new SharePaper { SecId = $"Paper{i + 1}" });
+            }
+
+            TestsHelper.LastPrices.Add("Paper1", 20);
+            TestsHelper.LastPrices.Add("Paper2", 10);
+            
+            var builder = TestsHelper.CreateBuilder();
+            var calculator = TestsHelper.CreateCalculator(portfolio);
+            var service = TestsHelper.CreateService(portfolio);
+
+            var actions = calculator.BuyPaper(new SharePaper {SecId = "Paper1"}, 100, TestsHelper.LastPrices["Paper1"]).ToList();
+            actions.AddRange(calculator.BuyPaper(new SharePaper {SecId = "Paper2"}, 1000, TestsHelper.LastPrices["Paper2"]));
+
+            service.ApplyActions(actions);
+            
+            var content = builder.Build(portfolio.Id);
+            content.Papers.Count.ShouldBe(2);
+            content.Papers[0].Count.ShouldBe(100);
+            content.Papers[1].Count.ShouldBe(1000);
+
+            var prevBuySum = 12000;
+
+            var sum = actions.OfType<PortfolioMoneyAction>().Sum(x => x.Sum);
+            sum.ShouldBe(prevBuySum);
+
+            var papers = content.Papers.ToDictionary(x => x.Paper.SecId);
+            (papers["Paper1"].Count * TestsHelper.LastPrices["Paper1"] / sum).ShouldBe(0.16m, 0.1m);
+            (papers["Paper2"].Count * TestsHelper.LastPrices["Paper2"] / sum).ShouldBe(0.84m, 0.1m);
+
+            var availSum = 100000m;
+
+            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
+            {
+                {Constants.Adviser.P_AvailSum, availSum.ToString()},
+            }, builder, calculator, service);
+
+            actions = (await adviser.Advise(portfolio)).ToList();
+            service.ApplyActions(actions);
+
+            sum = actions.OfType<PortfolioMoneyAction>().Sum(x => x.Sum);
+            sum.ShouldBe(availSum);
+ 
+            content = builder.Build(portfolio.Id);
+            content.Papers.Count.ShouldBe(2);
+
+            availSum += prevBuySum;
+            
+            papers = content.Papers.ToDictionary(x => x.Paper.SecId);
+            (papers["Paper1"].Count * TestsHelper.LastPrices["Paper1"] / availSum).ShouldBe(0.8m, 0.01m);
+            (papers["Paper2"].Count * TestsHelper.LastPrices["Paper2"] / availSum).ShouldBe(0.2m, 0.01m);
+        }
+        
+        [TestMethod]
+        public async Task Rebalance_AllowSell_Test()
+        {
+            // аналогично тесту где нельзя было продавать, но тут разрешаем
+            // поэтому проводим две итерации - сначала докупка на небольшую сумму,
+            // и в этом случае часть бумаг превышающая долю будет продана
+            // и вторая итерация на большую сумму, где продаж уже не будет, а будут только докупки
+            var portfolio = new Portfolio
+            {
+                Id = Guid.NewGuid(),
+                Commissions = 0,
+                RootLeaf = new PortfolioStructureLeaf
+                {
+                    Papers = new List<PortfolioStructureLeafPaper>
+                    {
+                        new PortfolioStructureLeafPaper
+                        {
+                            Paper = new SharePaper {SecId = "Paper1"},
+                            Volume = 0.8m
+                        },
+                        new PortfolioStructureLeafPaper
+                        {
+                            Paper = new SharePaper {SecId = "Paper2"},
+                            Volume = 0.2m
+                        },
+                    }
+                }
+            };
+            
+            for (var i = 0; i < 2; i++)
+            {
+                TestsHelper.Papers.Add(new SharePaper { SecId = $"Paper{i + 1}" });
+            }
+
+            TestsHelper.LastPrices.Add("Paper1", 20);
+            TestsHelper.LastPrices.Add("Paper2", 10);
+            
+            var builder = TestsHelper.CreateBuilder();
+            var calculator = TestsHelper.CreateCalculator(portfolio);
+            var service = TestsHelper.CreateService(portfolio);
+
+            var actions = calculator.BuyPaper(new SharePaper {SecId = "Paper1"}, 100, TestsHelper.LastPrices["Paper1"]).ToList();
+            actions.AddRange(calculator.BuyPaper(new SharePaper {SecId = "Paper2"}, 1000, TestsHelper.LastPrices["Paper2"]));
+
+            service.ApplyActions(actions);
+            
+            var content = builder.Build(portfolio.Id);
+            content.Papers.Count.ShouldBe(2);
+            content.Papers[0].Count.ShouldBe(100);
+            content.Papers[1].Count.ShouldBe(1000);
+
+            var prevBuySum = 12000;
+
+            var sum = actions.OfType<PortfolioMoneyAction>().Sum(x => x.Sum);
+            sum.ShouldBe(prevBuySum);
+
+            var papers = content.Papers.ToDictionary(x => x.Paper.SecId);
+            (papers["Paper1"].Count * TestsHelper.LastPrices["Paper1"] / sum).ShouldBe(0.16m, 0.1m);
+            (papers["Paper2"].Count * TestsHelper.LastPrices["Paper2"] / sum).ShouldBe(0.84m, 0.1m);
+
+            var availSum = 8000m;
+
+            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
+            {
+                {Constants.Adviser.P_AvailSum, availSum.ToString()},
+                {Constants.Adviser.P_AllowSell, "true"}
+            }, builder, calculator, service);
+
+            actions = (await adviser.Advise(portfolio)).ToList();
+            service.ApplyActions(actions);
+
+            actions.OfType<PortfolioPaperAction>().Any(x => x.SecId == "Paper1" && x.PaperAction == PaperActionType.Buy).ShouldBeTrue();
+            actions.OfType<PortfolioPaperAction>().Any(x => x.SecId == "Paper1" && x.PaperAction == PaperActionType.Sell).ShouldBeFalse();
+            actions.OfType<PortfolioPaperAction>().Any(x => x.SecId == "Paper2" && x.PaperAction == PaperActionType.Sell).ShouldBeTrue();
+            actions.OfType<PortfolioPaperAction>().Any(x => x.SecId == "Paper2" && x.PaperAction == PaperActionType.Buy).ShouldBeFalse();
+
+            content = builder.Build(portfolio.Id);
+            content.Papers.Count.ShouldBe(2);
+
+            availSum += prevBuySum;
+            
+            papers = content.Papers.ToDictionary(x => x.Paper.SecId);
+            (papers["Paper1"].Count * TestsHelper.LastPrices["Paper1"] / availSum).ShouldBe(0.8m, 0.01m);
+            (papers["Paper2"].Count * TestsHelper.LastPrices["Paper2"] / availSum).ShouldBe(0.2m, 0.01m);
+
+            papers["Paper1"].Count.ShouldBe(800);
+            papers["Paper2"].Count.ShouldBe(400);
+
+            var availSum2 = 100000m;
+
+            adviser = new BuyAdviser(TestsHelper.CreateLogger(), new Dictionary<string, string>
+            {
+                {Constants.Adviser.P_AvailSum, availSum2.ToString()},
+                {Constants.Adviser.P_AllowSell, "true"}
+            }, builder, calculator, service);
+
+            actions = (await adviser.Advise(portfolio)).ToList();
+            service.ApplyActions(actions);
+
+            actions.OfType<PortfolioPaperAction>().Any(x => x.SecId == "Paper1" && x.PaperAction == PaperActionType.Buy).ShouldBeTrue();
+            actions.OfType<PortfolioPaperAction>().Any(x => x.SecId == "Paper1" && x.PaperAction == PaperActionType.Sell).ShouldBeFalse();
+            actions.OfType<PortfolioPaperAction>().Any(x => x.SecId == "Paper2" && x.PaperAction == PaperActionType.Buy).ShouldBeTrue();
+            actions.OfType<PortfolioPaperAction>().Any(x => x.SecId == "Paper2" && x.PaperAction == PaperActionType.Sell).ShouldBeFalse();
+
+            content = builder.Build(portfolio.Id);
+            content.Papers.Count.ShouldBe(2);
+
+            availSum += availSum2;
+
+            papers = content.Papers.ToDictionary(x => x.Paper.SecId);
+            (papers["Paper1"].Count * TestsHelper.LastPrices["Paper1"] / availSum).ShouldBe(0.8m, 0.01m);
+            (papers["Paper2"].Count * TestsHelper.LastPrices["Paper2"] / availSum).ShouldBe(0.2m, 0.01m);
+
+            papers["Paper1"].Count.ShouldBe(4800);
+            papers["Paper2"].Count.ShouldBe(2400);
+        }
     }
 }

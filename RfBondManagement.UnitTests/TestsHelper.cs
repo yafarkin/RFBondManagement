@@ -162,6 +162,13 @@ namespace RfBondManagement.UnitTests
         public static IExternalImport CreateExternalImport(bool setAsDefault)
         {
             var mock = new Mock<IExternalImport>();
+
+            mock.Setup(m => m.ImportPaper(It.IsAny<ILogger>(), It.IsAny<string>()))
+                .Returns((ILogger l, string s) =>
+                {
+                    return Task.FromResult(new SharePaper { SecId = s } as AbstractPaper);
+                });
+
             mock
                 .Setup(m => m.LastPrice(It.IsAny<ILogger>(), It.IsAny<AbstractPaper>()))
                 .Returns((ILogger l, AbstractPaper p) =>

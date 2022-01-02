@@ -96,7 +96,7 @@ namespace RfBondManagement.Engine.Calculations
             }
             else
             {
-                var p =await _import.ImportPaper(_logger, paper.SecId);
+                var p = await _import.ImportPaper(_logger, paper.SecId);
                 var lastPrice = await _import.LastPrice(_logger, p);
                 result = lastPrice.Price;
             }

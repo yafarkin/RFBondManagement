@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using BackTesting.Interfaces;
 using NLog;
-using RfBondManagement.Engine.Calculations;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
-using Unity;
 
 namespace BackTesting.Strategies
 {
@@ -54,7 +50,7 @@ namespace BackTesting.Strategies
             _portfolioCalculator = portfolioCalculator;
             _portfolioBuilder = portfolioBuilder;
             
-            _adviser = adviserFactory.GetAdviser(Constants.Adviser.BuyAndHold);
+            _adviser = adviserFactory.GetAdviser(Constants.Adviser.BuyAndHold.Name);
         }
 
         protected IList<PortfolioStructureLeafPaper> FlattenPaper(PortfolioStructureLeaf leaf)
@@ -126,7 +122,7 @@ namespace BackTesting.Strategies
             {
                 var actions = _adviser.Advise(_portfolio, new Dictionary<string, string>
                 {
-                    {Constants.Adviser.P_AvailSum, content.AvailSum.ToString()}
+                    {Constants.Adviser.BuyAndHold.P_AvailSum, content.AvailSum.ToString()}
                 }).GetAwaiter().GetResult();
                 _portfolioService.ApplyActions(actions);
                 //BalancePortfolio(date);

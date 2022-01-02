@@ -30,7 +30,8 @@ namespace RfBondManagement.Engine
                 .RegisterType<IPortfolioBuilder, PortfolioBuilder>()
                 .RegisterType<IPortfolioService, PortfolioService>()
                 .RegisterSingleton<IAdviserFactory, AdviserFactory>()
-                .RegisterType<IAdviser, BuyAdviser>(Constants.Adviser.BuyAndHold)
+                .RegisterType<IAdviser, BuyAdviser>(Constants.Adviser.BuyAndHold.Name)
+                .RegisterType<IAdviser, BuyAdviserVA>(Constants.Adviser.BuyAndHoldWithVA.Name)
                 ;
 
             container.AddNewExtension<NLogExtension>();

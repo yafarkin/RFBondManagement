@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using NLog;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
@@ -31,6 +32,7 @@ namespace BackTesting.Strategies
         protected readonly IPortfolioCalculator _portfolioCalculator;
         protected readonly IPortfolioBuilder _portfolioBuilder;
         protected readonly IAdviser _adviser;
+        protected ExternalImportType _importType;
 
         public BuyAndHoldStrategy(
             ILogger logger,
@@ -49,13 +51,17 @@ namespace BackTesting.Strategies
             _portfolioService = portfolioService;
             _portfolioCalculator = portfolioCalculator;
             _portfolioBuilder = portfolioBuilder;
-            
-            _adviser = adviserFactory.GetAdviser(Constants.Adviser.BuyAndHold.Name);
+
+            _adviser = adviserFactory.GetAdviser(_useVaMethod
+                ? Constants.Adviser.BuyAndHoldWithVA.Name
+                : Constants.Adviser.BuyAndHold.Name);
         }
 
         protected IList<PortfolioStructureLeafPaper> FlattenPaper(PortfolioStructureLeaf leaf)
         {
-            var result = leaf.Papers != null && leaf.Papers.Count > 0 ? new List<PortfolioStructureLeafPaper>(leaf.Papers) : new List<PortfolioStructureLeafPaper>();
+            var result = leaf.Papers != null && leaf.Papers.Count > 0
+                ? new List<PortfolioStructureLeafPaper>(leaf.Papers)
+                : new List<PortfolioStructureLeafPaper>();
 
             if (leaf.Children != null)
             {
@@ -68,12 +74,13 @@ namespace BackTesting.Strategies
             return result;
         }
 
-        public Portfolio Configure(bool useVaMethod, bool reinvestIncome, decimal initialSum, decimal monthlyIncome, decimal tax, decimal commission, PortfolioStructureLeaf rootLeaf)
+        public Portfolio Configure(bool useVaMethod, bool reinvestIncome, decimal initialSum, decimal monthlyIncome, decimal tax, decimal commission, PortfolioStructureLeaf rootLeaf, ExternalImportType importType)
         {
             _useVaMethod = useVaMethod;
             _reinvestIncome = reinvestIncome;
             _initialSum = initialSum;
             _monthlyIncome = monthlyIncome;
+            _importType = importType;
 
             _portfolio = new Portfolio
             {
@@ -90,7 +97,7 @@ namespace BackTesting.Strategies
             _papers = _paperRepository.Get().Where(p => secIds.Contains(p.SecId)).ToDictionary(p => p.SecId);
 
             _flattenPapers = FlattenPaper(rootLeaf).ToDictionary(x => x.Paper.SecId);
-            
+
             return _portfolio;
         }
 
@@ -103,10 +110,13 @@ namespace BackTesting.Strategies
             _portfolio = portfolio;
             _nextMonthlyIncome = date.AddMonths(1);
 
+            _portfolioService.Configure(portfolio, _importType);
+            _portfolioCalculator.Configure(portfolio);
+
             _portfolioService.ApplyActions(_portfolioCalculator.MoveMoney(_initialSum, MoneyActionType.IncomeExternal, "Начальная сумма", null, date));
         }
 
-        public override bool Process(DateTime date)
+        public override async Task<bool> Process(DateTime date)
         {
             if (_monthlyIncome > 0 && date >= _nextMonthlyIncome)
             {
@@ -120,12 +130,20 @@ namespace BackTesting.Strategies
 
             if (_reinvestIncome || 0 == content.Papers.Count)
             {
-                var actions = _adviser.Advise(_portfolio, new Dictionary<string, string>
+                var p = new Dictionary<string, string>();
+
+                if (_useVaMethod)
                 {
-                    {Constants.Adviser.BuyAndHold.P_AvailSum, content.AvailSum.ToString()}
-                }).GetAwaiter().GetResult();
+                    var incomeTotal = content.TotalIncome;
+                    p.Add(Constants.Adviser.BuyAndHoldWithVA.P_ExpectedVolume, incomeTotal.ToString());
+                }
+                else
+                {
+                    p.Add(Constants.Adviser.BuyAndHold.P_AvailSum, content.AvailSum.ToString());
+                }
+
+                var actions = await _adviser.Advise(_portfolio, _importType, p);
                 _portfolioService.ApplyActions(actions);
-                //BalancePortfolio(date);
             }
 
             var statistic = _portfolioBuilder.FillStatistic(_portfolio.Id, date);
@@ -134,117 +152,5 @@ namespace BackTesting.Strategies
 
             return true;
         }
-
-        // protected virtual void FindMaxDisbalance(DateTime date, decimal portfolioCost, PortfolioAggregatedContent content, out string secId, out decimal percentDisbalance)
-        // {
-        //     if (_portfolioPercent.Count() == 1)
-        //     {
-        //         secId = _portfolioPercent.First().Item1;
-        //         percentDisbalance = -1;
-        //
-        //         return;
-        //     }
-        //
-        //     var l = new List<Tuple<string, decimal, decimal>>();
-        //
-        //     foreach (var p in _portfolioPercent)
-        //     {
-        //         decimal paperSum = 0;
-        //
-        //         var paperInPortfolio = content.Papers.SingleOrDefault(x => x.Paper.SecId == p.Item1);
-        //         if (paperInPortfolio != null)
-        //         {
-        //             var historyPrice = _historyRepository.GetHistoryPriceOnDate(paperInPortfolio.Paper.SecId, date);
-        //             var count = paperInPortfolio.Count;
-        //             paperSum = count * historyPrice.ClosePrice;
-        //         }
-        //
-        //         var actualPercent = 0 == portfolioCost ? 0 : paperSum / portfolioCost * 100;
-        //
-        //         var t = new Tuple<string, decimal, decimal>(p.Item1, p.Item2, actualPercent);
-        //         l.Add(t);
-        //     }
-        //
-        //     var sl = l.OrderByDescending(x => x.Item2 - x.Item3).First();
-        //
-        //     secId = sl.Item1;
-        //     percentDisbalance = Math.Abs(sl.Item2 - sl.Item3);
-        // }
-
-        // protected virtual void BalancePortfolio(DateTime date)
-        // {
-        //     while (true)
-        //     {
-        //         string secId;
-        //         decimal needPercent;
-        //
-        //         var content = _portfolioBuilder.Build(_portfolio.Id, date);
-        //         var statistic = _portfolioBuilder.FillStatistic(_portfolio.Id, date);
-        //         var portfolioCost = statistic.PortfolioCost;
-        //
-        //         FindMaxDisbalance(date, portfolioCost, content, out secId, out needPercent);
-        //
-        //         var priceEntity = _historyRepository.GetHistoryPriceOnDate(secId, date);
-        //         var price = priceEntity.LegalClosePrice;
-        //
-        //         var paper = _papers[secId];
-        //         if (paper.PaperType == PaperType.Bond)
-        //         {
-        //             var aci = _bondCalculator.CalculateAci(paper as BondPaper, date);
-        //             price += aci;
-        //         }
-        //
-        //         long paperCount = 0;
-        //         var sumToPaper = needPercent == -1 ? content.AvailSum : (portfolioCost + content.AvailSum) * needPercent / 100;
-        //
-        //         if (_useVaMethod)
-        //         {
-        //             var incomeTotal = content.TotalIncome;
-        //
-        //             var paperInPortfolio = content.Papers.SingleOrDefault(p => p.Paper.SecId == secId);
-        //             if (null == paperInPortfolio)
-        //             {
-        //                 paperCount = Convert.ToInt64(Math.Floor(sumToPaper / price));
-        //             }
-        //             else
-        //             {
-        //                 var alreadyExist = paperInPortfolio.Count;
-        //
-        //                 paperCount = Convert.ToInt64((incomeTotal - price * alreadyExist) / price);
-        //                 if (paperCount <= 0)
-        //                 {
-        //                     break;
-        //                 }
-        //             }
-        //         }
-        //         else
-        //         {
-        //             paperCount = Convert.ToInt64(Math.Floor(sumToPaper / price));
-        //         }
-        //
-        //         if (0 == paperCount && content.AvailSum > price)
-        //         {
-        //             paperCount = 1;
-        //         }
-        //
-        //         if (paperCount > 0)
-        //         {
-        //             var totalSum = paperCount * price;
-        //             if (totalSum > content.AvailSum)
-        //             {
-        //                 break;
-        //             }
-        //
-        //             _logger.Info($"Buy {secId}, price {price:C}, count: {paperCount:N0}, total sum: {totalSum:C}; free sum: {content.AvailSum:C}");
-        //             var actions = _portfolioCalculator.BuyPaper(paper, paperCount, price, date);
-        //             _portfolioService.ApplyActions(actions);
-        //         }
-        //         else
-        //         {
-        //             break;
-        //             //_logger.Error($"Can't buy paper {p.Item1} to portfolio, price {p.Item2:C} too high ever for one paper (budget to paper {sumToPaper:C}");
-        //         }
-        //     }
-        // }
     }
 }

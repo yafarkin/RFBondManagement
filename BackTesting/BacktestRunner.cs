@@ -7,7 +7,6 @@ using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
 using RfFondPortfolio.Common.Interfaces;
-using Unity;
 
 namespace BackTesting
 {
@@ -43,6 +42,7 @@ namespace BackTesting
         
         public void Configure(Portfolio portfolio, ExternalImportType importType)
         {
+            _portfolio = portfolio;
             _portfolioService.Configure(portfolio, importType);
             _portfolioCalculator.Configure(portfolio);
         }
@@ -97,7 +97,7 @@ namespace BackTesting
                     }
                 } while (true);
 
-                var result = strategy.Process(date);
+                var result = strategy.Process(date).GetAwaiter().GetResult();
 
                 statistics.Add(_portfolioBuilder.FillStatistic(_portfolio.Id, date));
 

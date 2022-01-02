@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using RfFondPortfolio.Common.Dtos;
 
 namespace BackTesting.Interfaces
@@ -12,6 +13,6 @@ namespace BackTesting.Interfaces
 
         void Init(Portfolio portfolio, DateTime date);
 
-        bool Process(DateTime date);
+        Task<bool> Process(DateTime date);
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using NLog;
 using RfBondManagement.Engine.Common;
@@ -18,13 +17,13 @@ namespace RfBondManagement.Engine.Calculations
         {
         }
 
-        public override async Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio, IDictionary<string, string> p)
+        public override async Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio, ExternalImportType importType, IDictionary<string, string> p)
         {
             var allowSell = GetAsBool(p, Constants.Adviser.P_AllowSell, false);
             var onDate = GetAsDateTime(p, Constants.Adviser.P_OnDate);
             var expectedVolume = GetAsDecimal(p, Constants.Adviser.BuyAndHoldWithVA.P_ExpectedVolume) ?? 0m;
 
-            await Prepare(portfolio);
+            await Prepare(portfolio, importType);
 
             if (0 == expectedVolume)
             {

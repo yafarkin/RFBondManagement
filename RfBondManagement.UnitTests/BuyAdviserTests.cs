@@ -201,7 +201,7 @@ namespace RfBondManagement.UnitTests
 
             var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
 
-            var actions = await adviser.Advise(portfolio, new Dictionary<string, string>
+            var actions = await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
                 {Constants.Adviser.BuyAndHold.P_AvailSum, availSum.ToString()}
             });
@@ -261,7 +261,7 @@ namespace RfBondManagement.UnitTests
 
             var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
 
-            var actions = await adviser.Advise(portfolio, new Dictionary<string, string>
+            var actions = await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
                 {Constants.Adviser.BuyAndHold.P_AvailSum, availSum.ToString()}
             });
@@ -313,7 +313,7 @@ namespace RfBondManagement.UnitTests
 
             var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
 
-            var actions = await adviser.Advise(portfolio, new Dictionary<string, string>
+            var actions = await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
                 {Constants.Adviser.BuyAndHold.P_AvailSum, availSum.ToString()},
                 {Constants.Adviser.P_AllowSell, "true"}
@@ -365,7 +365,7 @@ namespace RfBondManagement.UnitTests
 
             var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
 
-            var actions = (await adviser.Advise(portfolio, new Dictionary<string, string>
+            var actions = (await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
                 {Constants.Adviser.BuyAndHold.P_AvailSum, availSum.ToString()},
             })).ToList();
@@ -417,7 +417,7 @@ namespace RfBondManagement.UnitTests
 
             var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
 
-            var actions = (await adviser.Advise(portfolio, new Dictionary<string, string>
+            var actions = (await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
                 {Constants.Adviser.BuyAndHold.P_AvailSum, availSum.ToString()},
                 {Constants.Adviser.P_AllowSell, "true"}
@@ -445,7 +445,7 @@ namespace RfBondManagement.UnitTests
 
             adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
 
-            actions = (await adviser.Advise(portfolio, new Dictionary<string, string>
+            actions = (await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
                 {Constants.Adviser.BuyAndHold.P_AvailSum, availSum2.ToString()},
                 {Constants.Adviser.P_AllowSell, "true"}
@@ -494,7 +494,7 @@ namespace RfBondManagement.UnitTests
             // ожидаем, что итоговая сумма портфеля чуть чуть не дотянет
             var expectedSumm = 9995m;
 
-            var actions = (await adviser.Advise(portfolio, new Dictionary<string, string>
+            var actions = (await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
                 {Constants.Adviser.BuyAndHoldWithVA.P_ExpectedVolume, expectedSumm.ToString()},
                 {Constants.Adviser.P_AllowSell, "true"}
@@ -536,7 +536,7 @@ namespace RfBondManagement.UnitTests
             // ожидаем небольшое превышение цены
             var expectedSumm = 3005m;
 
-            var actions = (await adviser.Advise(portfolio, new Dictionary<string, string>
+            var actions = (await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
                 {Constants.Adviser.BuyAndHoldWithVA.P_ExpectedVolume, expectedSumm.ToString()},
             })).ToList();
@@ -567,7 +567,7 @@ namespace RfBondManagement.UnitTests
 
             var expectedSumm = 2005m;
 
-            var actions = (await adviser.Advise(portfolio, new Dictionary<string, string>
+            var actions = (await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
                 {Constants.Adviser.BuyAndHoldWithVA.P_ExpectedVolume, expectedSumm.ToString()},
                 {Constants.Adviser.P_AllowSell, "true"}

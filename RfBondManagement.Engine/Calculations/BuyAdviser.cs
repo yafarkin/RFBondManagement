@@ -16,7 +16,7 @@ namespace RfBondManagement.Engine.Calculations
         {
         }
 
-        public override async Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio, IDictionary<string, string> p)
+        public override async Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio, ExternalImportType importType, IDictionary<string, string> p)
         {
             var availSum = GetAsDecimal(p, Constants.Adviser.BuyAndHold.P_AvailSum) ?? 0;
             var allowSell = GetAsBool(p, Constants.Adviser.P_AllowSell, false);
@@ -27,7 +27,7 @@ namespace RfBondManagement.Engine.Calculations
                 return new List<PortfolioAction>();
             }
 
-            await Prepare(portfolio);
+            await Prepare(portfolio, importType);
 
             while (availSum > 0)
             {

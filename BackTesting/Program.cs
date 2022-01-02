@@ -45,31 +45,31 @@ namespace BackTesting
                         Paper = new SharePaper {SecId = "SBERP"},
                         Volume = 20
                     },
-                    new PortfolioStructureLeafPaper
-                    {
-                        Paper = new SharePaper {SecId = "MTSS"},
-                        Volume = 20
-                    },
-                    new PortfolioStructureLeafPaper
-                    {
-                        Paper = new SharePaper {SecId = "FXIT"},
-                        Volume = 15
-                    },
-                    new PortfolioStructureLeafPaper
-                    {
-                        Paper = new SharePaper {SecId = "FXUS"},
-                        Volume = 20
-                    },
-                    new PortfolioStructureLeafPaper
-                    {
-                        Paper = new SharePaper {SecId = "FXCN"},
-                        Volume = 20
-                    },
-                    new PortfolioStructureLeafPaper
-                    {
-                        Paper = new SharePaper {SecId = "FXRL"},
-                        Volume = 5
-                    },
+                    //new PortfolioStructureLeafPaper
+                    //{
+                    //    Paper = new SharePaper {SecId = "MTSS"},
+                    //    Volume = 20
+                    //},
+                    //new PortfolioStructureLeafPaper
+                    //{
+                    //    Paper = new SharePaper {SecId = "FXIT"},
+                    //    Volume = 15
+                    //},
+                    //new PortfolioStructureLeafPaper
+                    //{
+                    //    Paper = new SharePaper {SecId = "FXUS"},
+                    //    Volume = 20
+                    //},
+                    //new PortfolioStructureLeafPaper
+                    //{
+                    //    Paper = new SharePaper {SecId = "FXCN"},
+                    //    Volume = 20
+                    //},
+                    //new PortfolioStructureLeafPaper
+                    //{
+                    //    Paper = new SharePaper {SecId = "FXRL"},
+                    //    Volume = 5
+                    //},
                 }
             };
 
@@ -80,7 +80,7 @@ namespace BackTesting
             foreach (var t in rootLeaf.Papers)
             {
                 var secId = t.Paper.SecId;
-                
+
                 var p = paperRepository.Get().SingleOrDefault(x => x.SecId == secId);
                 if (null == p)
                 {
@@ -99,12 +99,12 @@ namespace BackTesting
 
             var useVa = false;
             var strategy = container.Resolve<BuyAndHoldStrategy>();
-            var portfolio = strategy.Configure(useVa, true, initialSum, monthlyIncome, 13, 0.061m, rootLeaf);
+            var portfolio = strategy.Configure(useVa, true, initialSum, monthlyIncome, 13, 0.061m, rootLeaf, ExternalImportType.Moex);
 
             var portfolioRepository = container.Resolve<IPortfolioRepository>();
             portfolioRepository.Insert(portfolio);
 
-            var backtest = container.Resolve<BacktestRunner>(new ParameterOverride("portfolio", portfolio), new ParameterOverride("importType", ExternalImportType.Moex));
+            var backtest = container.Resolve<BacktestRunner>();
             backtest.Configure(portfolio, ExternalImportType.Moex);
             backtest.Run(strategy, startDate, ref endDate);
 

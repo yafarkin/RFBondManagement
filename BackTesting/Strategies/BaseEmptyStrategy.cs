@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using BackTesting.Interfaces;
 using NLog;
 using RfBondManagement.Engine.Interfaces;
@@ -19,7 +20,7 @@ namespace BackTesting.Strategies
         public abstract IEnumerable<string> Papers { get; }
         public abstract string Description { get; }
         public abstract void Init(Portfolio portfolio, DateTime date);
-        public abstract bool Process(DateTime date);
+        public abstract Task<bool> Process(DateTime date);
 
         protected BaseEmptyStrategy(ILogger logger, IHistoryRepository historyRepository, IBondCalculator bondCalculator)
         {

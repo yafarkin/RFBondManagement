@@ -202,8 +202,11 @@ namespace RfBondManagement.Engine.Calculations
             return balance;
         }
 
-        protected async Task Prepare(Portfolio portfolio)
+        protected async Task Prepare(Portfolio portfolio, ExternalImportType importType)
         {
+            _portfolioCalculator.Configure(portfolio);
+            _portfolioService.Configure(portfolio, importType);
+
             _content = _portfolioBuilder.Build(portfolio.Id);
             _flattenPapers = FlattenPaperStructure(portfolio.RootLeaf, 1).ToDictionary(x => x.Paper.SecId);
             _portfolioPapers = _content.Papers.ToDictionary(x => x.Paper.SecId);
@@ -269,6 +272,6 @@ namespace RfBondManagement.Engine.Calculations
             return result;
         }
 
-        public abstract Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio, IDictionary<string, string> p);
+        public abstract Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio, ExternalImportType importType, IDictionary<string, string> p);
     }
 }

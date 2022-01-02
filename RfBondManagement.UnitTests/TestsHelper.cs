@@ -14,6 +14,8 @@ namespace RfBondManagement.UnitTests
 {
     public static class TestsHelper
     {
+        public static readonly ExternalImportType ImportType = ExternalImportType.Moex;
+
         public static List<PortfolioAction> Actions = new List<PortfolioAction>();
         public static List<AbstractPaper> Papers = new List<AbstractPaper>();
         public static List<PaperSplit> Splits = new List<PaperSplit>();

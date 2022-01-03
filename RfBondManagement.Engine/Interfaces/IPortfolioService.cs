@@ -8,10 +8,11 @@ namespace RfBondManagement.Engine.Interfaces
 {
     public interface IPortfolioService
     {
+        Portfolio Portfolio { get; }
+
         void Configure(Portfolio portfolio, ExternalImportType importType);
 
         void ApplyActions(IEnumerable<PortfolioAction> actions);
-        void ApplyActions(PortfolioAction action);
 
         Task GetPrice(PortfolioAggregatedContent portfolioAggregatedContent, DateTime? onDate = null);
         

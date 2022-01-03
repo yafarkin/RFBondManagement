@@ -222,14 +222,13 @@ namespace RfBondManagement.UnitTests
         public static IPortfolioCalculator CreateCalculator(Portfolio portfolio)
         {
             var calc = new PortfolioCalculator(CreateBuilder(), CreatePortfolioActions(), CreatePaperRepository(), CreateSplitRepository(), GetBondCalculator(), CreateLogger());
-            calc.Configure(portfolio);
             return calc;
         }
 
         public static IPortfolioService CreateService(Portfolio portfolio)
         {
             var logic = new PortfolioService(CreateLogger(), CreateExternalImportFactory(), CreateMoneyActionRepository(), CreatePaperActionRepository(), CreateHistoryRepository());
-            logic.Configure(portfolio, ExternalImportType.Moex);
+            logic.Configure(portfolio, ImportType);
             return logic;
         }
     }

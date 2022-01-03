@@ -28,17 +28,16 @@ namespace BackTesting.Strategies
         protected Dictionary<string, AbstractPaper> _papers;
 
         protected readonly IPaperRepository _paperRepository;
-        protected readonly IPortfolioService _portfolioService;
         protected readonly IPortfolioCalculator _portfolioCalculator;
         protected readonly IPortfolioBuilder _portfolioBuilder;
         protected readonly IAdviser _adviser;
-        protected ExternalImportType _importType;
+
+        protected IPortfolioService _portfolioService;
 
         public BuyAndHoldStrategy(
             ILogger logger,
             IHistoryRepository historyRepository,
             IBondCalculator bondCalculator,
-            IPortfolioService portfolioService,
             IPortfolioCalculator portfolioCalculator,
             IPortfolioBuilder portfolioBuilder,
             IPaperRepository paperRepository,
@@ -48,7 +47,6 @@ namespace BackTesting.Strategies
         {
             _paperRepository = paperRepository;
             
-            _portfolioService = portfolioService;
             _portfolioCalculator = portfolioCalculator;
             _portfolioBuilder = portfolioBuilder;
 
@@ -74,15 +72,14 @@ namespace BackTesting.Strategies
             return result;
         }
 
-        public Portfolio Configure(bool useVaMethod, bool reinvestIncome, decimal initialSum, decimal monthlyIncome, decimal tax, decimal commission, PortfolioStructureLeaf rootLeaf, ExternalImportType importType)
+        public Portfolio CreateTestPortfolio(bool useVaMethod, bool reinvestIncome, decimal initialSum, decimal monthlyIncome, decimal tax, decimal commission, PortfolioStructureLeaf rootLeaf)
         {
             _useVaMethod = useVaMethod;
             _reinvestIncome = reinvestIncome;
             _initialSum = initialSum;
             _monthlyIncome = monthlyIncome;
-            _importType = importType;
 
-            _portfolio = new Portfolio
+            var portfolio = new Portfolio
             {
                 Id = Guid.NewGuid(),
                 Tax = tax,
@@ -98,22 +95,19 @@ namespace BackTesting.Strategies
 
             _flattenPapers = FlattenPaper(rootLeaf).ToDictionary(x => x.SecId);
 
-            return _portfolio;
+            return portfolio;
         }
 
         public override IEnumerable<string> Papers => _flattenPapers.Select(x => x.Key);
 
         public override string Description => "Buy and hold" + (_reinvestIncome ? " (with reinvest)" : string.Empty);
 
-        public override void Init(Portfolio portfolio, DateTime date)
+        public override void Init(IPortfolioService portfolioService, DateTime date)
         {
-            _portfolio = portfolio;
             _nextMonthlyIncome = date.AddMonths(1);
 
-            _portfolioService.Configure(portfolio, _importType);
-            _portfolioCalculator.Configure(portfolio);
-
-            _portfolioService.ApplyActions(_portfolioCalculator.MoveMoney(_initialSum, MoneyActionType.IncomeExternal, "Начальная сумма", null, date));
+            _portfolioService = portfolioService;
+            _portfolioService.ApplyActions(_portfolioCalculator.MoveMoney(_portfolioService.Portfolio, _initialSum, MoneyActionType.IncomeExternal, "Начальная сумма", null, date));
         }
 
         public override async Task<bool> Process(DateTime date)
@@ -122,11 +116,11 @@ namespace BackTesting.Strategies
             {
                 _nextMonthlyIncome = _nextMonthlyIncome.AddMonths(1);
 
-                _portfolioService.ApplyActions(_portfolioCalculator.MoveMoney(_monthlyIncome, MoneyActionType.IncomeExternal, "Ежемесячное пополнение", null, date));
+                _portfolioService.ApplyActions(_portfolioCalculator.MoveMoney(_portfolioService.Portfolio, _monthlyIncome, MoneyActionType.IncomeExternal, "Ежемесячное пополнение", null, date));
                 _logger.Info($"Monthly income, {_monthlyIncome:C}");
             }
 
-            var content = _portfolioBuilder.Build(_portfolio.Id, date);
+            var content = _portfolioBuilder.Build(_portfolioService.Portfolio.Id, date);
 
             if (_reinvestIncome || 0 == content.Papers.Count)
             {
@@ -143,11 +137,11 @@ namespace BackTesting.Strategies
 
                 p.Add(Constants.Adviser.P_OnDate, date.ToString());
 
-                var actions = await _adviser.Advise(_portfolio, _importType, p);
+                var actions = await _adviser.Advise(_portfolioService, p);
                 _portfolioService.ApplyActions(actions);
             }
 
-            var statistic = _portfolioBuilder.FillStatistic(_portfolio.Id, date);
+            var statistic = _portfolioBuilder.FillStatistic(_portfolioService.Portfolio.Id, date);
             var portfolioCost = statistic.PortfolioCost;
             _logger.Info($"Portfolio cost on {date} is {portfolioCost:C}; free sum: {content.AvailSum:C}");
 

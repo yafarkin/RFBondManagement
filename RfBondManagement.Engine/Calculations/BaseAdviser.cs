@@ -12,9 +12,7 @@ namespace RfBondManagement.Engine.Calculations
 {
     public abstract class BaseAdviser : IAdviser
     {
-        protected readonly ILogger _logger;
         protected readonly IPortfolioBuilder _portfolioBuilder;
-        protected readonly IPortfolioService _portfolioService;
         protected readonly IPortfolioCalculator _portfolioCalculator;
         protected readonly IPaperRepository _paperRepository;
 
@@ -43,13 +41,10 @@ namespace RfBondManagement.Engine.Calculations
         /// </summary>
         protected PortfolioAggregatedContent _content;
 
-        protected BaseAdviser(ILogger logger, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService, IPaperRepository paperRepository)
+        protected BaseAdviser(IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPaperRepository paperRepository)
         {
-            _logger = logger;
-
             _portfolioBuilder = portfolioBuilder;
             _portfolioCalculator = portfolioCalculator;
-            _portfolioService = portfolioService;
             _paperRepository = paperRepository;
         }
 
@@ -124,7 +119,7 @@ namespace RfBondManagement.Engine.Calculations
             return result;
         }
 
-        public async Task<IDictionary<string, decimal>> FillPaperPrices(DateTime? onDate = null)
+        public async Task<IDictionary<string, decimal>> FillPaperPrices(IPortfolioService portfolioService, DateTime? onDate = null)
         {
             var papers = _flattenPapers.Select(x => x.Value.SecId).Concat(_content.Papers.Select(x => x.Paper.SecId));
 
@@ -138,7 +133,7 @@ namespace RfBondManagement.Engine.Calculations
                 }
 
                 var paper = _paperRepository.Get(secId);
-                var price = await _portfolioService.GetPrice(paper, onDate);
+                var price = await portfolioService.GetPrice(paper, onDate);
                 result.Add(secId, price);
             }
 
@@ -205,19 +200,16 @@ namespace RfBondManagement.Engine.Calculations
             return balance;
         }
 
-        protected async Task Prepare(Portfolio portfolio, ExternalImportType importType, DateTime? onDate)
+        protected async Task Prepare(IPortfolioService portfolioService, DateTime? onDate)
         {
-            _portfolioCalculator.Configure(portfolio);
-            _portfolioService.Configure(portfolio, importType);
-
-            _content = _portfolioBuilder.Build(portfolio.Id);
-            _flattenPapers = FlattenPaperStructure(portfolio.RootLeaf, 1).ToDictionary(x => x.SecId);
+            _content = _portfolioBuilder.Build(portfolioService.Portfolio.Id);
+            _flattenPapers = FlattenPaperStructure(portfolioService.Portfolio.RootLeaf, 1).ToDictionary(x => x.SecId);
             _portfolioPapers = _content.Papers.ToDictionary(x => x.Paper.SecId);
-            _paperPrices = await FillPaperPrices(onDate);
+            _paperPrices = await FillPaperPrices(portfolioService, onDate);
             _paperToChange = new Dictionary<string, long>();
         }
 
-        protected IEnumerable<PortfolioAction> ChangeCount(string secId, long count, DateTime? onDate = null)
+        protected IEnumerable<PortfolioAction> ChangeCount(Portfolio portfolio, string secId, long count, DateTime? onDate = null)
         {
             IEnumerable<PortfolioAction> actions;
 
@@ -226,6 +218,7 @@ namespace RfBondManagement.Engine.Calculations
             if (count > 0)
             {
                 actions = _portfolioCalculator.BuyPaper(
+                        portfolio,
                         paper,
                         count,
                         _paperPrices[secId],
@@ -235,6 +228,7 @@ namespace RfBondManagement.Engine.Calculations
             else
             {
                 actions = _portfolioCalculator.SellPaper(
+                        portfolio,
                         paper,
                         -count,
                         _paperPrices[secId],
@@ -254,7 +248,7 @@ namespace RfBondManagement.Engine.Calculations
             return actions;
         }
 
-        protected IEnumerable<PortfolioAction> Finish(DateTime? onDate)
+        protected IEnumerable<PortfolioAction> Finish(Portfolio portfolio, DateTime? onDate)
         {
             var result = new List<PortfolioAction>();
 
@@ -267,13 +261,13 @@ namespace RfBondManagement.Engine.Calculations
                 var paper = _paperRepository.Get(secId);
 
                 result.AddRange(kv.Value > 0
-                    ? _portfolioCalculator.BuyPaper(paper, count, price, onDate ?? DateTime.UtcNow)
-                    : _portfolioCalculator.SellPaper(paper, count, price, onDate ?? DateTime.UtcNow));
+                    ? _portfolioCalculator.BuyPaper(portfolio, paper, count, price, onDate ?? DateTime.UtcNow)
+                    : _portfolioCalculator.SellPaper(portfolio, paper, count, price, onDate ?? DateTime.UtcNow));
             }
 
             return result;
         }
 
-        public abstract Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio, ExternalImportType importType, IDictionary<string, string> p);
+        public abstract Task<IEnumerable<PortfolioAction>> Advise(IPortfolioService portfolioService, IDictionary<string, string> p);
     }
 }

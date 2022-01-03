@@ -18,6 +18,10 @@ namespace RfBondManagement.Engine.Calculations
         protected readonly IHistoryRepository _historyRepository;
         protected readonly ILogger _logger;
 
+        protected Portfolio _portfolio;
+
+        public Portfolio Portfolio => _portfolio;
+
         protected IExternalImport _import;
 
         public PortfolioService(
@@ -35,8 +39,17 @@ namespace RfBondManagement.Engine.Calculations
             _historyRepository = historyRepository;
         }
 
+        protected void CheckIsConfigured()
+        {
+            if (null == _portfolio)
+            {
+                throw new Exception("Portfolio service is not configured");
+            }
+        }
+
         public void Configure(Portfolio portfolio, ExternalImportType importType)
         {
+            _portfolio = portfolio;
             _import = _importFactory.GetImpl(importType);
 
             _paperActionRepository.Setup(portfolio.Id);
@@ -45,6 +58,8 @@ namespace RfBondManagement.Engine.Calculations
 
         public void ApplyActions(PortfolioAction action)
         {
+            CheckIsConfigured();
+
             if (action is PortfolioMoneyAction moneyAction)
             {
                 _moneyActionRepository.Insert(moneyAction);
@@ -69,6 +84,8 @@ namespace RfBondManagement.Engine.Calculations
 
         public async Task GetPrice(PortfolioAggregatedContent portfolioAggregatedContent, DateTime? onDate = null)
         {
+            CheckIsConfigured();
+
             foreach (var paper in portfolioAggregatedContent.Papers)
             {
                 var marketPrice = await GetPrice(paper.Paper, onDate);
@@ -78,6 +95,8 @@ namespace RfBondManagement.Engine.Calculations
 
         public async Task<decimal> GetPrice(AbstractPaper paper, DateTime? onDate = null)
         {
+            CheckIsConfigured();
+
             decimal result;
 
             if (onDate.HasValue)

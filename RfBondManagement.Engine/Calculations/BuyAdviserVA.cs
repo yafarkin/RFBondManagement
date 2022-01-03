@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NLog;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
@@ -12,19 +11,18 @@ namespace RfBondManagement.Engine.Calculations
 {
     public class BuyAdviserVA : BaseAdviser
     {
-        public BuyAdviserVA(ILogger logger, IPortfolioBuilder portfolioBuilder,
-            IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService, IPaperRepository paperRepository)
-            : base(logger, portfolioBuilder, portfolioCalculator, portfolioService, paperRepository)
+        public BuyAdviserVA(IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPaperRepository paperRepository)
+            : base(portfolioBuilder, portfolioCalculator, paperRepository)
         {
         }
 
-        public override async Task<IEnumerable<PortfolioAction>> Advise(Portfolio portfolio, ExternalImportType importType, IDictionary<string, string> p)
+        public override async Task<IEnumerable<PortfolioAction>> Advise(IPortfolioService portfolioService, IDictionary<string, string> p)
         {
             var allowSell = GetAsBool(p, Constants.Adviser.P_AllowSell, false);
             var onDate = GetAsDateTime(p, Constants.Adviser.P_OnDate);
             var expectedVolume = GetAsDecimal(p, Constants.Adviser.BuyAndHoldWithVA.P_ExpectedVolume) ?? 0m;
 
-            await Prepare(portfolio, importType, onDate);
+            await Prepare(portfolioService, onDate);
 
             if (0 == expectedVolume)
             {
@@ -87,10 +85,10 @@ namespace RfBondManagement.Engine.Calculations
                     break;
                 }
 
-                ChangeCount(secId, countToChange, onDate);
+                ChangeCount(portfolioService.Portfolio, secId, countToChange, onDate);
             }
 
-            return Finish(onDate);
+            return Finish(portfolioService.Portfolio, onDate);
         }
     }
 }

@@ -6,18 +6,14 @@ namespace RfBondManagement.Engine.Interfaces
 {
     public interface IPortfolioCalculator
     {
-        Portfolio Portfolio { get; }
+        IEnumerable<PortfolioAction> PayTaxByDraftProfit(Portfolio portfolio, decimal draftSum, string comment = null, DateTime when = default(DateTime));
 
-        void Configure(Portfolio portfolio);
+        IEnumerable<PortfolioAction> MoveMoney(Portfolio portfolio, decimal sum, MoneyActionType moneyActionType, string comment, string secId = null, DateTime when = default(DateTime));
 
-        IEnumerable<PortfolioAction> PayTaxByDraftProfit(decimal draftSum, string comment = null, DateTime when = default(DateTime));
+        IEnumerable<PortfolioAction> BuyPaper(Portfolio portfolio, AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime));
 
-        IEnumerable<PortfolioAction> MoveMoney(decimal sum, MoneyActionType moneyActionType, string comment, string secId = null, DateTime when = default(DateTime));
+        IEnumerable<PortfolioAction> SellPaper(Portfolio portfolio, AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime));
 
-        IEnumerable<PortfolioAction> BuyPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime));
-
-        IEnumerable<PortfolioAction> SellPaper(AbstractPaper paper, long count, decimal price, DateTime when = default(DateTime));
-
-        IEnumerable<PortfolioAction> Automate(DateTime onDate);
+        IEnumerable<PortfolioAction> Automate(Portfolio portfolio, DateTime onDate);
     }
 }

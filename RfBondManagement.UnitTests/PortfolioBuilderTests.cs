@@ -87,12 +87,12 @@ namespace RfBondManagement.UnitTests
             var when = DateTime.UtcNow.AddDays(-91);
 
             var paper = BondSample;
-            Service.ApplyActions(Calculator.MoveMoney(2500, MoneyActionType.IncomeExternal, "пополнение счёта", null, when));
-            Service.ApplyActions(Calculator.BuyPaper(paper, 1, 95, when));
-            Service.ApplyActions(Calculator.BuyPaper(paper, 1, 98, when));
+            Service.ApplyActions(Calculator.MoveMoney(Portfolio, 2500, MoneyActionType.IncomeExternal, "пополнение счёта", null, when));
+            Service.ApplyActions(Calculator.BuyPaper(Portfolio, paper, 1, 95, when));
+            Service.ApplyActions(Calculator.BuyPaper(Portfolio, paper, 1, 98, when));
 
             when = DateTime.UtcNow;
-            Service.ApplyActions(Calculator.SellPaper(paper, 1, 108, when));
+            Service.ApplyActions(Calculator.SellPaper(Portfolio, paper, 1, 108, when));
 
             var content = Builder.Build(Portfolio.Id);
             await Service.GetPrice(content);
@@ -120,11 +120,11 @@ namespace RfBondManagement.UnitTests
             var when = DateTime.UtcNow.AddDays(-91);
 
             var paper = BondSample;
-            Service.ApplyActions(Calculator.MoveMoney(2500, MoneyActionType.IncomeExternal, "пополнение счёта", null, when));
-            Service.ApplyActions(Calculator.BuyPaper(paper, 1, 95, when));
+            Service.ApplyActions(Calculator.MoveMoney(Portfolio, 2500, MoneyActionType.IncomeExternal, "пополнение счёта", null, when));
+            Service.ApplyActions(Calculator.BuyPaper(Portfolio, paper, 1, 95, when));
 
             when = DateTime.UtcNow;
-            Service.ApplyActions(Calculator.SellPaper(paper, 1, 108, when));
+            Service.ApplyActions(Calculator.SellPaper(Portfolio, paper, 1, 108, when));
 
             var content = Builder.Build(Portfolio.Id);
 
@@ -132,7 +132,7 @@ namespace RfBondManagement.UnitTests
             content.Sums[MoneyActionType.DraftProfit].ShouldBe(130);
             content.Sums.ContainsKey(MoneyActionType.OutcomeTax).ShouldBeFalse();
 
-            var moneyActions = Calculator.PayTaxByDraftProfit(130).OfType<PortfolioMoneyAction>().ToList();
+            var moneyActions = Calculator.PayTaxByDraftProfit(Portfolio, 130).OfType<PortfolioMoneyAction>().ToList();
             Service.ApplyActions(moneyActions);
             moneyActions.Count.ShouldBe(2);
             moneyActions[0].MoneyAction.ShouldBe(MoneyActionType.OutcomeTax);
@@ -168,13 +168,13 @@ namespace RfBondManagement.UnitTests
 
             Portfolio.Tax = 10;
 
-            Service.ApplyActions(Calculator.BuyPaper(ShareSample, 1, 100, onDate));
+            Service.ApplyActions(Calculator.BuyPaper(Portfolio, ShareSample, 1, 100, onDate));
 
-            var p = Calculator.AutomateDividend(onDate, new[] {ShareSample.SecId}).ToList();
+            var p = Calculator.AutomateDividend(Portfolio, onDate, new[] {ShareSample.SecId}).ToList();
             Service.ApplyActions(p);
             p.ShouldBeEmpty();
 
-            p = Calculator.AutomateDividend(onDate.AddDays(1), new[] {ShareSample.SecId}).ToList();
+            p = Calculator.AutomateDividend(Portfolio, onDate.AddDays(1), new[] {ShareSample.SecId}).ToList();
             Service.ApplyActions(p);
             p.Count.ShouldBe(3);
             p[0].ShouldBeOfType<PortfolioPaperAction>();
@@ -208,13 +208,13 @@ namespace RfBondManagement.UnitTests
 
             Portfolio.Tax = 10;
 
-            Service.ApplyActions(Calculator.BuyPaper(BondSample, 1, 100, onDate));
+            Service.ApplyActions(Calculator.BuyPaper(Portfolio, BondSample, 1, 100, onDate));
 
-            var p = Calculator.AutomateCoupons(onDate, new[] {BondSample.SecId}).ToList();
+            var p = Calculator.AutomateCoupons(Portfolio, onDate, new[] {BondSample.SecId}).ToList();
             Service.ApplyActions(p);
             p.ShouldBeEmpty();
 
-            p = Calculator.AutomateCoupons(onDate.AddDays(1), new[] {BondSample.SecId}).ToList();
+            p = Calculator.AutomateCoupons(Portfolio, onDate.AddDays(1), new[] {BondSample.SecId}).ToList();
             Service.ApplyActions(p);
             p.Count.ShouldBe(3);
             p[0].ShouldBeOfType<PortfolioPaperAction>();
@@ -248,12 +248,12 @@ namespace RfBondManagement.UnitTests
 
             Portfolio.Tax = 10;
 
-            Service.ApplyActions(Calculator.BuyPaper(BondSample, 1, 95, onDate));
+            Service.ApplyActions(Calculator.BuyPaper(Portfolio, BondSample, 1, 95, onDate));
 
-            var p = Calculator.AutomateBondCloseDate(onDate, new[] {BondSample.SecId}).ToList();
+            var p = Calculator.AutomateBondCloseDate(Portfolio, onDate, new[] {BondSample.SecId}).ToList();
             p.ShouldBeEmpty();
 
-            p = Calculator.AutomateBondCloseDate(onDate.AddDays(1), new[] {BondSample.SecId}).ToList();
+            p = Calculator.AutomateBondCloseDate(Portfolio, onDate.AddDays(1), new[] {BondSample.SecId}).ToList();
             Service.ApplyActions(p);
             p.Count.ShouldBe(3);
             p[2].ShouldBeOfType<PortfolioPaperAction>();
@@ -285,10 +285,10 @@ namespace RfBondManagement.UnitTests
                 SecId = ShareSample.SecId
             });
 
-            var p = Calculator.AutomateSplit(onDate.AddDays(-2), new[] {ShareSample.SecId});
+            var p = Calculator.AutomateSplit(Portfolio, onDate.AddDays(-2), new[] {ShareSample.SecId});
             p.ShouldBeEmpty();
 
-            p = Calculator.AutomateSplit(onDate.AddDays(-1), new[] {ShareSample.SecId});
+            p = Calculator.AutomateSplit(Portfolio, onDate.AddDays(-1), new[] {ShareSample.SecId});
             p.Count().ShouldBe(1);
         }
 
@@ -304,15 +304,15 @@ namespace RfBondManagement.UnitTests
                 SecId = ShareSample.SecId
             });
 
-            Service.ApplyActions(Calculator.BuyPaper(ShareSample, 5, 25, onDate.AddDays(-3)));
-            Service.ApplyActions(Calculator.SellPaper(ShareSample, 1, 30, onDate.AddDays(-2)));
+            Service.ApplyActions(Calculator.BuyPaper(Portfolio, ShareSample, 5, 25, onDate.AddDays(-3)));
+            Service.ApplyActions(Calculator.SellPaper(Portfolio, ShareSample, 1, 30, onDate.AddDays(-2)));
 
-            var automate = Calculator.AutomateSplit(onDate.AddDays(-1), new[] {ShareSample.SecId});
+            var automate = Calculator.AutomateSplit(Portfolio, onDate.AddDays(-1), new[] {ShareSample.SecId});
             automate.ShouldNotBeEmpty();
             Service.ApplyActions(automate);
 
-            Service.ApplyActions(Calculator.BuyPaper(ShareSample, 50, 2.6m, onDate.AddDays(-1)));
-            Service.ApplyActions(Calculator.SellPaper(ShareSample, 25, 3.3m, onDate));
+            Service.ApplyActions(Calculator.BuyPaper(Portfolio, ShareSample, 50, 2.6m, onDate.AddDays(-1)));
+            Service.ApplyActions(Calculator.SellPaper(Portfolio, ShareSample, 25, 3.3m, onDate));
 
             var actions = TestsHelper.Actions.OfType<PortfolioPaperAction>().ToList();
 
@@ -358,10 +358,10 @@ namespace RfBondManagement.UnitTests
             Portfolio.Tax = 13m;
 
             var paper = PaperRepository.Get().First();
-            Service.ApplyActions(Calculator.MoveMoney(1000, MoneyActionType.IncomeExternal, "пополнение счёта"));
-            Service.ApplyActions(Calculator.BuyPaper(paper, 1, 100));
-            Service.ApplyActions(Calculator.BuyPaper(paper, 1, 200));
-            Service.ApplyActions(Calculator.SellPaper(paper, 1, 250));
+            Service.ApplyActions(Calculator.MoveMoney(Portfolio, 1000, MoneyActionType.IncomeExternal, "пополнение счёта"));
+            Service.ApplyActions(Calculator.BuyPaper(Portfolio, paper, 1, 100));
+            Service.ApplyActions(Calculator.BuyPaper(Portfolio, paper, 1, 200));
+            Service.ApplyActions(Calculator.SellPaper(Portfolio, paper, 1, 250));
 
             var content = Builder.Build(Portfolio.Id);
             await Service.GetPrice(content);

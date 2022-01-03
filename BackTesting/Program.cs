@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using BackTesting.Interfaces;
 using BackTesting.Strategies;
 using NLog;
 using RfBondManagement.Engine;
@@ -45,36 +44,38 @@ namespace BackTesting
                         SecId = "SBERP",
                         Volume = 20
                     },
+                    new PortfolioStructureLeafPaper
+                    {
+                        SecId = "MTSS",
+                        Volume = 20
+                    },
+                    new PortfolioStructureLeafPaper
+                    {
+                        SecId = "FXIT",
+                        Volume = 15
+                    },
+                    new PortfolioStructureLeafPaper
+                    {
+                        SecId = "FXUS",
+                        Volume = 20
+                    },
+                    new PortfolioStructureLeafPaper
+                    {
+                        SecId = "FXCN",
+                        Volume = 20
+                    },
                     //new PortfolioStructureLeafPaper
                     //{
-                    //    Paper = new SharePaper {SecId = "MTSS"},
-                    //    Volume = 20
-                    //},
-                    //new PortfolioStructureLeafPaper
-                    //{
-                    //    Paper = new SharePaper {SecId = "FXIT"},
-                    //    Volume = 15
-                    //},
-                    //new PortfolioStructureLeafPaper
-                    //{
-                    //    Paper = new SharePaper {SecId = "FXUS"},
-                    //    Volume = 20
-                    //},
-                    //new PortfolioStructureLeafPaper
-                    //{
-                    //    Paper = new SharePaper {SecId = "FXCN"},
-                    //    Volume = 20
-                    //},
-                    //new PortfolioStructureLeafPaper
-                    //{
-                    //    Paper = new SharePaper {SecId = "FXRL"},
+                    //    SecId = "FXRL",
                     //    Volume = 5
                     //},
                 }
             };
 
+            var importType = ExternalImportType.Moex;
+
             var importFactory = container.Resolve<IExternalImportFactory>();
-            var importEngine = importFactory.GetImpl(ExternalImportType.Moex);
+            var importEngine = importFactory.GetImpl(importType);
             var historyEngine = container.Resolve<HistoryEngine>();
 
             foreach (var t in rootLeaf.Papers)
@@ -99,13 +100,13 @@ namespace BackTesting
 
             var useVa = false;
             var strategy = container.Resolve<BuyAndHoldStrategy>();
-            var portfolio = strategy.Configure(useVa, true, initialSum, monthlyIncome, 13, 0.061m, rootLeaf, ExternalImportType.Moex);
+            var portfolio = strategy.CreateTestPortfolio(useVa, true, initialSum, monthlyIncome, 13, 0.061m, rootLeaf);
 
             var portfolioRepository = container.Resolve<IPortfolioRepository>();
             portfolioRepository.Insert(portfolio);
 
             var backtest = container.Resolve<BacktestRunner>();
-            backtest.Configure(portfolio, ExternalImportType.Moex);
+            backtest.Configure(portfolio, importType);
             backtest.Run(strategy, startDate, ref endDate);
 
             var nearEndDate = backtest.FindNearestDateWithPrices(strategy.Papers.ToList(), endDate);

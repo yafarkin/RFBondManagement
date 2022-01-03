@@ -26,12 +26,12 @@ namespace RfBondManagement.Engine
                 .RegisterType<IExternalImportFactory, ExternalImportFactory>(TypeLifetime.Singleton)
                 .RegisterType<IExternalImport, MoexImport>(ExternalImportType.Moex.ToString())
                 .RegisterType<IPortfolioActions, PortfolioActions>()
-                .RegisterType<IPortfolioCalculator, PortfolioCalculator>()
-                .RegisterType<IPortfolioBuilder, PortfolioBuilder>()
                 .RegisterType<IPortfolioService, PortfolioService>()
-                .RegisterSingleton<IAdviserFactory, AdviserFactory>()
                 .RegisterType<IAdviser, BuyAdviser>(Constants.Adviser.BuyAndHold.Name)
                 .RegisterType<IAdviser, BuyAdviserVA>(Constants.Adviser.BuyAndHoldWithVA.Name)
+                .RegisterSingleton<IPortfolioBuilder, PortfolioBuilder>()
+                .RegisterSingleton<IPortfolioCalculator, PortfolioCalculator>()
+                .RegisterSingleton<IAdviserFactory, AdviserFactory>()
                 ;
 
             container.AddNewExtension<NLogExtension>();

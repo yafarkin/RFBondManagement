@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using RfFondPortfolio.Common.Dtos;
+using RfBondManagement.Engine.Interfaces;
 
 namespace BackTesting.Interfaces
 {
@@ -11,7 +11,7 @@ namespace BackTesting.Interfaces
 
         string Description { get; }
 
-        void Init(Portfolio portfolio, DateTime date);
+        void Init(IPortfolioService portfolioService, DateTime date);
 
         Task<bool> Process(DateTime date);
     }

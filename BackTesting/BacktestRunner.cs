@@ -18,8 +18,6 @@ namespace BackTesting
         protected readonly IPortfolioBuilder _portfolioBuilder;
         protected readonly IPortfolioActions _portfolioActions;
         protected readonly IHistoryRepository _historyRepository;
-        
-        protected Portfolio _portfolio;
 
         public BacktestRunner(
             ILogger logger,
@@ -39,12 +37,10 @@ namespace BackTesting
 
             _historyRepository = historyRepository;
         }
-        
+
         public void Configure(Portfolio portfolio, ExternalImportType importType)
         {
-            _portfolio = portfolio;
             _portfolioService.Configure(portfolio, importType);
-            _portfolioCalculator.Configure(portfolio);
         }
 
         public void Run(IStrategy strategy, DateTime fromDate, ref DateTime toDate)
@@ -59,14 +55,14 @@ namespace BackTesting
                 _logger.Warn($"Shifted start date {fromDate} to nearest date with prices {date}");
             }
 
-            strategy.Init(_portfolio, date);
+            strategy.Init(_portfolioService, date);
 
             if (date != fromDate)
             {
                 _logger.Info($"Start date shifted from {fromDate} to {date}");
             }
 
-            statistics.Add(_portfolioBuilder.FillStatistic(_portfolio.Id, date));
+            statistics.Add(_portfolioBuilder.FillStatistic(_portfolioService.Portfolio.Id, date));
 
             while (date <= toDate)
             {
@@ -84,7 +80,7 @@ namespace BackTesting
 
                 do
                 {
-                    var actions = _portfolioCalculator.Automate(date);
+                    var actions = _portfolioCalculator.Automate(_portfolioService.Portfolio, date);
                     _portfolioService.ApplyActions(actions);
 
                     if (date != nextProcessDate)
@@ -99,7 +95,7 @@ namespace BackTesting
 
                 var result = strategy.Process(date).GetAwaiter().GetResult();
 
-                statistics.Add(_portfolioBuilder.FillStatistic(_portfolio.Id, date));
+                statistics.Add(_portfolioBuilder.FillStatistic(_portfolioService.Portfolio.Id, date));
 
                 if (!result)
                 {
@@ -111,9 +107,9 @@ namespace BackTesting
 
             _logger.Info($"Complete at {date}");
 
-            _portfolioBuilder.ExportToCsv(_portfolio.Id, statistics);
+            _portfolioBuilder.ExportToCsv(_portfolioService.Portfolio.Id, statistics);
         }
-        
+
         public virtual DateTime FindNearestDateWithPrices(IList<string> codes, DateTime date)
         {
             var nearDate = date;

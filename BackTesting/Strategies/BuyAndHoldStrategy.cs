@@ -134,13 +134,14 @@ namespace BackTesting.Strategies
 
                 if (_useVaMethod)
                 {
-                    var incomeTotal = content.TotalIncome;
-                    p.Add(Constants.Adviser.BuyAndHoldWithVA.P_ExpectedVolume, incomeTotal.ToString());
+                    p.Add(Constants.Adviser.BuyAndHoldWithVA.P_ExpectedVolume, content.TotalIncome.ToString());
                 }
                 else
                 {
                     p.Add(Constants.Adviser.BuyAndHold.P_AvailSum, content.AvailSum.ToString());
                 }
+
+                p.Add(Constants.Adviser.P_OnDate, date.ToString());
 
                 var actions = await _adviser.Advise(_portfolio, _importType, p);
                 _portfolioService.ApplyActions(actions);

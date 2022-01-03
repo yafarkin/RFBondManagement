@@ -34,8 +34,8 @@ namespace BackTesting
             var monthlyIncome = 10_000m;
 
             var startDate = new DateTime(2015, 1, 1);
-            var endDate = new DateTime(2021, 12, 31);
-            
+            var endDate = new DateTime(2015, 12, 31);
+
             var rootLeaf = new PortfolioStructureLeaf
             {
                 Papers = new List<PortfolioStructureLeafPaper>

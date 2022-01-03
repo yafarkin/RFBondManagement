@@ -55,7 +55,7 @@ namespace RfBondManagement.Engine.Calculations
             }
             else
             {
-                throw new NotSupportedException($"Не известный тип действия: {action.GetType()}");
+                throw new NotSupportedException($"Неизвестный тип действия: {action.GetType()}");
             }
         }
 

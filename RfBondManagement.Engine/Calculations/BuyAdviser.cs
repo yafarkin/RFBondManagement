@@ -27,7 +27,7 @@ namespace RfBondManagement.Engine.Calculations
                 return new List<PortfolioAction>();
             }
 
-            await Prepare(portfolio, importType);
+            await Prepare(portfolio, importType, onDate);
 
             while (availSum > 0)
             {
@@ -70,7 +70,7 @@ namespace RfBondManagement.Engine.Calculations
                 }
             }
 
-            return Finish();
+            return Finish(onDate);
         }
     }
 }

@@ -23,7 +23,7 @@ namespace RfBondManagement.Engine.Calculations
             var onDate = GetAsDateTime(p, Constants.Adviser.P_OnDate);
             var expectedVolume = GetAsDecimal(p, Constants.Adviser.BuyAndHoldWithVA.P_ExpectedVolume) ?? 0m;
 
-            await Prepare(portfolio, importType);
+            await Prepare(portfolio, importType, onDate);
 
             if (0 == expectedVolume)
             {
@@ -104,7 +104,7 @@ namespace RfBondManagement.Engine.Calculations
                 ChangeCount(paper, countToChange, onDate);
             }
 
-            return Finish();
+            return Finish(onDate);
         }
     }
 }

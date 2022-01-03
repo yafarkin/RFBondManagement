@@ -42,7 +42,7 @@ namespace BackTesting
                 {
                     new PortfolioStructureLeafPaper
                     {
-                        Paper = new SharePaper {SecId = "SBERP"},
+                        SecId = "SBERP",
                         Volume = 20
                     },
                     //new PortfolioStructureLeafPaper
@@ -79,7 +79,7 @@ namespace BackTesting
 
             foreach (var t in rootLeaf.Papers)
             {
-                var secId = t.Paper.SecId;
+                var secId = t.SecId;
 
                 var p = paperRepository.Get().SingleOrDefault(x => x.SecId == secId);
                 if (null == p)

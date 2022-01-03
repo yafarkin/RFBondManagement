@@ -16,6 +16,9 @@ namespace RfBondManagement.WinForm.Controls
         public IPortfolioRepository PortfolioRepository { get; set; }
 
         [Dependency]
+        public IPaperRepository PaperRepository { get; set; }
+
+        [Dependency]
         public IUnityContainer DiContainer { get; set; }
 
         public PortfolioStructureLeaf SelectedLeaf
@@ -113,9 +116,11 @@ namespace RfBondManagement.WinForm.Controls
 
                 foreach (var leafPaper in leaf.Papers)
                 {
+                    var paper = PaperRepository.Get(leafPaper.SecId);
+
                     var paperNode = new TreeNode
                     {
-                        Text = $"{leafPaper.Volume/totalVolume:P} ({leafPaper.Volume:N}), {leafPaper.Paper.SecId} ({leafPaper.Paper.ShortName})",
+                        Text = $"{leafPaper.Volume/totalVolume:P} ({leafPaper.Volume:N}), {leafPaper.SecId} ({paper.ShortName})",
                         Tag = leafPaper,
                         ImageKey = "paper",
                         SelectedImageKey = "paper"

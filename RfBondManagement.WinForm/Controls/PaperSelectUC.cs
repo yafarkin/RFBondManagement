@@ -1,8 +1,8 @@
 ﻿using RfBondManagement.WinForm.Forms;
-using RfFondPortfolio.Common.Dtos;
 using System;
 using System.ComponentModel;
 using System.Windows.Forms;
+using RfFondPortfolio.Common.Interfaces;
 using Unity;
 
 namespace RfBondManagement.WinForm.Controls
@@ -12,20 +12,24 @@ namespace RfBondManagement.WinForm.Controls
         [Dependency]
         public IUnityContainer DiContainer { get; set; }
 
+        [Dependency]
+        public IPaperRepository PaperRepository { get; set; }
+
         [Browsable(true)]
         [Category("Action")]
         [Description("Invoked when user select stock paper")]
-        public event Action<AbstractPaper> OnSelectPaper;
+        public event Action<string> OnSelectPaper;
 
-        protected AbstractPaper _selectedPaper;
+        protected string _secId;
 
-        public AbstractPaper SelectedPaper
+        public string SecId
         {
-            get => _selectedPaper;
+            get => _secId;
             set
             {
-                _selectedPaper = value;
-                tbSelectedPaper.Text = null == value ? string.Empty : $"{value.SecId} ({value.ShortName})";
+                _secId = value;
+                var paper = PaperRepository.Get(_secId);
+                tbSelectedPaper.Text = null == value ? string.Empty : $"{value} ({paper.ShortName})";
             }
         }
 
@@ -44,14 +48,14 @@ namespace RfBondManagement.WinForm.Controls
                     return;
                 }
 
-                SelectedPaper = f.SelectedPaper;
-                OnSelectPaper?.Invoke(SelectedPaper);
+                SecId = f.SelectedPaper.SecId;
+                OnSelectPaper?.Invoke(SecId);
             }
         }
 
         private void PaperSelectUC_Load(object sender, EventArgs e)
         {
-            if (null == SelectedPaper)
+            if (null == SecId)
             {
                 return;
             }

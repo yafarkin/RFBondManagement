@@ -16,6 +16,7 @@ namespace RfBondManagement.Engine.Calculations
         protected readonly IPortfolioBuilder _portfolioBuilder;
         protected readonly IPortfolioService _portfolioService;
         protected readonly IPortfolioCalculator _portfolioCalculator;
+        protected readonly IPaperRepository _paperRepository;
 
         /// <summary>
         /// Цены на бумаги
@@ -42,13 +43,14 @@ namespace RfBondManagement.Engine.Calculations
         /// </summary>
         protected PortfolioAggregatedContent _content;
 
-        protected BaseAdviser(ILogger logger, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService)
+        protected BaseAdviser(ILogger logger, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService, IPaperRepository paperRepository)
         {
             _logger = logger;
 
             _portfolioBuilder = portfolioBuilder;
             _portfolioCalculator = portfolioCalculator;
             _portfolioService = portfolioService;
+            _paperRepository = paperRepository;
         }
 
         protected decimal? GetAsDecimal(IDictionary<string, string> p, string key, decimal? defaultValue = null)
@@ -102,7 +104,7 @@ namespace RfBondManagement.Engine.Calculations
                     var paperGlobalPercent = paperLocalPercent * percent;
                     result.Add(new PortfolioStructureLeafPaper
                     {
-                        Paper = paper.Paper,
+                        SecId = paper.SecId,
                         Volume = paperGlobalPercent
                     });
                 }
@@ -124,19 +126,20 @@ namespace RfBondManagement.Engine.Calculations
 
         public async Task<IDictionary<string, decimal>> FillPaperPrices(DateTime? onDate = null)
         {
-            var papers = _flattenPapers.Select(x => x.Value.Paper).Concat(_content.Papers.Select(x => x.Paper));
+            var papers = _flattenPapers.Select(x => x.Value.SecId).Concat(_content.Papers.Select(x => x.Paper.SecId));
 
             var result = new Dictionary<string, decimal>();
 
-            foreach (var paper in papers)
+            foreach (var secId in papers)
             {
-                if (result.ContainsKey(paper.SecId))
+                if (result.ContainsKey(secId))
                 {
                     continue;
                 }
 
+                var paper = _paperRepository.Get(secId);
                 var price = await _portfolioService.GetPrice(paper, onDate);
-                result.Add(paper.SecId, price);
+                result.Add(secId, price);
             }
 
             return result;
@@ -208,22 +211,24 @@ namespace RfBondManagement.Engine.Calculations
             _portfolioService.Configure(portfolio, importType);
 
             _content = _portfolioBuilder.Build(portfolio.Id);
-            _flattenPapers = FlattenPaperStructure(portfolio.RootLeaf, 1).ToDictionary(x => x.Paper.SecId);
+            _flattenPapers = FlattenPaperStructure(portfolio.RootLeaf, 1).ToDictionary(x => x.SecId);
             _portfolioPapers = _content.Papers.ToDictionary(x => x.Paper.SecId);
             _paperPrices = await FillPaperPrices(onDate);
             _paperToChange = new Dictionary<string, long>();
         }
 
-        protected IEnumerable<PortfolioAction> ChangeCount(AbstractPaper paper, long count, DateTime? onDate = null)
+        protected IEnumerable<PortfolioAction> ChangeCount(string secId, long count, DateTime? onDate = null)
         {
             IEnumerable<PortfolioAction> actions;
+
+            var paper = _paperRepository.Get(secId);
 
             if (count > 0)
             {
                 actions = _portfolioCalculator.BuyPaper(
                         paper,
                         count,
-                        _paperPrices[paper.SecId],
+                        _paperPrices[secId],
                         onDate ?? DateTime.UtcNow)
                     .OfType<PortfolioMoneyAction>();
             }
@@ -232,18 +237,18 @@ namespace RfBondManagement.Engine.Calculations
                 actions = _portfolioCalculator.SellPaper(
                         paper,
                         -count,
-                        _paperPrices[paper.SecId],
+                        _paperPrices[secId],
                         onDate ?? DateTime.UtcNow)
                     .OfType<PortfolioMoneyAction>();
             }
 
             if (!_paperToChange.ContainsKey(paper.SecId))
             {
-                _paperToChange.Add(paper.SecId, count);
+                _paperToChange.Add(secId, count);
             }
             else
             {
-                _paperToChange[paper.SecId] += count;
+                _paperToChange[secId] += count;
             }
 
             return actions;
@@ -255,18 +260,15 @@ namespace RfBondManagement.Engine.Calculations
 
             foreach (var kv in _paperToChange)
             {
-                var paper = _flattenPapers.ContainsKey(kv.Key) ? _flattenPapers[kv.Key].Paper : _portfolioPapers[kv.Key].Paper;
+                var secId = _flattenPapers.ContainsKey(kv.Key) ? _flattenPapers[kv.Key].SecId : _portfolioPapers[kv.Key].Paper.SecId;
                 var price = _paperPrices[kv.Key];
                 var count = Math.Abs(kv.Value);
 
-                if (kv.Value > 0)
-                {
-                    result.AddRange(_portfolioCalculator.BuyPaper(paper, count, price, onDate ?? DateTime.UtcNow));
-                }
-                else
-                {
-                    result.AddRange(_portfolioCalculator.SellPaper(paper, count, price, onDate ?? DateTime.UtcNow));
-                }
+                var paper = _paperRepository.Get(secId);
+
+                result.AddRange(kv.Value > 0
+                    ? _portfolioCalculator.BuyPaper(paper, count, price, onDate ?? DateTime.UtcNow)
+                    : _portfolioCalculator.SellPaper(paper, count, price, onDate ?? DateTime.UtcNow));
             }
 
             return result;

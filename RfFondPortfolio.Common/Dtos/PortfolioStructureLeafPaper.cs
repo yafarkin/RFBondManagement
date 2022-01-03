@@ -4,6 +4,6 @@
     {
         public decimal Volume { get; set; }
 
-        public AbstractPaper Paper { get; set; }
+        public string SecId { get; set; }
     }
 }

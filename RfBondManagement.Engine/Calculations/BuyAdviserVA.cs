@@ -6,14 +6,15 @@ using NLog;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
+using RfFondPortfolio.Common.Interfaces;
 
 namespace RfBondManagement.Engine.Calculations
 {
     public class BuyAdviserVA : BaseAdviser
     {
         public BuyAdviserVA(ILogger logger, IPortfolioBuilder portfolioBuilder,
-            IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService)
-            : base(logger, portfolioBuilder, portfolioCalculator, portfolioService)
+            IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService, IPaperRepository paperRepository)
+            : base(logger, portfolioBuilder, portfolioCalculator, portfolioService, paperRepository)
         {
         }
 
@@ -86,22 +87,7 @@ namespace RfBondManagement.Engine.Calculations
                     break;
                 }
 
-                AbstractPaper paper = null;
-                if (_flattenPapers.ContainsKey(secId))
-                {
-                    paper = _flattenPapers[secId].Paper;
-                }
-                else if (_portfolioPapers.ContainsKey(secId))
-                {
-                    paper = _portfolioPapers[secId].Paper;
-                }
-
-                if (null == paper)
-                {
-                    throw new InvalidOperationException($"Не удалось найти бумагу {secId}");
-                }
-
-                ChangeCount(paper, countToChange, onDate);
+                ChangeCount(secId, countToChange, onDate);
             }
 
             return Finish(onDate);

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using RfFondPortfolio.Common.Interfaces;
 using Unity;
 
 namespace RfBondManagement.WinForm.Forms
@@ -10,6 +11,8 @@ namespace RfBondManagement.WinForm.Forms
     public partial class StructureLeafEditForm : Form
     {
         protected readonly IUnityContainer _container;
+
+        protected readonly IPaperRepository _paperRepository;
 
         public PortfolioStructureLeaf RootLeaf { protected get; set; }
         public PortfolioStructureLeaf Leaf { get; set; }
@@ -22,18 +25,21 @@ namespace RfBondManagement.WinForm.Forms
         public StructureLeafEditForm(IUnityContainer container)
         {
             _container = container;
+            _paperRepository = _container.Resolve<IPaperRepository>();
 
             InitializeComponent();
         }
 
         private ListViewItem CreatePaperToListView(PortfolioStructureLeafPaper leafPaper, decimal percent)
         {
+            var paper = _paperRepository.Get(leafPaper.SecId);
+
             var lvi = new ListViewItem(new[]
             {
                 percent.ToString("P"),
                 leafPaper.Volume.ToString(),
-                leafPaper.Paper.SecId,
-                leafPaper.Paper.ShortName
+                leafPaper.SecId,
+                paper.ShortName
             })
             {
                 Tag = leafPaper
@@ -87,7 +93,7 @@ namespace RfBondManagement.WinForm.Forms
             {
                 Leaf.Papers.Add(new PortfolioStructureLeafPaper
                 {
-                    Paper = (lvi.Tag as PortfolioStructureLeafPaper).Paper,
+                    SecId = (lvi.Tag as PortfolioStructureLeafPaper).SecId,
                     Volume = Convert.ToDecimal(lvi.SubItems[1].Text)
                 });
             }

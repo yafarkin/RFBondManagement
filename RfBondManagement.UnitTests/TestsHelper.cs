@@ -50,6 +50,10 @@ namespace RfBondManagement.UnitTests
             {
                 var mock = new Mock<IPaperRepository>();
                 mock.Setup(m => m.Get()).Returns(() => Papers);
+                mock.Setup(m => m.Get(It.IsAny<string>())).Returns((string secId) =>
+                {
+                    return Papers.FirstOrDefault(p => p.SecId == secId);
+                });
                 mock.Setup(m => m.Insert(It.IsAny<AbstractPaper>()))
                     .Callback<AbstractPaper>(i =>
                     {

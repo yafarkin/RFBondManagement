@@ -29,25 +29,25 @@ namespace RfBondManagement.WinForm.Forms
                 return;
             }
 
-            paperSelect.SelectedPaper = SelectedLeafPaper.Paper;
+            paperSelect.SecId = SelectedLeafPaper.SecId;
             tbVolume.Text = SelectedLeafPaper.Volume.ToString();
         }
 
-        protected bool IsPaperAlreadyExist(PortfolioStructureLeaf leaf, AbstractPaper paper)
+        protected bool IsPaperAlreadyExist(PortfolioStructureLeaf leaf, string secId)
         {
             if (leaf == CurrentLeaf)
             {
                 return false;
             }
 
-            if (leaf.Papers.Any(x => x.Paper.SecId == paper.SecId))
+            if (leaf.Papers.Any(x => x.SecId == secId))
             {
                 return true;
             }
 
             foreach (var child in leaf.Children)
             {
-                if (IsPaperAlreadyExist(child, paper))
+                if (IsPaperAlreadyExist(child, secId))
                 {
                     return true;
                 }
@@ -58,7 +58,7 @@ namespace RfBondManagement.WinForm.Forms
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            if (IsPaperAlreadyExist(RootLeaf, paperSelect.SelectedPaper))
+            if (IsPaperAlreadyExist(RootLeaf, paperSelect.SecId))
             {
                 DialogResult = DialogResult.None;
                 paperSelect.Focus();
@@ -68,7 +68,7 @@ namespace RfBondManagement.WinForm.Forms
 
             SelectedLeafPaper ??= new PortfolioStructureLeafPaper();
 
-            SelectedLeafPaper.Paper = paperSelect.SelectedPaper;
+            SelectedLeafPaper.SecId = paperSelect.SecId;
             SelectedLeafPaper.Volume = Convert.ToDecimal(tbVolume.Text);
         }
     }

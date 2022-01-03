@@ -96,7 +96,7 @@ namespace BackTesting.Strategies
             var secIds = _historyRepository.Get().Select(x => x.SecId).Distinct().ToHashSet();
             _papers = _paperRepository.Get().Where(p => secIds.Contains(p.SecId)).ToDictionary(p => p.SecId);
 
-            _flattenPapers = FlattenPaper(rootLeaf).ToDictionary(x => x.Paper.SecId);
+            _flattenPapers = FlattenPaper(rootLeaf).ToDictionary(x => x.SecId);
 
             return _portfolio;
         }

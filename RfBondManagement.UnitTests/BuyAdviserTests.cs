@@ -38,12 +38,12 @@ namespace RfBondManagement.UnitTests
                             {
                                 new PortfolioStructureLeafPaper
                                 {
-                                    Paper = new SharePaper { SecId = "Paper1" },
+                                    SecId = "Paper1",
                                     Volume = 100
                                 },
                                 new PortfolioStructureLeafPaper
                                 {
-                                    Paper = new SharePaper { SecId = "Paper2" },
+                                    SecId = "Paper2",
                                     Volume = 200
                                 }
                             }
@@ -56,12 +56,12 @@ namespace RfBondManagement.UnitTests
                             {
                                 new PortfolioStructureLeafPaper
                                 {
-                                    Paper = new SharePaper { SecId = "Paper3" },
+                                    SecId = "Paper3",
                                     Volume = 30
                                 },
                                 new PortfolioStructureLeafPaper
                                 {
-                                    Paper = new SharePaper { SecId = "Paper4" },
+                                    SecId = "Paper4",
                                     Volume = 20
                                 }
                             },
@@ -75,12 +75,12 @@ namespace RfBondManagement.UnitTests
                                     {
                                         new PortfolioStructureLeafPaper
                                         {
-                                            Paper = new SharePaper { SecId = "Paper5" },
+                                            SecId = "Paper5",
                                             Volume = 100
                                         },
                                         new PortfolioStructureLeafPaper
                                         {
-                                            Paper = new SharePaper { SecId = "Paper6" },
+                                            SecId = "Paper6",
                                             Volume = 50
                                         }
                                     }
@@ -106,12 +106,12 @@ namespace RfBondManagement.UnitTests
                     {
                         new PortfolioStructureLeafPaper
                         {
-                            Paper = new SharePaper {SecId = "Paper1"},
+                            SecId = "Paper1",
                             Volume = 0.8m
                         },
                         new PortfolioStructureLeafPaper
                         {
-                            Paper = new SharePaper {SecId = "Paper2"},
+                            SecId = "Paper2",
                             Volume = 0.2m
                         },
                     }
@@ -156,22 +156,22 @@ namespace RfBondManagement.UnitTests
             var flattenList = BuyAdviser.FlattenPaperStructure(BuildSamplePortfolio().RootLeaf, 1);
             flattenList.Count.ShouldBe(6);
 
-            flattenList[0].Paper.SecId.ShouldBe("Paper1");
+            flattenList[0].SecId.ShouldBe("Paper1");
             flattenList[0].Volume.ShouldBe(0.1666m, 0.0001m);
 
-            flattenList[1].Paper.SecId.ShouldBe("Paper2");
+            flattenList[1].SecId.ShouldBe("Paper2");
             flattenList[1].Volume.ShouldBe(0.3333m, 0.0001m);
 
-            flattenList[2].Paper.SecId.ShouldBe("Paper3");
+            flattenList[2].SecId.ShouldBe("Paper3");
             flattenList[2].Volume.ShouldBe(0.15m);
 
-            flattenList[3].Paper.SecId.ShouldBe("Paper4");
+            flattenList[3].SecId.ShouldBe("Paper4");
             flattenList[3].Volume.ShouldBe(0.1m);
 
-            flattenList[4].Paper.SecId.ShouldBe("Paper5");
+            flattenList[4].SecId.ShouldBe("Paper5");
             flattenList[4].Volume.ShouldBe(0.1666m, 0.0001m);
 
-            flattenList[5].Paper.SecId.ShouldBe("Paper6");
+            flattenList[5].SecId.ShouldBe("Paper6");
             flattenList[5].Volume.ShouldBe(0.0833m, 0.0001m);
         }
 
@@ -193,14 +193,14 @@ namespace RfBondManagement.UnitTests
             TestsHelper.LastPrices.Add("Paper5", 100);
             TestsHelper.LastPrices.Add("Paper6", 50);
 
+            var logger = TestsHelper.CreateLogger();
             var builder = TestsHelper.CreateBuilder();
             var calculator = TestsHelper.CreateCalculator(portfolio);
             var service = TestsHelper.CreateService(portfolio);
+            var paperRepo = TestsHelper.CreatePaperRepository();
+            var adviser = new BuyAdviser(logger, builder, calculator, service, paperRepo);
 
             var availSum = 100000m;
-
-            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
-
             var actions = await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
                 {Constants.Adviser.BuyAndHold.P_AvailSum, availSum.ToString()}
@@ -243,24 +243,24 @@ namespace RfBondManagement.UnitTests
                 {
                     new PortfolioStructureLeafPaper
                     {
-                        Paper = new SharePaper { SecId = "Paper1" },
+                        SecId = "Paper1",
                         Volume = 1
                     }
                 }
             };
 
+            var logger = TestsHelper.CreateLogger();
             var builder = TestsHelper.CreateBuilder();
             var calculator = TestsHelper.CreateCalculator(portfolio);
             var service = TestsHelper.CreateService(portfolio);
+            var paperRepo = TestsHelper.CreatePaperRepository();
+            var adviser = new BuyAdviser(logger, builder, calculator, service, paperRepo);
 
             var content = builder.Build(portfolio.Id);
             content.Papers.Count.ShouldBe(1);
             content.Papers[0].Count.ShouldBe(1000);
 
             var availSum = 100000m;
-
-            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
-
             var actions = await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
                 {Constants.Adviser.BuyAndHold.P_AvailSum, availSum.ToString()}
@@ -295,23 +295,24 @@ namespace RfBondManagement.UnitTests
                 {
                     new PortfolioStructureLeafPaper
                     {
-                        Paper = new SharePaper { SecId = "Paper1" },
+                        SecId = "Paper1",
                         Volume = 1
                     }
                 }
             };
 
+            var logger = TestsHelper.CreateLogger();
             var builder = TestsHelper.CreateBuilder();
             var calculator = TestsHelper.CreateCalculator(portfolio);
             var service = TestsHelper.CreateService(portfolio);
+            var paperRepo = TestsHelper.CreatePaperRepository();
+            var adviser = new BuyAdviser(logger, builder, calculator, service, paperRepo);
 
             var content = builder.Build(portfolio.Id);
             content.Papers.Count.ShouldBe(1);
             content.Papers[0].Count.ShouldBe(1000);
 
             var availSum = 100000m;
-
-            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
 
             var actions = await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
@@ -341,9 +342,12 @@ namespace RfBondManagement.UnitTests
             // стал соответствовать заданному
             var portfolio = BuildSimplePortfolioAndBuy(100, 1000);
 
+            var logger = TestsHelper.CreateLogger();
             var builder = TestsHelper.CreateBuilder();
             var calculator = TestsHelper.CreateCalculator(portfolio);
             var service = TestsHelper.CreateService(portfolio);
+            var paperRepo = TestsHelper.CreatePaperRepository();
+            var adviser = new BuyAdviser(logger, builder, calculator, service, paperRepo);
             var actionsRepo = TestsHelper.CreatePortfolioActions();
 
             var content = builder.Build(portfolio.Id);
@@ -362,8 +366,6 @@ namespace RfBondManagement.UnitTests
             (papers["Paper2"].Count * TestsHelper.LastPrices["Paper2"] / sum).ShouldBe(0.84m, 0.1m);
 
             var availSum = 100000m;
-
-            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
 
             var actions = (await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
@@ -393,9 +395,12 @@ namespace RfBondManagement.UnitTests
             // и вторая итерация на большую сумму, где продаж уже не будет, а будут только докупки
             var portfolio = BuildSimplePortfolioAndBuy(100, 1000);
 
+            var logger = TestsHelper.CreateLogger();
             var builder = TestsHelper.CreateBuilder();
             var calculator = TestsHelper.CreateCalculator(portfolio);
             var service = TestsHelper.CreateService(portfolio);
+            var paperRepo = TestsHelper.CreatePaperRepository();
+            var adviser = new BuyAdviser(logger, builder, calculator, service, paperRepo);
             var actionsRepo = TestsHelper.CreatePortfolioActions();
 
             var content = builder.Build(portfolio.Id);
@@ -414,8 +419,6 @@ namespace RfBondManagement.UnitTests
             (papers["Paper2"].Count * TestsHelper.LastPrices["Paper2"] / sum).ShouldBe(0.84m, 0.1m);
 
             var availSum = 8000m;
-
-            var adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
 
             var actions = (await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
@@ -442,8 +445,6 @@ namespace RfBondManagement.UnitTests
             papers["Paper2"].Count.ShouldBe(400);
 
             var availSum2 = 100000m;
-
-            adviser = new BuyAdviser(TestsHelper.CreateLogger(), builder, calculator, service);
 
             actions = (await adviser.Advise(portfolio, TestsHelper.ImportType, new Dictionary<string, string>
             {
@@ -477,9 +478,12 @@ namespace RfBondManagement.UnitTests
             // простой тест, требуется докупить несколько бумаг. по факту, тут отработает как обычная покупка на указанную сумму.
             var portfolio = BuildSimplePortfolioAndBuy(10, 20);
 
+            var logger = TestsHelper.CreateLogger();
             var builder = TestsHelper.CreateBuilder();
             var calculator = TestsHelper.CreateCalculator(portfolio);
             var service = TestsHelper.CreateService(portfolio);
+            var paperRepo = TestsHelper.CreatePaperRepository();
+            var adviser = new BuyAdviserVA(logger, builder, calculator, service, paperRepo);
 
             var content = builder.Build(portfolio.Id);
             content.Papers.Count.ShouldBe(2);
@@ -488,8 +492,6 @@ namespace RfBondManagement.UnitTests
             var papers = content.Papers.ToDictionary(x => x.Paper.SecId);
             (papers["Paper1"].Count * TestsHelper.LastPrices["Paper1"] / sum).ShouldBe(0.5m, 0.1m);
             (papers["Paper2"].Count * TestsHelper.LastPrices["Paper2"] / sum).ShouldBe(0.5m, 0.1m);
-
-            var adviser = new BuyAdviserVA(TestsHelper.CreateLogger(), builder, calculator, service);
 
             // ожидаем, что итоговая сумма портфеля чуть чуть не дотянет
             var expectedSumm = 9995m;
@@ -519,9 +521,12 @@ namespace RfBondManagement.UnitTests
             // простой тест, требуется докупить несколько бумаг. по факту, тут отработает как обычная покупка на указанную сумму.
             var portfolio = BuildSimplePortfolioAndBuy(100, 200);
 
+            var logger = TestsHelper.CreateLogger();
             var builder = TestsHelper.CreateBuilder();
             var calculator = TestsHelper.CreateCalculator(portfolio);
             var service = TestsHelper.CreateService(portfolio);
+            var paperRepo = TestsHelper.CreatePaperRepository();
+            var adviser = new BuyAdviser(logger, builder, calculator, service, paperRepo);
 
             var content = builder.Build(portfolio.Id);
             content.Papers.Count.ShouldBe(2);
@@ -530,8 +535,6 @@ namespace RfBondManagement.UnitTests
             var papers = content.Papers.ToDictionary(x => x.Paper.SecId);
             (papers["Paper1"].Count * TestsHelper.LastPrices["Paper1"] / sum).ShouldBe(0.5m, 0.1m);
             (papers["Paper2"].Count * TestsHelper.LastPrices["Paper2"] / sum).ShouldBe(0.5m, 0.1m);
-
-            var adviser = new BuyAdviserVA(TestsHelper.CreateLogger(), builder, calculator, service);
 
             // ожидаем небольшое превышение цены
             var expectedSumm = 3005m;
@@ -551,9 +554,12 @@ namespace RfBondManagement.UnitTests
             // простой тест, требуется докупить несколько бумаг. по факту, тут отработает как обычная покупка на указанную сумму.
             var portfolio = BuildSimplePortfolioAndBuy(100, 200);
 
+            var logger = TestsHelper.CreateLogger();
             var builder = TestsHelper.CreateBuilder();
             var calculator = TestsHelper.CreateCalculator(portfolio);
             var service = TestsHelper.CreateService(portfolio);
+            var paperRepo = TestsHelper.CreatePaperRepository();
+            var adviser = new BuyAdviserVA(logger, builder, calculator, service, paperRepo);
 
             var content = builder.Build(portfolio.Id);
             content.Papers.Count.ShouldBe(2);
@@ -562,8 +568,6 @@ namespace RfBondManagement.UnitTests
             var papers = content.Papers.ToDictionary(x => x.Paper.SecId);
             (papers["Paper1"].Count * TestsHelper.LastPrices["Paper1"] / sum).ShouldBe(0.5m, 0.1m);
             (papers["Paper2"].Count * TestsHelper.LastPrices["Paper2"] / sum).ShouldBe(0.5m, 0.1m);
-
-            var adviser = new BuyAdviserVA(TestsHelper.CreateLogger(), builder, calculator, service);
 
             var expectedSumm = 2005m;
 

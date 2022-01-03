@@ -6,13 +6,14 @@ using NLog;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
 using RfFondPortfolio.Common.Dtos;
+using RfFondPortfolio.Common.Interfaces;
 
 namespace RfBondManagement.Engine.Calculations
 {
     public class BuyAdviser : BaseAdviser
     {
-        public BuyAdviser(ILogger logger, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService)
-            : base(logger, portfolioBuilder, portfolioCalculator, portfolioService)
+        public BuyAdviser(ILogger logger, IPortfolioBuilder portfolioBuilder, IPortfolioCalculator portfolioCalculator, IPortfolioService portfolioService, IPaperRepository paperRepository)
+            : base(logger, portfolioBuilder, portfolioCalculator, portfolioService, paperRepository)
         {
         }
 
@@ -41,7 +42,7 @@ namespace RfBondManagement.Engine.Calculations
                     foreach (var kv in sellPapers)
                     {
                         var countToSell = Convert.ToInt64(kv.Value.Difference * totalVolume / kv.Value.Price);
-                        var foundPaper = _flattenPapers.ContainsKey(kv.Key) ? _flattenPapers[kv.Key].Paper : _portfolioPapers[kv.Key].Paper;
+                        var foundPaper = _flattenPapers.ContainsKey(kv.Key) ? _flattenPapers[kv.Key].SecId : _portfolioPapers[kv.Key].Paper.SecId;
                         var sellActions = ChangeCount(foundPaper, countToSell, onDate);
                         foreach (var action in sellActions)
                         {
@@ -63,7 +64,7 @@ namespace RfBondManagement.Engine.Calculations
                 }
 
                 var countToBuy = 1;
-                var buyActions = ChangeCount(_flattenPapers[buyPaper.Key].Paper, countToBuy, onDate);
+                var buyActions = ChangeCount(_flattenPapers[buyPaper.Key].SecId, countToBuy, onDate);
                 foreach(var action in buyActions)
                 {
                     availSum -= action.Sum;

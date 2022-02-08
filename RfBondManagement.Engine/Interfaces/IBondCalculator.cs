@@ -13,5 +13,7 @@ namespace RfBondManagement.Engine.Interfaces
         decimal CalculateAci(BondPaper paper, DateTime toDate);
 
         BondCoupon NearFutureCoupon(BondPaper bond, DateTime toDate);
+
+        decimal CalcPercentForPeriod(int periodCount, decimal resultPercent);
     }
 }

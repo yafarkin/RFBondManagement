@@ -302,5 +302,15 @@ namespace RfBondManagement.UnitTests
             var duration2 = Calculator.CalculateDiscountedDuration(realPaper, 99.41m, new DateTime(2021, 6, 30));
             duration.ShouldBe(899); // duration2 = 890
         }
+
+        [TestMethod]
+        public void CalcPercentForPeriod_Test()
+        {
+            var periodCount = 12;
+            var percent = 20;
+            var percentInPeriod = Calculator.CalcPercentForPeriod(periodCount, percent);
+
+            percentInPeriod.ShouldBe(1.53m, 0.001m);
+        }
     }
 }

@@ -265,5 +265,14 @@ namespace RfBondManagement.Engine.Calculations
 
             return 0 == coupons.Count ? bond.Coupons.Last() : coupons.First();
         }
+
+        public decimal CalcPercentForPeriod(int periodCount, decimal resultPercent)
+        {
+            // SQRT((результат / депозит)), (количество периодов )) - 1
+            var x = 1 + Convert.ToDouble(resultPercent) / 100;
+            var y = 1 / Convert.ToDouble(periodCount);
+            var percentForPeriod = Math.Pow(x, y) - 1.0;
+            return Convert.ToDecimal(percentForPeriod) * 100;
+        }
     }
 }

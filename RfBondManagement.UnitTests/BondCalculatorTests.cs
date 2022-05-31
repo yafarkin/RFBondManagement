@@ -312,5 +312,16 @@ namespace RfBondManagement.UnitTests
 
             percentInPeriod.ShouldBe(1.53m, 0.001m);
         }
+
+        [TestMethod]
+        public void CalcComplexPercent_Test()
+        {
+            var initialSumm = 100_000;
+            var percent = 1.531m;
+            var periodCount = 12;
+
+            var resultSumm = Calculator.CalcComplexPercent(initialSumm, percent, periodCount);
+            resultSumm.ShouldBe(120_000, 1);
+        }
     }
 }

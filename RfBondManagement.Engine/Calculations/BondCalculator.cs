@@ -266,6 +266,13 @@ namespace RfBondManagement.Engine.Calculations
             return 0 == coupons.Count ? bond.Coupons.Last() : coupons.First();
         }
 
+        /// <summary>
+        /// Рассчитывет, сколько должна быть процентная ставка в каждый период времени, что бы по окончанию получить результирующую процентную ставку
+        /// </summary>
+        /// <param name="periodCount">Количество периодов</param>
+        /// <param name="resultPercent">Целевой процент</param>
+        /// <returns>Процентная ставка на один период</returns>
+        /// <remarks>Например, если результирующая ставка 20%, и всего 12 периодов (условный год), то в каждый период (в месяц) ставка должна быть 1.53%</remarks>
         public decimal CalcPercentForPeriod(int periodCount, decimal resultPercent)
         {
             // SQRT((результат / депозит)), (количество периодов )) - 1
@@ -273,6 +280,20 @@ namespace RfBondManagement.Engine.Calculations
             var y = 1 / Convert.ToDouble(periodCount);
             var percentForPeriod = Math.Pow(x, y) - 1.0;
             return Convert.ToDecimal(percentForPeriod) * 100;
+        }
+
+        /// <summary>
+        /// Расчёт сложных процентов - при начислении процента на процент
+        /// </summary>
+        /// <param name="initialSum">Сумма депозита</param>
+        /// <param name="percent">Годовая процентная ставка</param>
+        /// <param name="periodCount">Число периодов начисления процентов</param>
+        /// <returns>Сумма депозита с процентами</returns>
+        public decimal CalcComplexPercent(decimal initialSumm, decimal percent, int periodCount)
+        {
+            var result = Convert.ToDouble(initialSumm) * Math.Pow((1 + Convert.ToDouble(percent) / 100), periodCount);
+
+            return Convert.ToDecimal(result);
         }
     }
 }

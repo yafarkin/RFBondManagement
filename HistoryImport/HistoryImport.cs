@@ -11,6 +11,7 @@ using System.Xml.Serialization;
 using NLog;
 using RfBondManagement.Engine.Common;
 using RfBondManagement.Engine.Interfaces;
+using RfFondPortfolio.Common.Dtos;
 using Unity.Injection;
 
 namespace HistoryImport

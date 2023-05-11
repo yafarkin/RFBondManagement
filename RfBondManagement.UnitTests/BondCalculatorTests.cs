@@ -311,6 +311,8 @@ namespace RfBondManagement.UnitTests
             var percentInPeriod = Calculator.CalcPercentForPeriod(periodCount, percent);
 
             percentInPeriod.ShouldBe(1.53m, 0.001m);
+
+            percentInPeriod = Calculator.CalcPercentForPeriod(10, 329);
         }
     }
 }
